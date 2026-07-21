@@ -9,32 +9,36 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing notionToken or databaseId' });
   }
 
+  const headers = {
+    'Authorization': `Bearer ${notionToken}`,
+    'Notion-Version': '2022-06-28',
+    'Content-Type': 'application/json'
+  };
+
   try {
+    // 1. Fetch the main database rows
     const response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${notionToken}`,
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json'
-      }
+      headers: headers
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to fetch from Notion');
+      throw new Error(errorData.message || 'Failed to fetch database');
     }
 
     const rawData = await response.json();
 
-    const formattedLogs = rawData.results.map((page) => {
+    // 2. Map through rows and Deep Fetch page contents concurrently
+    const formattedLogs = await Promise.all(rawData.results.map(async (page) => {
       const props = page.properties;
       const propValues = Object.values(props);
 
-      // 1. TITLE
+      // --- LAYER 1: DATABASE COLUMNS ---
+      
       const titleProp = propValues.find(p => p.type === 'title');
       const title = titleProp?.title?.[0]?.plain_text || 'Untitled Log';
 
-      // 2. DATE
       const dateProp = propValues.find(p => p.type === 'date');
       const dateStr = dateProp?.date?.start || page.created_time.split('T')[0];
       
@@ -50,14 +54,11 @@ export default async function handler(req, res) {
          monthNumber = parseInt(m, 10);
          dayNumber = parseInt(d, 10);
       }
-      
-      // 3. SMART IMAGE FINDER (Checks Page Cover first, then any "Files & media" column)
+
+      // Look for images in the cover or file columns first
       let imageUrl = null;
-      if (page.cover?.type === 'external') {
-        imageUrl = page.cover.external.url;
-      } else if (page.cover?.type === 'file') {
-        imageUrl = page.cover.file.url;
-      }
+      if (page.cover?.type === 'external') imageUrl = page.cover.external.url;
+      else if (page.cover?.type === 'file') imageUrl = page.cover.file.url;
       
       if (!imageUrl) {
         const filesProp = propValues.find(p => p.type === 'files' && p.files?.length > 0);
@@ -67,26 +68,61 @@ export default async function handler(req, res) {
         }
       }
 
-      // 4. SMART TEXT FINDER (Finds the first Text column and merges formatted text blocks)
+      // Look for text in text columns first
+      let pageContent = '';
       const textProp = propValues.find(p => p.type === 'rich_text' && p.rich_text?.length > 0);
-      const pageContent = textProp ? textProp.rich_text.map(t => t.plain_text).join('') : '';
+      if (textProp) {
+        pageContent = textProp.rich_text.map(t => t.plain_text).join('');
+      }
 
-      // 5. SMART CATEGORY FINDER (Hunts for Dropdowns/Tags)
-      const getSelectData = (prop) => {
+      // Scan for Tags (now supports Select, Multi-Select, and Status types)
+      const getTagData = (prop) => {
         if (!prop) return null;
         if (prop.type === 'select' && prop.select) return { name: prop.select.name, color: prop.select.color };
         if (prop.type === 'multi_select' && prop.multi_select.length > 0) return { name: prop.multi_select[0].name, color: prop.multi_select[0].color };
+        if (prop.type === 'status' && prop.status) return { name: prop.status.name, color: prop.status.color };
         return null;
       };
 
-      // Try common column names first
-      let projectData = getSelectData(props['Projects'] || props['Project'] || props['Project Name'] || props['Client']);
-      let typeData = getSelectData(props['Project Type'] || props['Category'] || props['Type'] || props['Tags']);
+      const allTags = propValues.filter(p => p.type === 'select' || p.type === 'multi_select' || p.type === 'status');
+      let projectData = getTagData(props['Projects'] || props['Project']);
+      let typeData = getTagData(props['Project Type'] || props['Category'] || props['Type'] || props['Status']);
 
-      // If typical names fail, automatically grab the first and second dropdown menus available
-      const allSelects = propValues.filter(p => p.type === 'select' || p.type === 'multi_select');
-      if (!projectData && allSelects.length > 0) projectData = getSelectData(allSelects[0]);
-      if (!typeData && allSelects.length > 1) typeData = getSelectData(allSelects[1]);
+      if (!projectData && allTags.length > 0) projectData = getTagData(allTags[0]);
+      if (!typeData && allTags.length > 1) typeData = getTagData(allTags[1]);
+
+      // --- LAYER 2: DEEP FETCH PAGE BLOCKS ---
+      // If we didn't find an image or text in the columns, dive into the page body
+      if (!imageUrl || !pageContent) {
+        try {
+          const blockRes = await fetch(`https://api.notion.com/v1/blocks/${page.id}/children?page_size=25`, {
+            method: 'GET',
+            headers: headers
+          });
+          
+          if (blockRes.ok) {
+            const blockData = await blockRes.json();
+            
+            // Find first image block in the page
+            if (!imageUrl) {
+              const imgBlock = blockData.results.find(b => b.type === 'image');
+              if (imgBlock) {
+                imageUrl = imgBlock.image.type === 'external' ? imgBlock.image.external.url : imgBlock.image.file.url;
+              }
+            }
+            
+            // Find first paragraph block in the page
+            if (!pageContent) {
+              const pBlock = blockData.results.find(b => b.type === 'paragraph' && b.paragraph.rich_text.length > 0);
+              if (pBlock) {
+                pageContent = pBlock.paragraph.rich_text.map(t => t.plain_text).join('');
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`Failed to fetch blocks for page ${page.id}`, err);
+        }
+      }
 
       return {
         id: page.id,
@@ -100,7 +136,7 @@ export default async function handler(req, res) {
         imageUrl: imageUrl,
         pageContent: pageContent
       };
-    });
+    }));
 
     return res.status(200).json({ success: true, data: formattedLogs });
 
