@@ -1,9 +1,8 @@
-import { Client } from '@notionhq/client';
+import * as Notion from '@notionhq/client';
 
 export default async function handler(req, res) {
-  // Only allow POST requests so credentials aren't leaked via URL query strings
   if (req.method !== 'POST') {
-    return res.status(405.1).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { notionToken, databaseId } = req.body;
@@ -13,16 +12,80 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Initialize the Notion client dynamically with the user's provided credentials
+    // 1. Bypass Vercel ESM/CJS interop glitches
+    const Client = Notion.Client || Notion.default.Client;
     const notion = new Client({ auth: notionToken });
 
-    // Query your Notion database (matching your previous python script logic)
+    // 2. Query your Notion database
     const response = await notion.databases.query({
       database_id: databaseId,
     });
 
-    // Send the formatted results back to your React frontend
-    return res.status(200).json({ success: true, data: response.results });
+    // 3. The Data Parser: Format raw Notion data into our flat React structure
+    const formattedLogs = response.results.map((page) => {
+      const props = page.properties;
+      
+      // Smart-search properties by their Notion type
+      const dateProp = Object.values(props).find(p => p.type === 'date');
+      const titleProp = Object.values(props).find(p => p.type === 'title');
+      const textProp = Object.values(props).find(p => p.type === 'rich_text');
+
+      const dateStr = dateProp?.date?.start || page.created_time.split('T')[0];
+      
+      // Prevent timezone shift bugs on simple YYYY-MM-DD dates
+      let year, monthNumber, dayNumber;
+      if (dateStr.includes('T')) {
+         const d = new Date(dateStr);
+         year = d.getFullYear();
+         monthNumber = d.getMonth() + 1;
+         dayNumber = d.getDate();
+      } else {
+         const [y, m, d] = dateStr.split('-');
+         year = parseInt(y, 10);
+         monthNumber = parseInt(m, 10);
+         dayNumber = parseInt(d, 10);
+      }
+      
+      let imageUrl = null;
+      if (page.cover?.type === 'external') imageUrl = page.cover.external.url;
+      else if (page.cover?.type === 'file') imageUrl = page.cover.file.url;
+
+      // Identify Select properties for Projects and Categories
+      const selectProps = Object.values(props).filter(p => p.type === 'select');
+      const projectProp = props['Projects'] || props['Project'];
+      const typeProp = props['Project Type'] || props['Category'] || props['Type'];
+
+      let projectName = 'General';
+      if (projectProp?.type === 'select') projectName = projectProp.select?.name || 'General';
+      else if (selectProps.length > 0) projectName = selectProps[0].select?.name || 'General';
+
+      let typeName = 'Log';
+      let typeColor = 'default';
+      if (typeProp?.type === 'select') {
+        typeName = typeProp.select?.name || 'Log';
+        typeColor = typeProp.select?.color || 'default';
+      } else if (selectProps.length > 1) {
+        typeName = selectProps[1].select?.name || 'Log';
+        typeColor = selectProps[1].select?.color || 'default';
+      }
+
+      return {
+        id: page.id,
+        year,
+        monthNumber,
+        dayNumber,
+        title: titleProp?.title?.[0]?.plain_text || 'Untitled Log',
+        Projects: projectName,
+        projectType: typeName,
+        projectTypeColor: typeColor,
+        imageUrl: imageUrl,
+        pageContent: textProp?.rich_text?.[0]?.plain_text || ''
+      };
+    });
+
+    // 4. Send clean data to frontend
+    return res.status(200).json({ success: true, data: formattedLogs });
+
   } catch (error) {
     console.error('Notion API Error:', error.message);
     return res.status(500).json({ error: error.message });
