@@ -1,5 +1,3 @@
-import * as Notion from '@notionhq/client';
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -12,27 +10,33 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Bypass Vercel ESM/CJS interop glitches
-    const Client = Notion.Client || Notion.default.Client;
-    const notion = new Client({ auth: notionToken });
-
-    // 2. Query your Notion database
-    const response = await notion.databases.query({
-      database_id: databaseId,
+    // 1. Bypass the buggy Notion SDK and use a native HTTP request
+    const response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${notionToken}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json'
+      }
     });
 
-    // 3. The Data Parser: Format raw Notion data into our flat React structure
-    const formattedLogs = response.results.map((page) => {
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch from Notion');
+    }
+
+    const rawData = await response.json();
+
+    // 2. The Data Parser: Format raw Notion data into our flat React structure
+    const formattedLogs = rawData.results.map((page) => {
       const props = page.properties;
       
-      // Smart-search properties by their Notion type
       const dateProp = Object.values(props).find(p => p.type === 'date');
       const titleProp = Object.values(props).find(p => p.type === 'title');
       const textProp = Object.values(props).find(p => p.type === 'rich_text');
 
       const dateStr = dateProp?.date?.start || page.created_time.split('T')[0];
       
-      // Prevent timezone shift bugs on simple YYYY-MM-DD dates
       let year, monthNumber, dayNumber;
       if (dateStr.includes('T')) {
          const d = new Date(dateStr);
@@ -50,7 +54,6 @@ export default async function handler(req, res) {
       if (page.cover?.type === 'external') imageUrl = page.cover.external.url;
       else if (page.cover?.type === 'file') imageUrl = page.cover.file.url;
 
-      // Identify Select properties for Projects and Categories
       const selectProps = Object.values(props).filter(p => p.type === 'select');
       const projectProp = props['Projects'] || props['Project'];
       const typeProp = props['Project Type'] || props['Category'] || props['Type'];
@@ -83,7 +86,7 @@ export default async function handler(req, res) {
       };
     });
 
-    // 4. Send clean data to frontend
+    // 3. Send clean data to frontend
     return res.status(200).json({ success: true, data: formattedLogs });
 
   } catch (error) {
