@@ -10,7 +10,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Bypass the buggy Notion SDK and use a native HTTP request
     const response = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
       method: 'POST',
       headers: {
@@ -27,14 +26,16 @@ export default async function handler(req, res) {
 
     const rawData = await response.json();
 
-    // 2. The Data Parser: Format raw Notion data into our flat React structure
     const formattedLogs = rawData.results.map((page) => {
       const props = page.properties;
-      
-      const dateProp = Object.values(props).find(p => p.type === 'date');
-      const titleProp = Object.values(props).find(p => p.type === 'title');
-      const textProp = Object.values(props).find(p => p.type === 'rich_text');
+      const propValues = Object.values(props);
 
+      // 1. TITLE
+      const titleProp = propValues.find(p => p.type === 'title');
+      const title = titleProp?.title?.[0]?.plain_text || 'Untitled Log';
+
+      // 2. DATE
+      const dateProp = propValues.find(p => p.type === 'date');
       const dateStr = dateProp?.date?.start || page.created_time.split('T')[0];
       
       let year, monthNumber, dayNumber;
@@ -50,43 +51,57 @@ export default async function handler(req, res) {
          dayNumber = parseInt(d, 10);
       }
       
+      // 3. SMART IMAGE FINDER (Checks Page Cover first, then any "Files & media" column)
       let imageUrl = null;
-      if (page.cover?.type === 'external') imageUrl = page.cover.external.url;
-      else if (page.cover?.type === 'file') imageUrl = page.cover.file.url;
-
-      const selectProps = Object.values(props).filter(p => p.type === 'select');
-      const projectProp = props['Projects'] || props['Project'];
-      const typeProp = props['Project Type'] || props['Category'] || props['Type'];
-
-      let projectName = 'General';
-      if (projectProp?.type === 'select') projectName = projectProp.select?.name || 'General';
-      else if (selectProps.length > 0) projectName = selectProps[0].select?.name || 'General';
-
-      let typeName = 'Log';
-      let typeColor = 'default';
-      if (typeProp?.type === 'select') {
-        typeName = typeProp.select?.name || 'Log';
-        typeColor = typeProp.select?.color || 'default';
-      } else if (selectProps.length > 1) {
-        typeName = selectProps[1].select?.name || 'Log';
-        typeColor = selectProps[1].select?.color || 'default';
+      if (page.cover?.type === 'external') {
+        imageUrl = page.cover.external.url;
+      } else if (page.cover?.type === 'file') {
+        imageUrl = page.cover.file.url;
       }
+      
+      if (!imageUrl) {
+        const filesProp = propValues.find(p => p.type === 'files' && p.files?.length > 0);
+        if (filesProp) {
+          const file = filesProp.files[0];
+          imageUrl = file.type === 'external' ? file.external.url : file.file.url;
+        }
+      }
+
+      // 4. SMART TEXT FINDER (Finds the first Text column and merges formatted text blocks)
+      const textProp = propValues.find(p => p.type === 'rich_text' && p.rich_text?.length > 0);
+      const pageContent = textProp ? textProp.rich_text.map(t => t.plain_text).join('') : '';
+
+      // 5. SMART CATEGORY FINDER (Hunts for Dropdowns/Tags)
+      const getSelectData = (prop) => {
+        if (!prop) return null;
+        if (prop.type === 'select' && prop.select) return { name: prop.select.name, color: prop.select.color };
+        if (prop.type === 'multi_select' && prop.multi_select.length > 0) return { name: prop.multi_select[0].name, color: prop.multi_select[0].color };
+        return null;
+      };
+
+      // Try common column names first
+      let projectData = getSelectData(props['Projects'] || props['Project'] || props['Project Name'] || props['Client']);
+      let typeData = getSelectData(props['Project Type'] || props['Category'] || props['Type'] || props['Tags']);
+
+      // If typical names fail, automatically grab the first and second dropdown menus available
+      const allSelects = propValues.filter(p => p.type === 'select' || p.type === 'multi_select');
+      if (!projectData && allSelects.length > 0) projectData = getSelectData(allSelects[0]);
+      if (!typeData && allSelects.length > 1) typeData = getSelectData(allSelects[1]);
 
       return {
         id: page.id,
         year,
         monthNumber,
         dayNumber,
-        title: titleProp?.title?.[0]?.plain_text || 'Untitled Log',
-        Projects: projectName,
-        projectType: typeName,
-        projectTypeColor: typeColor,
+        title: title,
+        Projects: projectData?.name || 'General',
+        projectType: typeData?.name || 'Log',
+        projectTypeColor: typeData?.color || 'default',
         imageUrl: imageUrl,
-        pageContent: textProp?.rich_text?.[0]?.plain_text || ''
+        pageContent: pageContent
       };
     });
 
-    // 3. Send clean data to frontend
     return res.status(200).json({ success: true, data: formattedLogs });
 
   } catch (error) {
