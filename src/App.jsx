@@ -113,6 +113,7 @@ function App() {
   const [yearOrientationMode, setYearOrientationMode] = useState('auto'); // 'auto', 'landscape', 'portrait'
   const [calendarSize, setCalendarSize] = useState({ width: 0, height: 0 });
 
+  const appRef = useRef(null);
   const calendarRef = useRef(null);
   const carouselRef = useRef(null);
 
@@ -449,7 +450,7 @@ function App() {
   // 6. RENDER (FIXED VIEWPORT / FLUID CONTENT)
   // -------------------------------------------------------------
   return (
-    <div className={`w-full h-screen flex flex-col p-4 sm:p-6 overflow-hidden select-none transition-colors duration-300 ${
+    <div ref={appRef} className={`w-full h-screen flex flex-col p-4 sm:p-6 overflow-hidden select-none transition-colors duration-300 ${
       isDarkMode ? 'bg-[#191919] text-zinc-100' : 'bg-slate-50 text-slate-900'
     }`}>
       
@@ -933,7 +934,7 @@ function App() {
       {/* SETTINGS MODAL */}
       {/* ------------------------------------------------------------- */}
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs text-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70 backdrop-blur-xs text-slate-800">
           <div className={`w-full max-w-md rounded-xl shadow-xl border p-6 ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
             <h2 className="text-lg font-bold mb-4">Widget Setup</h2>
             <p className={`text-xs mb-6 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Enter your Notion Integration Token and Database ID to fetch your personal logs.</p>
@@ -981,15 +982,15 @@ function App() {
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* DETAIL LOG MODAL (WITH THUMBNAIL SELECTOR) - EXPANDED SIZING */}
+      {/* DETAIL LOG MODAL (PROPORTIONAL FRAME SIZING & CONSISTENT BUFFERS) */}
       {/* ------------------------------------------------------------- */}
       {selectedLogModal && (() => {
         const dateKey = selectedLogModal.dateObj.toISOString().split('T')[0];
         const currentThumbId = thumbnailOverrides[dateKey] || (selectedLogModal.logs[0]?.id);
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs" onClick={() => setSelectedLogModal(null)}>
-            <div className={`w-full max-w-5xl max-h-[90vh] rounded-xl flex flex-col overflow-hidden shadow-xl border ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 sm:p-8 bg-black/70 backdrop-blur-xs" onClick={() => setSelectedLogModal(null)}>
+            <div className={`w-[90%] max-w-[1300px] h-[85%] max-h-[850px] rounded-2xl flex flex-col overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} onClick={(e) => e.stopPropagation()}>
               <div className={`px-6 py-4 border-b flex items-center justify-between shrink-0 ${isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-bold text-rose-500 tracking-wider">
@@ -1005,7 +1006,7 @@ function App() {
                 <button onClick={() => setSelectedLogModal(null)} className={`font-bold cursor-pointer text-base ${isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-slate-400 hover:text-slate-600'}`}>✕</button>
               </div>
               
-              <div className="p-6 overflow-x-auto flex gap-6 min-h-0 items-start" ref={carouselRef}>
+              <div className="p-6 sm:p-8 overflow-x-auto flex gap-6 min-h-0 items-start flex-1" ref={carouselRef}>
                 {selectedLogModal.logs.length > 0 ? (
                   selectedLogModal.logs.map((log) => {
                     const isThumbnail = log.id === currentThumbId;
@@ -1013,7 +1014,7 @@ function App() {
                       <div 
                         key={log.id} 
                         onClick={() => setThumbnailOverrides(prev => ({ ...prev, [dateKey]: log.id }))}
-                        className={`shrink-0 w-[440px] p-5 border rounded-xl flex flex-col gap-4 shadow-sm cursor-pointer transition-all ${
+                        className={`shrink-0 w-[420px] sm:w-[460px] p-5 sm:p-6 border rounded-xl flex flex-col gap-4 shadow-sm cursor-pointer transition-all ${
                           isThumbnail 
                             ? (isDarkMode ? 'border-2 border-amber-500 bg-amber-950/20 ring-2 ring-amber-500/20' : 'border-2 border-amber-500 bg-amber-50/20 ring-2 ring-amber-500/20')
                             : (isDarkMode ? 'border-zinc-700 bg-zinc-800/80 hover:border-zinc-500' : 'border-slate-200 bg-slate-50 hover:border-slate-400')
