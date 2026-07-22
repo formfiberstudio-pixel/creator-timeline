@@ -98,14 +98,9 @@ function App() {
   // Resize Listener for Auto-Rotation
   useEffect(() => {
     const checkOrientation = () => {
-      // If height is greater than width, it's portrait
       setIsPortraitFrame(window.innerHeight > window.innerWidth);
     };
-    
-    // Check initially
     checkOrientation();
-    
-    // Check whenever window resizes
     window.addEventListener('resize', checkOrientation);
     return () => window.removeEventListener('resize', checkOrientation);
   }, []);
@@ -117,7 +112,6 @@ function App() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Determine active orientation based on user toggle + window size
   const activeYearOrientation = yearOrientationMode === 'auto' 
     ? (isPortraitFrame ? 'portrait' : 'landscape') 
     : yearOrientationMode;
@@ -524,13 +518,15 @@ function App() {
                         const logs = getLogsForDate(slot.dateObj);
                         const hasLog = logs.length > 0;
                         const pLog = logs[0];
+                        const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
+
                         return (
                           <div 
                             key={slotIndex} 
                             onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
                             onMouseEnter={() => { if (hasLog && pLog) setHoveredProjectTitle(pLog.Projects || 'Untitled Project'); }}
                             onMouseLeave={() => setHoveredProjectTitle(null)}
-                            className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all bg-white border-slate-200 hover:shadow-md ${isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`}
+                            className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all bg-white border-slate-200 hover:shadow-md ${isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''} ${isHoveredProject ? 'ring-2 ring-rose-500 shadow-md scale-[1.02] z-20 bg-rose-50/10' : ''}`}
                             style={{ borderRadius: `${cardRadius}px` }}
                           >
                             {hasLog && pLog.imageUrl && <img src={pLog.imageUrl} className="absolute inset-0 w-full h-full object-cover z-0" alt="" />}
@@ -560,6 +556,8 @@ function App() {
                   const logs = getLogsForDate(slot.dateObj);
                   const hasLog = logs.length > 0;
                   const pLog = logs[0];
+                  const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
+
                   return (
                     <div 
                       key={index} 
@@ -570,7 +568,7 @@ function App() {
                         onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
                         onMouseEnter={() => { if (hasLog && pLog) setHoveredProjectTitle(pLog.Projects || 'Untitled Project'); }}
                         onMouseLeave={() => setHoveredProjectTitle(null)}
-                        className="relative h-[120px] shrink-0 overflow-hidden p-3 border-b border-slate-100 cursor-pointer flex flex-col justify-end"
+                        className={`relative h-[120px] shrink-0 overflow-hidden p-3 border-b border-slate-100 cursor-pointer flex flex-col justify-end transition-all ${isHoveredProject ? 'ring-2 ring-rose-500 ring-inset z-20 bg-rose-50/20' : ''}`}
                       >
                         {hasLog && pLog.imageUrl && <img src={pLog.imageUrl} className="absolute inset-0 w-full h-full object-cover z-0" alt="" />}
                         <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs ${isToday(slot.dateObj) && !hasLog ? 'bg-rose-500' : ''}`} style={{ backgroundColor: hasLog ? getDotColor(pLog) : undefined }}>{slot.dayNum}</div>
@@ -667,7 +665,7 @@ function App() {
                             const hasLog = logs.length > 0;
                             const primaryLog = hasLog ? logs[0] : null;
                             const currentDotHex = hasLog ? getDotColor(primaryLog) : 'transparent';
-                            const isHoveredProject = hasLog && primaryLog && (primaryLog.Projects || 'Untitled Project') === hoveredProjectTitle;
+                            const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
 
                             const slotBackground = isHoveredWeekCell ? weekHighlightStyle : isStatHoliday ? 'bg-amber-50/40' : isWeekend ? 'bg-rose-50/40' : '';
 
@@ -736,7 +734,7 @@ function App() {
                               const hasLog = logs.length > 0;
                               const primaryLog = hasLog ? logs[0] : null;
                               const currentDotHex = hasLog ? getDotColor(primaryLog) : 'transparent';
-                              const isHoveredProject = hasLog && primaryLog && (primaryLog.Projects || 'Untitled Project') === hoveredProjectTitle;
+                              const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                               
                               const slotBackground = isHoveredWeekCell ? weekHighlightStyle : isStatHoliday ? 'bg-amber-50/40' : isWeekend ? 'bg-rose-50/40' : '';
                               
@@ -844,7 +842,7 @@ function App() {
                   <div key={idx} className="shrink-0 w-[320px] p-4 border border-slate-200 rounded-xl bg-slate-50 flex flex-col gap-3 shadow-2xs overflow-y-auto">
                     {log.imageUrl && <img src={log.imageUrl} className="max-h-[180px] rounded object-contain" alt="" />}
                     <div>
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 border rounded inline-block mb-1" style={{ color: getDotColor(log), borderColor: getDotColor(log) }}>{log.projectType}</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 border rounded inline-block mb-1" style={{ color: getDotColor(log), borderColor: getDotColor(log) } }>{log.projectType}</span>
                       <h3 className="text-sm font-bold text-slate-800">{log.title}</h3>
                     </div>
                     {log.pageContent && <div className="text-xs text-slate-600 p-2 bg-white rounded border border-slate-150 whitespace-pre-wrap leading-normal">{log.pageContent}</div>}
