@@ -463,13 +463,13 @@ function App() {
                           const isSelected = selectedProjectFilters.includes(p.title);
                           const dynamicFilterActive = selectedProjectFilters.length > 0;
                           const isHovered = hoveredProjectTitle === p.title;
-                          let cardStyles = 'border-slate-300 font-medium text-slate-800 shadow-2xs hover:border-rose-400';
+                          let cardStyles = 'border-slate-300 font-medium text-slate-800 shadow-2xs hover:border-amber-400';
                           
                           if (isHovered) {
-                            cardStyles = 'border-rose-500 bg-rose-50 font-bold text-rose-700 shadow-sm ring-1 ring-rose-500/50 scale-[1.02] z-10 relative transition-all duration-200';
+                            cardStyles = 'border-amber-500 bg-amber-50 font-bold text-amber-800 shadow-sm ring-1 ring-amber-500/50 scale-[1.02] z-10 relative transition-all duration-200';
                           } else if (dynamicFilterActive) {
                             cardStyles = isSelected 
-                              ? 'border-rose-400 font-bold text-slate-900 shadow-xs ring-1 ring-rose-400/20' 
+                              ? 'border-amber-400 font-bold text-slate-900 shadow-xs ring-1 ring-amber-400/20' 
                               : 'border-slate-200 opacity-30 font-normal text-slate-400 hover:opacity-60';
                           }
                           return (
@@ -526,11 +526,11 @@ function App() {
                             onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
                             onMouseEnter={() => { if (hasLog && pLog) setHoveredProjectTitle(pLog.Projects || 'Untitled Project'); }}
                             onMouseLeave={() => setHoveredProjectTitle(null)}
-                            className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all bg-white border-slate-200 hover:shadow-md ${isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''} ${isHoveredProject ? 'ring-2 ring-rose-500 shadow-md scale-[1.02] z-20 bg-rose-50/10' : ''}`}
+                            className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all bg-white border-slate-200 hover:shadow-md ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.02] z-20 bg-amber-50/20' : isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`}
                             style={{ borderRadius: `${cardRadius}px` }}
                           >
                             {hasLog && pLog.imageUrl && <img src={pLog.imageUrl} className="absolute inset-0 w-full h-full object-cover z-0" alt="" />}
-                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs ${isToday(slot.dateObj) && !hasLog ? 'bg-rose-500' : ''}`} style={{ backgroundColor: hasLog ? getDotColor(pLog) : undefined }}>{slot.dayNum}</div>
+                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border border-white ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? getDotColor(pLog) : undefined }}>{slot.dayNum}</div>
                             {hasLog && <div className="relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/60 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{pLog.title}</div>}
                           </div>
                         );
@@ -561,17 +561,17 @@ function App() {
                   return (
                     <div 
                       key={index} 
-                      className={`flex flex-col h-full bg-white border border-slate-200 shadow-2xs overflow-hidden transition-all ${isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`} 
+                      className={`flex flex-col h-full bg-white border border-slate-200 shadow-2xs overflow-hidden transition-all ${isHoveredProject ? 'ring-2 ring-amber-500 z-20' : isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`} 
                       style={{ borderRadius: `${cardRadius}px` }}
                     >
                       <div 
                         onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
                         onMouseEnter={() => { if (hasLog && pLog) setHoveredProjectTitle(pLog.Projects || 'Untitled Project'); }}
                         onMouseLeave={() => setHoveredProjectTitle(null)}
-                        className={`relative h-[120px] shrink-0 overflow-hidden p-3 border-b border-slate-100 cursor-pointer flex flex-col justify-end transition-all ${isHoveredProject ? 'ring-2 ring-rose-500 ring-inset z-20 bg-rose-50/20' : ''}`}
+                        className={`relative h-[120px] shrink-0 overflow-hidden p-3 border-b border-slate-100 cursor-pointer flex flex-col justify-end transition-all ${isHoveredProject ? 'bg-amber-50/20' : ''}`}
                       >
                         {hasLog && pLog.imageUrl && <img src={pLog.imageUrl} className="absolute inset-0 w-full h-full object-cover z-0" alt="" />}
-                        <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs ${isToday(slot.dateObj) && !hasLog ? 'bg-rose-500' : ''}`} style={{ backgroundColor: hasLog ? getDotColor(pLog) : undefined }}>{slot.dayNum}</div>
+                        <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border border-white ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? getDotColor(pLog) : undefined }}>{slot.dayNum}</div>
                         {hasLog && <div className="relative z-10 text-[11px] font-bold text-white bg-black/60 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{pLog.title}</div>}
                       </div>
                       <div className="p-3 flex-1 overflow-y-auto min-h-0">
@@ -669,17 +669,17 @@ function App() {
 
                             const slotBackground = isHoveredWeekCell ? weekHighlightStyle : isStatHoliday ? 'bg-amber-50/40' : isWeekend ? 'bg-rose-50/40' : '';
 
-                            let dotStyles = 'border border-slate-200 bg-white text-slate-400 font-normal hover:border-slate-400 hover:text-slate-600';
+                            let dotStyles = 'border border-white bg-white text-slate-400 font-normal hover:border-slate-400 hover:text-slate-600';
                             if (hasLog) {
                               let ringClass = isStatHoliday ? 'ring-2 ring-amber-400/60' : isWeekend ? 'ring-2 ring-rose-400/50' : '';
-                              if (isHoveredProject) ringClass = 'ring-2 ring-rose-500/50 scale-125 z-30';
-                              dotStyles = `text-white font-bold border border-transparent shadow-xs scale-110 ${ringClass}`;
-                            } else if (isStatHoliday) dotStyles = 'border border-amber-200 bg-amber-50 text-amber-500 font-medium hover:border-amber-300 hover:text-amber-700';
-                            else if (isWeekend) dotStyles = 'border border-rose-200 bg-rose-50 text-rose-400 font-medium hover:border-rose-300 hover:text-rose-600';
+                              if (isHoveredProject) ringClass = 'ring-2 ring-amber-500 scale-125 z-30';
+                              dotStyles = `text-white font-bold border border-white shadow-xs scale-110 ${ringClass}`;
+                            } else if (isStatHoliday) dotStyles = 'border border-white bg-amber-50 text-amber-500 font-medium hover:border-amber-300 hover:text-amber-700';
+                            else if (isWeekend) dotStyles = 'border border-white bg-rose-50 text-rose-400 font-medium hover:border-rose-300 hover:text-rose-600';
 
                             return (
                               <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${slotBackground}`}>
-                                <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} ${isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? currentDotHex : undefined }}>{targetDayNum}</div>
+                                <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} border border-white ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? currentDotHex : undefined }}>{targetDayNum}</div>
                               </div>
                             );
                           })}
@@ -738,17 +738,17 @@ function App() {
                               
                               const slotBackground = isHoveredWeekCell ? weekHighlightStyle : isStatHoliday ? 'bg-amber-50/40' : isWeekend ? 'bg-rose-50/40' : '';
                               
-                              let dotStyles = 'border border-slate-200 bg-white text-slate-400 font-normal hover:border-slate-400 hover:text-slate-600';
+                              let dotStyles = 'border border-white bg-white text-slate-400 font-normal hover:border-slate-400 hover:text-slate-600';
                               if (hasLog) {
                                 let ringClass = isStatHoliday ? 'ring-2 ring-amber-400/60' : isWeekend ? 'ring-2 ring-rose-400/50' : '';
-                                if (isHoveredProject) ringClass = 'ring-2 ring-rose-500/50 scale-125 z-30';
-                                dotStyles = `text-white font-bold border border-transparent shadow-xs scale-110 ${ringClass}`;
-                              } else if (isStatHoliday) dotStyles = 'border border-amber-200 bg-amber-50 text-amber-500 font-medium hover:border-amber-300 hover:text-amber-700';
-                              else if (isWeekend) dotStyles = 'border border-rose-200 bg-rose-50 text-rose-400 font-medium hover:border-rose-300 hover:text-rose-600';
+                                if (isHoveredProject) ringClass = 'ring-2 ring-amber-500 scale-125 z-30';
+                                dotStyles = `text-white font-bold border border-white shadow-xs scale-110 ${ringClass}`;
+                              } else if (isStatHoliday) dotStyles = 'border border-white bg-amber-50 text-amber-500 font-medium hover:border-amber-300 hover:text-amber-700';
+                              else if (isWeekend) dotStyles = 'border border-white bg-rose-50 text-rose-400 font-medium hover:border-rose-300 hover:text-rose-600';
 
                               return (
                                 <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekRoundClass} ${slotBackground}`}>
-                                  <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} ${isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? currentDotHex : undefined }}>{targetDayNum}</div>
+                                  <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} border border-white ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? currentDotHex : undefined }}>{targetDayNum}</div>
                                 </div>
                               );
                             })}
@@ -842,7 +842,7 @@ function App() {
                   <div key={idx} className="shrink-0 w-[320px] p-4 border border-slate-200 rounded-xl bg-slate-50 flex flex-col gap-3 shadow-2xs overflow-y-auto">
                     {log.imageUrl && <img src={log.imageUrl} className="max-h-[180px] rounded object-contain" alt="" />}
                     <div>
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 border rounded inline-block mb-1" style={{ color: getDotColor(log), borderColor: getDotColor(log) } }>{log.projectType}</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 border rounded inline-block mb-1" style={{ color: getDotColor(log), borderColor: getDotColor(log) }}>{log.projectType}</span>
                       <h3 className="text-sm font-bold text-slate-800">{log.title}</h3>
                     </div>
                     {log.pageContent && <div className="text-xs text-slate-600 p-2 bg-white rounded border border-slate-150 whitespace-pre-wrap leading-normal">{log.pageContent}</div>}
