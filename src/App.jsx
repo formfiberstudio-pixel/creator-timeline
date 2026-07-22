@@ -1082,7 +1082,7 @@ function App() {
                             <h3 className={`text-base font-bold truncate ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>{log.title}</h3>
                             <a 
                               href={notionPageUrl} 
-                              target="_top" 
+                              target="_blank" 
                               rel="noopener noreferrer" 
                               onClick={(e) => e.stopPropagation()}
                               className={`text-xs font-semibold px-2.5 py-1 rounded border shrink-0 flex items-center gap-1 transition-colors ${
