@@ -1046,10 +1046,11 @@ function App() {
                   {logs.length > 0 ? (
                     logs.map((log) => {
                       const isThumbnail = log.id === currentThumbId;
-                      const baseUrl = log.url || `https://www.notion.so/${log.id.replace(/-/g, '')}`;
-                      
-                      // Inject pvs=4 to trigger Notion's "Center Peek" view overlay when intercepting the URL natively
-                      const notionPageUrl = baseUrl.includes('?') ? `${baseUrl}&pvs=4` : `${baseUrl}?pvs=4`;
+
+                      // Deep link mapping logic
+                      const httpsUrl = log.url || `https://www.notion.so/${log.id.replace(/-/g, '')}`;
+                      const desktopUrl = httpsUrl.replace('https://', 'notion://');
+                      const notionPageUrl = desktopUrl.includes('?') ? `${desktopUrl}&pvs=4` : `${desktopUrl}?pvs=4`;
 
                       return (
                         <div 
@@ -1081,7 +1082,7 @@ function App() {
                             <h3 className={`text-base font-bold truncate ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>{log.title}</h3>
                             <a 
                               href={notionPageUrl} 
-                              target="_blank" 
+                              target="_top" 
                               rel="noopener noreferrer" 
                               onClick={(e) => e.stopPropagation()}
                               className={`text-xs font-semibold px-2.5 py-1 rounded border shrink-0 flex items-center gap-1 transition-colors ${
