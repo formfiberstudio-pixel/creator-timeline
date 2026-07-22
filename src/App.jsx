@@ -633,7 +633,7 @@ function App() {
                     <button
                       onClick={() => { const targetSlot = rowSlots.find(s => s.isValid && s.dateObj) || rowSlots[0]; if (targetSlot && targetSlot.dateObj) { setCurrentDate(targetSlot.dateObj); setViewMode('week'); } }}
                       title="Open Weekly View"
-                      className={`w-5 shrink-0 rounded-md transition-all flex items-center justify-center cursor-pointer group border shadow-2xs ${isDarkMode ? 'bg-zinc-800 hover:bg-rose-600 text-zinc-400 hover:text-white border-zinc-700 hover:border-rose-600' : 'bg-slate-100 hover:bg-rose-505 text-slate-400 hover:text-white border-slate-200 hover:border-rose-500'}`}
+                      className={`w-5 shrink-0 rounded-md transition-all flex items-center justify-center cursor-pointer group border shadow-2xs ${isDarkMode ? 'bg-zinc-800 hover:bg-rose-600 text-zinc-400 hover:text-white border-zinc-700 hover:border-rose-600' : 'bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-white border-slate-200 hover:border-rose-500'}`}
                     >
                       <span className="text-[10px] font-bold group-hover:scale-125 transition-transform">›</span>
                     </button>
@@ -981,7 +981,7 @@ function App() {
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* DETAIL LOG MODAL (WITH THUMBNAIL SELECTOR) */}
+      {/* DETAIL LOG MODAL (WITH THUMBNAIL SELECTOR) - EXPANDED SIZING */}
       {/* ------------------------------------------------------------- */}
       {selectedLogModal && (() => {
         const dateKey = selectedLogModal.dateObj.toISOString().split('T')[0];
@@ -989,10 +989,10 @@ function App() {
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs" onClick={() => setSelectedLogModal(null)}>
-            <div className={`w-full max-w-3xl max-h-[85vh] rounded-xl flex flex-col overflow-hidden shadow-xl border ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} onClick={(e) => e.stopPropagation()}>
-              <div className={`px-5 py-3.5 border-b flex items-center justify-between shrink-0 ${isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
+            <div className={`w-full max-w-5xl max-h-[90vh] rounded-xl flex flex-col overflow-hidden shadow-xl border ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} onClick={(e) => e.stopPropagation()}>
+              <div className={`px-6 py-4 border-b flex items-center justify-between shrink-0 ${isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold text-rose-500 tracking-wider">
+                  <span className="text-sm font-bold text-rose-500 tracking-wider">
                     {selectedLogModal.dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
                   {getOntarioStatHolidayName(selectedLogModal.dateObj) && (
@@ -1002,10 +1002,10 @@ function App() {
                     </span>
                   )}
                 </div>
-                <button onClick={() => setSelectedLogModal(null)} className={`font-bold cursor-pointer ${isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-slate-400 hover:text-slate-600'}`}>✕</button>
+                <button onClick={() => setSelectedLogModal(null)} className={`font-bold cursor-pointer text-base ${isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-slate-400 hover:text-slate-600'}`}>✕</button>
               </div>
               
-              <div className="p-5 overflow-x-auto flex gap-4 min-h-0 items-start" ref={carouselRef}>
+              <div className="p-6 overflow-x-auto flex gap-6 min-h-0 items-start" ref={carouselRef}>
                 {selectedLogModal.logs.length > 0 ? (
                   selectedLogModal.logs.map((log) => {
                     const isThumbnail = log.id === currentThumbId;
@@ -1013,28 +1013,28 @@ function App() {
                       <div 
                         key={log.id} 
                         onClick={() => setThumbnailOverrides(prev => ({ ...prev, [dateKey]: log.id }))}
-                        className={`shrink-0 w-[320px] p-4 border rounded-xl flex flex-col gap-3 shadow-2xs cursor-pointer transition-all ${
+                        className={`shrink-0 w-[440px] p-5 border rounded-xl flex flex-col gap-4 shadow-sm cursor-pointer transition-all ${
                           isThumbnail 
                             ? (isDarkMode ? 'border-2 border-amber-500 bg-amber-950/20 ring-2 ring-amber-500/20' : 'border-2 border-amber-500 bg-amber-50/20 ring-2 ring-amber-500/20')
                             : (isDarkMode ? 'border-zinc-700 bg-zinc-800/80 hover:border-zinc-500' : 'border-slate-200 bg-slate-50 hover:border-slate-400')
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 border rounded inline-block" style={{ color: getDotColor(log), borderColor: getDotColor(log) }}>{log.projectType}</span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isThumbnail ? 'bg-amber-500 text-white' : (isDarkMode ? 'bg-zinc-700 text-zinc-300' : 'bg-slate-200 text-slate-600')}`}>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border rounded inline-block" style={{ color: getDotColor(log), borderColor: getDotColor(log) }}>{log.projectType}</span>
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${isThumbnail ? 'bg-amber-500 text-white' : (isDarkMode ? 'bg-zinc-700 text-zinc-300' : 'bg-slate-200 text-slate-600')}`}>
                             {isThumbnail ? '★ Current Thumbnail' : 'Click to set as thumbnail'}
                           </span>
                         </div>
-                        {log.imageUrl && <img src={log.imageUrl} className={`max-h-[180px] rounded object-contain p-1 border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-slate-100'}`} alt="" />}
+                        {log.imageUrl && <img src={log.imageUrl} className={`max-h-[260px] w-full rounded object-contain p-1 border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-slate-100'}`} alt="" />}
                         <div>
-                          <h3 className={`text-sm font-bold ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>{log.title}</h3>
+                          <h3 className={`text-base font-bold ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>{log.title}</h3>
                         </div>
-                        {log.pageContent && <div className={`text-xs p-2 rounded border leading-normal whitespace-pre-wrap ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-300' : 'bg-white border-slate-150 text-slate-600'}`}>{log.pageContent}</div>}
+                        {log.pageContent && <div className={`text-xs p-3 rounded border leading-normal whitespace-pre-wrap ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-300' : 'bg-white border-slate-150 text-slate-600'}`}>{log.pageContent}</div>}
                       </div>
                     );
                   })
                 ) : (
-                  <div className={`text-center py-6 w-full italic text-xs ${isDarkMode ? 'text-zinc-500' : 'text-slate-400'}`}>No logged actions for this target date.</div>
+                  <div className={`text-center py-8 w-full italic text-sm ${isDarkMode ? 'text-zinc-500' : 'text-slate-400'}`}>No logged actions for this target date.</div>
                 )}
               </div>
             </div>
