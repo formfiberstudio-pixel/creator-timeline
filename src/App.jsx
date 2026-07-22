@@ -229,7 +229,7 @@ function App() {
   const month = currentDate.getMonth();
 
   const getDotColor = (log) => {
-    if (!log) return isDarkMode ? '#27272A' : '#E4E4E7';
+    if (!log) return isDarkMode ? '#3F3F46' : '#CBD5E1';
     const projName = log.Projects || 'Untitled Project';
     if (projectColorMap[projName]) {
       return projectColorMap[projName];
@@ -244,9 +244,8 @@ function App() {
     return '#3F3F46';
   };
 
-  // Resolves dot color, respecting hovered project multi-project override
   const getDisplayDotColor = (logs, dateObj) => {
-    if (!logs || logs.length === 0) return isDarkMode ? '#27272A' : '#E4E4E7';
+    if (!logs || logs.length === 0) return isDarkMode ? '#3F3F46' : '#CBD5E1';
     if (hoveredProjectTitle) {
       const matchingLog = logs.find(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
       if (matchingLog) {
@@ -546,12 +545,11 @@ function App() {
                 const baseTypeHex = projs[0]?.projectTypeColor && NOTION_COLOR_MAP[projs[0].projectTypeColor] 
                   ? NOTION_COLOR_MAP[projs[0].projectTypeColor] 
                   : (themeTokens?.colour?.dot?.[type]?.$value?.hex || '#7c7c7c');
-                const categoryTabBg = adjustHexColor(baseTypeHex, 90);
-                const categoryBorderColor = adjustHexColor(baseTypeHex, 60);
+                const categoryBorderColor = adjustHexColor(baseTypeHex, 40);
 
                 return (
-                  <div key={type} className="border rounded-md overflow-hidden shrink-0 shadow-2xs" style={{ backgroundColor: categoryTabBg, borderColor: categoryBorderColor }}>
-                    <div onClick={() => toggleTypeAccordion(type)} className="text-[10px] font-bold uppercase tracking-wider p-2.5 text-slate-800 flex items-center justify-between cursor-pointer hover:bg-black/5 transition-colors">
+                  <div key={type} className="border rounded-md overflow-hidden shrink-0 shadow-2xs bg-white" style={{ borderColor: categoryBorderColor }}>
+                    <div onClick={() => toggleTypeAccordion(type)} className="text-[10px] font-bold uppercase tracking-wider p-2.5 text-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
                       <span className="tracking-wide font-black">{type}</span>
                       <span className="text-[9px] font-mono opacity-60">{isHidden ? '▼' : '▲'}</span>
                     </div>
@@ -644,7 +642,7 @@ function App() {
                                 alt="" 
                               />
                             )}
-                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border ${hasLog ? 'border-white' : 'border-slate-200'} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{slot.dayNum}</div>
+                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border ${hasLog ? 'border-white' : 'border-slate-300'} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{slot.dayNum}</div>
                             {hasLog && primaryLog && <div className="relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/60 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{primaryLog.title}</div>}
                           </div>
                         );
@@ -692,7 +690,7 @@ function App() {
                             alt="" 
                           />
                         )}
-                        <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border ${hasLog ? 'border-white' : 'border-slate-200'} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{slot.dayNum}</div>
+                        <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border ${hasLog ? 'border-white' : 'border-slate-300'} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{slot.dayNum}</div>
                         {hasLog && primaryLog && <div className="relative z-10 text-[11px] font-bold text-white bg-black/60 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{primaryLog.title}</div>}
                       </div>
                       <div className="p-3 flex-1 overflow-y-auto min-h-0">
@@ -790,14 +788,14 @@ function App() {
 
                             const slotBackground = isHoveredWeekCell ? weekHighlightStyle : '';
 
-                            let dotStyles = 'border bg-white text-slate-400 font-normal hover:border-slate-400 hover:text-slate-600';
+                            let dotStyles = 'border bg-white text-slate-500 font-normal hover:border-slate-400 hover:text-slate-700';
                             if (hasLog) {
                               let ringClass = isStatHoliday ? 'ring-2 ring-amber-400/60' : isWeekend ? 'ring-2 ring-rose-400/50' : '';
                               if (isHoveredProject) ringClass = 'ring-2 ring-amber-500 scale-125 z-30';
                               dotStyles = `text-white font-bold border border-white shadow-xs scale-110 ${ringClass}`;
                             } else if (isStatHoliday) dotStyles = 'border border-amber-300 bg-white text-amber-600 font-medium hover:border-amber-400 hover:text-amber-700';
-                            else if (isWeekend) dotStyles = 'border border-rose-200 bg-white text-rose-500 font-medium hover:border-rose-300 hover:text-rose-600';
-                            else dotStyles = 'border border-slate-200 bg-white text-slate-400 font-normal';
+                            else if (isWeekend) dotStyles = 'border border-rose-300 bg-white text-rose-500 font-medium hover:border-rose-400 hover:text-rose-600';
+                            else dotStyles = 'border border-slate-300 bg-white text-slate-500 font-normal';
 
                             return (
                               <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${slotBackground}`}>
@@ -835,6 +833,9 @@ function App() {
                             {monthLabel}
                           </div>
                           <div className="grid gap-0.5 sm:gap-1 items-center relative h-full min-w-0" style={{ gridTemplateColumns: 'repeat(37, minmax(0, 1fr))' }}>
+                            {/* Connecting line behind month dots */}
+                            <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[1.5px] bg-slate-200 z-0 pointer-events-none" />
+
                             {Array.from({ length: 37 }).map((_, colIndex) => {
                               const weekIndex = Math.floor(colIndex / 7);
                               const isHoveredWeekCell = hoveredWeek?.mIdx === mIdx && hoveredWeek?.weekIndex === weekIndex;
@@ -859,14 +860,14 @@ function App() {
                               
                               const slotBackground = isHoveredWeekCell ? weekHighlightStyle : '';
                               
-                              let dotStyles = 'border bg-white text-slate-400 font-normal hover:border-slate-400 hover:text-slate-600';
+                              let dotStyles = 'border bg-white text-slate-500 font-normal hover:border-slate-400 hover:text-slate-700';
                               if (hasLog) {
                                 let ringClass = isStatHoliday ? 'ring-2 ring-amber-400/60' : isWeekend ? 'ring-2 ring-rose-400/50' : '';
                                 if (isHoveredProject) ringClass = 'ring-2 ring-amber-500 scale-125 z-30';
                                 dotStyles = `text-white font-bold border border-white shadow-xs scale-110 ${ringClass}`;
                               } else if (isStatHoliday) dotStyles = 'border border-amber-300 bg-white text-amber-600 font-medium hover:border-amber-400 hover:text-amber-700';
-                              else if (isWeekend) dotStyles = 'border border-rose-200 bg-white text-rose-500 font-medium hover:border-rose-300 hover:text-rose-600';
-                              else dotStyles = 'border border-slate-200 bg-white text-slate-400 font-normal';
+                              else if (isWeekend) dotStyles = 'border border-rose-300 bg-white text-rose-500 font-medium hover:border-rose-400 hover:text-rose-600';
+                              else dotStyles = 'border border-slate-300 bg-white text-slate-500 font-normal';
 
                               return (
                                 <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekRoundClass} ${slotBackground}`}>
