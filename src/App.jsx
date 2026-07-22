@@ -1099,7 +1099,7 @@ function App() {
 
                           {log.pageContent && (
                             <div className={`text-xs p-3 rounded border leading-normal whitespace-pre-wrap flex-1 overflow-hidden ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-300' : 'bg-white border-slate-200 text-slate-600'}`}>
-                              <div className="line-clamp-[8] text-ellipsis">
+                              <div className="line-clamp-[12] lg:line-clamp-[16] 2xl:line-clamp-[22] text-ellipsis">
                                 {log.pageContent}
                               </div>
                             </div>
