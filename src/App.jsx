@@ -111,22 +111,28 @@ function App() {
 
   // --- RESPONSIVE ROTATION VARS ---
   const [yearOrientationMode, setYearOrientationMode] = useState('auto'); // 'auto', 'landscape', 'portrait'
-  const [isPortraitFrame, setIsPortraitFrame] = useState(true);
+  const [calendarSize, setCalendarSize] = useState({ width: 0, height: 0 });
 
+  const calendarRef = useRef(null);
   const carouselRef = useRef(null);
 
   const [isDarkMode, setIsDarkMode] = useState(() => 
     window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
   );
 
-  // Resize Listener for Auto-Rotation
+  // Resize Observer for Calendar Container Dimension Tracking
   useEffect(() => {
-    const checkOrientation = () => {
-      setIsPortraitFrame(window.innerHeight > window.innerWidth);
-    };
-    checkOrientation();
-    window.addEventListener('resize', checkOrientation);
-    return () => window.removeEventListener('resize', checkOrientation);
+    if (!calendarRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setCalendarSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
+      }
+    });
+    observer.observe(calendarRef.current);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -137,7 +143,7 @@ function App() {
   }, []);
 
   const activeYearOrientation = yearOrientationMode === 'auto' 
-    ? (isPortraitFrame ? 'portrait' : 'landscape') 
+    ? (calendarSize.width >= calendarSize.height ? 'landscape' : 'portrait') 
     : yearOrientationMode;
 
   // -------------------------------------------------------------
@@ -593,7 +599,7 @@ function App() {
         )}
 
         {/* CALENDAR CANVAS (Adapts fluidly based on view) */}
-        <main className="flex-1 h-full min-h-0 min-w-0 bg-white border border-gray-200 rounded-xl shadow-sm p-4 overflow-hidden flex flex-col relative" style={{ borderRadius: `${cardRadius}px` }}>
+        <main ref={calendarRef} className="flex-1 h-full min-h-0 min-w-0 bg-white border border-gray-200 rounded-xl shadow-sm p-4 overflow-hidden flex flex-col relative" style={{ borderRadius: `${cardRadius}px` }}>
           
           {/* A. MONTH VIEW */}
           {viewMode === 'month' && (
@@ -712,7 +718,7 @@ function App() {
                 <button 
                   onClick={() => setYearOrientationMode('auto')}
                   className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'auto' ? 'bg-rose-50 text-rose-600' : 'hover:bg-slate-50'}`}
-                  title="Auto Rotate based on window size"
+                  title="Auto Switch based on container width vs height"
                 >
                   AUTO
                 </button>
@@ -735,7 +741,7 @@ function App() {
 
               {activeYearOrientation === 'portrait' ? (
                 /* --- PORTRAIT LAYOUT (Months on X, Days on Y) --- */
-                <div className="flex flex-col h-full w-full min-w-0 min-h-0 mt-8">
+                <div className="flex flex-col h-full w-full min-w-0 min-h-0 mt-8 relative">
                   <div className="grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center mb-2 border-b border-slate-100 pb-2 shrink-0">
                     <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 text-center">Day</div>
                     {MONTH_NAMES.map((monthLabel, mIdx) => (
@@ -749,14 +755,24 @@ function App() {
                     ))}
                   </div>
                   
-                  <div className="flex-1 flex flex-col justify-between min-h-0 min-w-0">
+                  <div className="flex-1 flex flex-col justify-between min-h-0 min-w-0 relative">
+                    {/* Background vertical connecting lines for portrait months */}
+                    <div className="absolute inset-0 grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] pointer-events-none z-0">
+                      <div />
+                      {MONTH_NAMES.map((_, mIdx) => (
+                        <div key={mIdx} className="relative h-full flex justify-center">
+                          <div className="absolute top-0 bottom-0 w-[1.5px] bg-slate-200" />
+                        </div>
+                      ))}
+                    </div>
+
                     {Array.from({ length: 37 }).map((_, rowIndex) => {
                       const weekdayStr = TIMELINE_WEEKDAYS[rowIndex % 7];
                       const isWeekendRow = weekdayStr === 'SUN' || weekdayStr === 'SAT';
                       const weekIndex = Math.floor(rowIndex / 7);
                       
                       return (
-                        <div key={rowIndex} className="flex-1 grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center min-h-0 border-b border-dashed border-slate-100/50 last:border-0">
+                        <div key={rowIndex} className="flex-1 grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center min-h-0 border-b border-dashed border-slate-100/50 last:border-0 relative z-10">
                           <div className="h-full flex items-center justify-center">
                              <div className={`w-full text-[8px] sm:text-[9px] font-black tracking-tight py-0.5 text-center rounded ${isWeekendRow ? 'text-rose-500 font-bold' : 'text-slate-400'}`}>
                                {weekdayStr.slice(0, 2)}
@@ -774,7 +790,7 @@ function App() {
                             const weekHighlightStyle = isHoveredWeekCell ? `bg-amber-100 border-x border-amber-300/80 z-20 ${rowIndex % 7 === 0 ? 'border-t rounded-t-md' : ''} ${rowIndex % 7 === 6 || rowIndex === 36 ? 'border-b rounded-b-md' : ''}` : '';
 
                             if (!isValidCalendarDay) {
-                              return <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full w-full flex items-center justify-center transition-colors cursor-pointer ${isHoveredWeekCell ? weekHighlightStyle : 'z-10'}`} />;
+                              return <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full w-full flex items-center justify-center transition-colors cursor-pointer ${isHoveredWeekCell ? weekHighlightStyle : ''}`} />;
                             }
 
                             const targetDate = new Date(year, mIdx, targetDayNum);
