@@ -73,6 +73,9 @@ function App() {
   const [selectedProjectFilters, setSelectedProjectFilters] = useState([]); 
   const [selectedLogModal, setSelectedLogModal] = useState(null); 
   
+  // Thumbnail overrides state: { 'YYYY-MM-DD': logId }
+  const [thumbnailOverrides, setThumbnailOverrides] = useState({});
+
   const [hoveredProjectTitle, setHoveredProjectTitle] = useState(null);
   const [hoveredWeek, setHoveredWeek] = useState(null);
   const [collapsedTypes, setCollapsedTypes] = useState({});
@@ -215,6 +218,30 @@ function App() {
       }
       return false;
     });
+  };
+
+  // Helper to determine active thumbnail log & halftone status for a date
+  const getThumbnailLogForDate = (dateObj, logs) => {
+    if (!logs || logs.length === 0) return { primaryLog: null, isHalftoned: false };
+    const dateKey = dateObj.toISOString().split('T')[0];
+
+    // If hovering over a project, check if this day has an entry for that project
+    if (hoveredProjectTitle) {
+      const matchingProjectLog = logs.find(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
+      if (matchingProjectLog) {
+        return { primaryLog: matchingProjectLog, isHalftoned: false };
+      } else {
+        // Day has logs, but none for the hovered project -> halftone (dim) the default thumbnail
+        const overrideId = thumbnailOverrides[dateKey];
+        const primaryLog = overrideId ? logs.find(l => l.id === overrideId) || logs[0] : logs[0];
+        return { primaryLog, isHalftoned: true };
+      }
+    }
+
+    // Normal state with user-selected thumbnail override
+    const overrideId = thumbnailOverrides[dateKey];
+    const primaryLog = overrideId ? logs.find(l => l.id === overrideId) || logs[0] : logs[0];
+    return { primaryLog, isHalftoned: false };
   };
 
   const getYearProjects = (targetYear) => {
@@ -517,21 +544,27 @@ function App() {
                         if (!slot.isValid) return <div key={slotIndex} className="h-full w-full opacity-5 bg-slate-200" style={{ borderRadius: `${cardRadius}px` }} />;
                         const logs = getLogsForDate(slot.dateObj);
                         const hasLog = logs.length > 0;
-                        const pLog = logs[0];
+                        const { primaryLog, isHalftoned } = getThumbnailLogForDate(slot.dateObj, logs);
                         const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
 
                         return (
                           <div 
                             key={slotIndex} 
                             onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
-                            onMouseEnter={() => { if (hasLog && pLog) setHoveredProjectTitle(pLog.Projects || 'Untitled Project'); }}
+                            onMouseEnter={() => { if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }}
                             onMouseLeave={() => setHoveredProjectTitle(null)}
                             className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all bg-white border-slate-200 hover:shadow-md ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.02] z-20 bg-amber-50/20' : isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`}
                             style={{ borderRadius: `${cardRadius}px` }}
                           >
-                            {hasLog && pLog.imageUrl && <img src={pLog.imageUrl} className="absolute inset-0 w-full h-full object-cover z-0" alt="" />}
-                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border border-white ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? getDotColor(pLog) : undefined }}>{slot.dayNum}</div>
-                            {hasLog && <div className="relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/60 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{pLog.title}</div>}
+                            {hasLog && primaryLog?.imageUrl && (
+                              <img 
+                                src={primaryLog.imageUrl} 
+                                className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-200 ${isHalftoned ? 'opacity-40 grayscale-[20%]' : ''}`} 
+                                alt="" 
+                              />
+                            )}
+                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border border-white ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? getDotColor(primaryLog) : undefined }}>{slot.dayNum}</div>
+                            {hasLog && primaryLog && <div className="relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/60 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{primaryLog.title}</div>}
                           </div>
                         );
                       })}
@@ -555,7 +588,7 @@ function App() {
                 {slots.map((slot, index) => {
                   const logs = getLogsForDate(slot.dateObj);
                   const hasLog = logs.length > 0;
-                  const pLog = logs[0];
+                  const { primaryLog, isHalftoned } = getThumbnailLogForDate(slot.dateObj, logs);
                   const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
 
                   return (
@@ -566,16 +599,22 @@ function App() {
                     >
                       <div 
                         onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
-                        onMouseEnter={() => { if (hasLog && pLog) setHoveredProjectTitle(pLog.Projects || 'Untitled Project'); }}
+                        onMouseEnter={() => { if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }}
                         onMouseLeave={() => setHoveredProjectTitle(null)}
                         className={`relative h-[120px] shrink-0 overflow-hidden p-3 border-b border-slate-100 cursor-pointer flex flex-col justify-end transition-all ${isHoveredProject ? 'bg-amber-50/20' : ''}`}
                       >
-                        {hasLog && pLog.imageUrl && <img src={pLog.imageUrl} className="absolute inset-0 w-full h-full object-cover z-0" alt="" />}
-                        <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border border-white ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? getDotColor(pLog) : undefined }}>{slot.dayNum}</div>
-                        {hasLog && <div className="relative z-10 text-[11px] font-bold text-white bg-black/60 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{pLog.title}</div>}
+                        {hasLog && primaryLog?.imageUrl && (
+                          <img 
+                            src={primaryLog.imageUrl} 
+                            className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-200 ${isHalftoned ? 'opacity-40 grayscale-[20%]' : ''}`} 
+                            alt="" 
+                          />
+                        )}
+                        <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border border-white ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? getDotColor(primaryLog) : undefined }}>{slot.dayNum}</div>
+                        {hasLog && primaryLog && <div className="relative z-10 text-[11px] font-bold text-white bg-black/60 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{primaryLog.title}</div>}
                       </div>
                       <div className="p-3 flex-1 overflow-y-auto min-h-0">
-                        {hasLog && pLog.pageContent && <p className="text-[11px] text-slate-500 leading-normal whitespace-pre-wrap">{pLog.pageContent}</p>}
+                        {hasLog && primaryLog?.pageContent && <p className="text-[11px] text-slate-500 leading-normal whitespace-pre-wrap">{primaryLog.pageContent}</p>}
                       </div>
                     </div>
                   );
@@ -816,45 +855,64 @@ function App() {
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* DETAIL LOG MODAL */}
+      {/* DETAIL LOG MODAL (WITH THUMBNAIL SELECTOR) */}
       {/* ------------------------------------------------------------- */}
-      {selectedLogModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs" onClick={() => setSelectedLogModal(null)}>
-          <div className="w-full max-w-2xl max-h-[80vh] bg-white rounded-xl flex flex-col overflow-hidden shadow-xl border border-slate-200" onClick={(e) => e.stopPropagation()}>
-            <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold text-rose-500 tracking-wider">
-                  {selectedLogModal.dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
-                </span>
-                {getOntarioStatHolidayName(selectedLogModal.dateObj) && (
-                  <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
-                    <span>—</span>
-                    <span>{getOntarioStatHolidayName(selectedLogModal.dateObj)}</span>
+      {selectedLogModal && (() => {
+        const dateKey = selectedLogModal.dateObj.toISOString().split('T')[0];
+        const currentThumbId = thumbnailOverrides[dateKey] || (selectedLogModal.logs[0]?.id);
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs" onClick={() => setSelectedLogModal(null)}>
+            <div className="w-full max-w-3xl max-h-[85vh] bg-white rounded-xl flex flex-col overflow-hidden shadow-xl border border-slate-200" onClick={(e) => e.stopPropagation()}>
+              <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-rose-500 tracking-wider">
+                    {selectedLogModal.dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
+                  {getOntarioStatHolidayName(selectedLogModal.dateObj) && (
+                    <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+                      <span>—</span>
+                      <span>{getOntarioStatHolidayName(selectedLogModal.dateObj)}</span>
+                    </span>
+                  )}
+                </div>
+                <button onClick={() => setSelectedLogModal(null)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
+              </div>
+              
+              <div className="p-5 overflow-x-auto flex gap-4 min-h-0 items-start" ref={carouselRef}>
+                {selectedLogModal.logs.length > 0 ? (
+                  selectedLogModal.logs.map((log) => {
+                    const isThumbnail = log.id === currentThumbId;
+                    return (
+                      <div 
+                        key={log.id} 
+                        onClick={() => setThumbnailOverrides(prev => ({ ...prev, [dateKey]: log.id }))}
+                        className={`shrink-0 w-[320px] p-4 border rounded-xl bg-slate-50 flex flex-col gap-3 shadow-2xs cursor-pointer transition-all ${
+                          isThumbnail ? 'border-2 border-amber-500 bg-amber-50/20 ring-2 ring-amber-500/20' : 'border-slate-200 hover:border-slate-400'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 border rounded inline-block" style={{ color: getDotColor(log), borderColor: getDotColor(log) }}>{log.projectType}</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isThumbnail ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                            {isThumbnail ? '★ Current Thumbnail' : 'Click to set as thumbnail'}
+                          </span>
+                        </div>
+                        {log.imageUrl && <img src={log.imageUrl} className="max-h-[180px] rounded object-contain bg-white border border-slate-100 p-1" alt="" />}
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-800">{log.title}</h3>
+                        </div>
+                        {log.pageContent && <div className="text-xs text-slate-600 p-2 bg-white rounded border border-slate-150 whitespace-pre-wrap leading-normal">{log.pageContent}</div>}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-6 w-full text-slate-400 italic text-xs">No logged actions for this target date.</div>
                 )}
               </div>
-              <button onClick={() => setSelectedLogModal(null)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
-            </div>
-            
-            <div className="p-5 overflow-x-auto flex gap-4 min-h-0" ref={carouselRef}>
-              {selectedLogModal.logs.length > 0 ? (
-                selectedLogModal.logs.map((log, idx) => (
-                  <div key={idx} className="shrink-0 w-[320px] p-4 border border-slate-200 rounded-xl bg-slate-50 flex flex-col gap-3 shadow-2xs overflow-y-auto">
-                    {log.imageUrl && <img src={log.imageUrl} className="max-h-[180px] rounded object-contain" alt="" />}
-                    <div>
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 border rounded inline-block mb-1" style={{ color: getDotColor(log), borderColor: getDotColor(log) }}>{log.projectType}</span>
-                      <h3 className="text-sm font-bold text-slate-800">{log.title}</h3>
-                    </div>
-                    {log.pageContent && <div className="text-xs text-slate-600 p-2 bg-white rounded border border-slate-150 whitespace-pre-wrap leading-normal">{log.pageContent}</div>}
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-6 w-full text-slate-400 italic text-xs">No logged actions for this target date.</div>
-              )}
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
