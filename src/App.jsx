@@ -90,6 +90,7 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedProjectFilters, setSelectedProjectFilters] = useState([]); 
   const [selectedLogModal, setSelectedLogModal] = useState(null); 
+  const [modalRowIndex, setModalRowIndex] = useState(0);
   
   // Thumbnail overrides state: { 'YYYY-MM-DD': logId }
   const [thumbnailOverrides, setThumbnailOverrides] = useState({});
@@ -115,7 +116,6 @@ function App() {
 
   const appRef = useRef(null);
   const calendarRef = useRef(null);
-  const carouselRef = useRef(null);
 
   const [isDarkMode, setIsDarkMode] = useState(() => 
     window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -650,7 +650,7 @@ function App() {
                         return (
                           <div 
                             key={slotIndex} 
-                            onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
+                            onClick={() => { setModalRowIndex(0); slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs }); }}
                             onMouseEnter={() => { if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }}
                             onMouseLeave={() => setHoveredProjectTitle(null)}
                             className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all shadow-2xs ${isDarkMode ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' : 'bg-white border-slate-200 hover:shadow-md'} ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.02] z-20 bg-amber-500/10' : isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`}
@@ -699,7 +699,7 @@ function App() {
                       style={{ borderRadius: `${cardRadius}px` }}
                     >
                       <div 
-                        onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
+                        onClick={() => { setModalRowIndex(0); slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs }); }}
                         onMouseEnter={() => { if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }}
                         onMouseLeave={() => setHoveredProjectTitle(null)}
                         className={`relative h-[120px] shrink-0 overflow-hidden p-3 border-b cursor-pointer flex flex-col justify-end transition-all ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'} ${isHoveredProject ? 'bg-amber-500/10' : ''}`}
@@ -838,7 +838,7 @@ function App() {
 
                             return (
                               <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${slotBackground}`}>
-                                <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{targetDayNum}</div>
+                                <div onClick={(e) => { e.stopPropagation(); setModalRowIndex(0); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{targetDayNum}</div>
                               </div>
                             );
                           })}
@@ -914,7 +914,7 @@ function App() {
 
                               return (
                                 <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekRoundClass} ${slotBackground}`}>
-                                  <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{targetDayNum}</div>
+                                  <div onClick={(e) => { e.stopPropagation(); setModalRowIndex(0); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{targetDayNum}</div>
                                 </div>
                               );
                             })}
@@ -982,15 +982,21 @@ function App() {
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* DETAIL LOG MODAL (PROPORTIONAL FRAME SIZING & CONSISTENT BUFFERS) */}
+      {/* DETAIL LOG MODAL (GRID WRAP, ZERO SCROLLBARS & ROW ARROW NAV) */}
       {/* ------------------------------------------------------------- */}
       {selectedLogModal && (() => {
         const dateKey = selectedLogModal.dateObj.toISOString().split('T')[0];
         const currentThumbId = thumbnailOverrides[dateKey] || (selectedLogModal.logs[0]?.id);
+        const logs = selectedLogModal.logs;
+        const itemsPerRow = 3;
+        const totalRows = Math.ceil(logs.length / itemsPerRow);
+        const currentRowLogs = logs.slice(modalRowIndex * itemsPerRow, (modalRowIndex + 1) * itemsPerRow);
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6 sm:p-8 bg-black/70 backdrop-blur-xs" onClick={() => setSelectedLogModal(null)}>
             <div className={`w-[90%] max-w-[1300px] h-[85%] max-h-[850px] rounded-2xl flex flex-col overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} onClick={(e) => e.stopPropagation()}>
+              
+              {/* Modal Header */}
               <div className={`px-6 py-4 border-b flex items-center justify-between shrink-0 ${isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-bold text-rose-500 tracking-wider">
@@ -1006,15 +1012,16 @@ function App() {
                 <button onClick={() => setSelectedLogModal(null)} className={`font-bold cursor-pointer text-base ${isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-slate-400 hover:text-slate-600'}`}>✕</button>
               </div>
               
-              <div className="p-6 sm:p-8 overflow-x-auto flex gap-6 min-h-0 items-start flex-1" ref={carouselRef}>
-                {selectedLogModal.logs.length > 0 ? (
-                  selectedLogModal.logs.map((log) => {
+              {/* Modal Body Grid (Zero Scrollbars, Dynamic Filling Cards) */}
+              <div className="p-6 sm:p-8 flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-start overflow-hidden relative">
+                {currentRowLogs.length > 0 ? (
+                  currentRowLogs.map((log) => {
                     const isThumbnail = log.id === currentThumbId;
                     return (
                       <div 
                         key={log.id} 
                         onClick={() => setThumbnailOverrides(prev => ({ ...prev, [dateKey]: log.id }))}
-                        className={`shrink-0 w-[420px] sm:w-[460px] p-5 sm:p-6 border rounded-xl flex flex-col gap-4 shadow-sm cursor-pointer transition-all ${
+                        className={`h-full flex flex-col p-5 sm:p-6 border rounded-xl gap-4 shadow-sm cursor-pointer transition-all ${
                           isThumbnail 
                             ? (isDarkMode ? 'border-2 border-amber-500 bg-amber-950/20 ring-2 ring-amber-500/20' : 'border-2 border-amber-500 bg-amber-50/20 ring-2 ring-amber-500/20')
                             : (isDarkMode ? 'border-zinc-700 bg-zinc-800/80 hover:border-zinc-500' : 'border-slate-200 bg-slate-50 hover:border-slate-400')
@@ -1026,18 +1033,38 @@ function App() {
                             {isThumbnail ? '★ Current Thumbnail' : 'Click to set as thumbnail'}
                           </span>
                         </div>
-                        {log.imageUrl && <img src={log.imageUrl} className={`max-h-[260px] w-full rounded object-contain p-1 border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-slate-100'}`} alt="" />}
+                        {log.imageUrl && <img src={log.imageUrl} className={`max-h-[200px] w-full rounded object-contain p-1 border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-slate-100'}`} alt="" />}
                         <div>
                           <h3 className={`text-base font-bold ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>{log.title}</h3>
                         </div>
-                        {log.pageContent && <div className={`text-xs p-3 rounded border leading-normal whitespace-pre-wrap ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-300' : 'bg-white border-slate-150 text-slate-600'}`}>{log.pageContent}</div>}
+                        {log.pageContent && <div className={`text-xs p-3 rounded border leading-normal whitespace-pre-wrap flex-1 overflow-hidden ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-300' : 'bg-white border-slate-150 text-slate-600'}`}>{log.pageContent}</div>}
                       </div>
                     );
                   })
                 ) : (
-                  <div className={`text-center py-8 w-full italic text-sm ${isDarkMode ? 'text-zinc-500' : 'text-slate-400'}`}>No logged actions for this target date.</div>
+                  <div className={`col-span-3 text-center py-12 w-full italic text-sm ${isDarkMode ? 'text-zinc-500' : 'text-slate-400'}`}>No logged actions for this target date.</div>
                 )}
               </div>
+
+              {/* Modal Footer (Row Arrow Navigation if multiple rows exist) */}
+              {totalRows > 1 && (
+                <div className={`px-6 py-3 border-t flex items-center justify-between shrink-0 ${isDarkMode ? 'bg-zinc-800/50 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
+                  <span className={`text-xs font-semibold ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
+                    Row {modalRowIndex + 1} of {totalRows}
+                  </span>
+                  <button 
+                    onClick={() => setModalRowIndex((prev) => (prev + 1) % totalRows)}
+                    title="Move to next row"
+                    className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all cursor-pointer shadow-xs ${
+                      isDarkMode 
+                        ? 'bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-rose-600 hover:border-rose-600 hover:text-white' 
+                        : 'bg-white border-slate-300 text-slate-700 hover:bg-rose-500 hover:border-rose-500 hover:text-white'
+                    }`}
+                  >
+                    ↓
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );
