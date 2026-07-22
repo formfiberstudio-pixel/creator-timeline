@@ -982,7 +982,7 @@ function App() {
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* DETAIL LOG MODAL (FULL IMAGE FILL, CHEVRON ARROWS & POP-UP) */}
+      {/* DETAIL LOG MODAL (DYNAMIC GRID FRACTIONS & NOTION PVS LINK) */}
       {/* ------------------------------------------------------------- */}
       {selectedLogModal && (() => {
         const dateKey = selectedLogModal.dateObj.toISOString().split('T')[0];
@@ -991,7 +991,9 @@ function App() {
 
         const scrollCarousel = (direction) => {
           if (!modalCarouselRef.current) return;
-          const scrollAmount = 450;
+          const firstChild = modalCarouselRef.current.firstElementChild;
+          // Scroll accurately by measuring the first card's actual width + 24px gap
+          const scrollAmount = firstChild ? firstChild.clientWidth + 24 : 450;
           modalCarouselRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
         };
 
@@ -1035,22 +1037,26 @@ function App() {
                   </button>
                 )}
 
-                {/* Horizontal Scroll Area */}
+                {/* Horizontal Scroll Area (Dynamic Math Flex-basis) */}
                 <div 
                   ref={modalCarouselRef} 
-                  className="w-full h-full flex gap-6 overflow-x-auto scroll-smooth items-stretch select-none"
+                  className="w-full h-full flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory items-stretch select-none"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {logs.length > 0 ? (
                     logs.map((log) => {
                       const isThumbnail = log.id === currentThumbId;
-                      const notionPageUrl = log.url || `https://www.notion.so/${log.id.replace(/-/g, '')}`;
+                      const baseUrl = log.url || `https://www.notion.so/${log.id.replace(/-/g, '')}`;
+                      
+                      // Inject pvs=4 to trigger Notion's "Center Peek" view overlay when intercepting the URL natively
+                      const notionPageUrl = baseUrl.includes('?') ? `${baseUrl}&pvs=4` : `${baseUrl}?pvs=4`;
 
                       return (
                         <div 
                           key={log.id} 
                           onClick={() => setThumbnailOverrides(prev => ({ ...prev, [dateKey]: log.id }))}
-                          className={`shrink-0 w-[420px] sm:w-[460px] h-full my-auto flex flex-col p-5 sm:p-6 border rounded-xl gap-4 shadow-sm cursor-pointer transition-all ${
+                          // Fluid calc rules: 1 card wide on mobile, 2 cards perfectly on sm screens, 3 cards on lg screens
+                          className={`shrink-0 w-full sm:w-[calc((100%-24px)/2)] lg:w-[calc((100%-48px)/3)] snap-start h-full my-auto flex flex-col p-5 sm:p-6 border rounded-xl gap-4 shadow-sm cursor-pointer transition-all ${
                             isThumbnail 
                               ? (isDarkMode ? 'border-2 border-amber-500 bg-amber-950/20 ring-2 ring-amber-500/20' : 'border-2 border-amber-500 bg-amber-50/20 ring-2 ring-amber-500/20')
                               : (isDarkMode ? 'border-zinc-700 bg-zinc-800/80 hover:border-zinc-500' : 'border-slate-200 bg-slate-50 hover:border-slate-400')
@@ -1073,22 +1079,21 @@ function App() {
 
                           <div className="flex items-center justify-between gap-2">
                             <h3 className={`text-base font-bold truncate ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>{log.title}</h3>
-                            <button 
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(notionPageUrl, 'NotionModalPopup', 'width=920,height=720,resizable=yes,scrollbars=yes');
-                              }}
-                              className={`text-xs font-semibold px-2.5 py-1 rounded border shrink-0 flex items-center gap-1 transition-colors cursor-pointer ${
+                            <a 
+                              href={notionPageUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              onClick={(e) => e.stopPropagation()}
+                              className={`text-xs font-semibold px-2.5 py-1 rounded border shrink-0 flex items-center gap-1 transition-colors ${
                                 isDarkMode 
                                   ? 'bg-zinc-800 border-zinc-700 text-rose-400 hover:bg-rose-950/40 hover:border-rose-700' 
                                   : 'bg-white border-slate-300 text-rose-600 hover:bg-rose-50 hover:border-rose-300'
                               }`}
-                              title="Open original page in Notion pop-up"
+                              title="Open in Notion Center Peek"
                             >
                               <span>Open in Notion</span>
                               <span className="text-[10px]">↗</span>
-                            </button>
+                            </a>
                           </div>
 
                           {log.pageContent && (
