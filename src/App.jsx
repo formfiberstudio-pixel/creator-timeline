@@ -21,7 +21,7 @@ const MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SE
 const TIMELINE_WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 // -------------------------------------------------------------
-// HELPER: HEX COLOR SHADE ADJUSTMENT FOR PROJECT GRADIENTS
+// HELPER: HEX COLOR SHADE ADJUSTMENT (WITH CONTRAST SAFEGUARD)
 // -------------------------------------------------------------
 const adjustHexColor = (hex, percent) => {
   if (!hex || !hex.startsWith('#')) return hex;
@@ -32,9 +32,9 @@ const adjustHexColor = (hex, percent) => {
   let B = (num & 0x0000FF) + amt;
   return '#' + (
     0x1000000 +
-    (R < 255 ? (R < 0 ? 0 : R) : 255) * 0x10000 +
-    (G < 255 ? (G < 0 ? 0 : G) : 255) * 0x100 +
-    (B < 255 ? (B < 0 ? 0 : B) : 255)
+    (R < 230 ? (R < 15 ? 15 : R) : 230) * 0x10000 +
+    (G < 230 ? (G < 15 ? 15 : G) : 230) * 0x100 +
+    (B < 230 ? (B < 15 ? 15 : B) : 230)
   ).toString(16).slice(1);
 };
 
@@ -195,7 +195,6 @@ function App() {
       const projs = Array.from(projSet).sort();
       const total = projs.length;
       
-      // Determine base hex for this project type
       let baseHex = '#3F3F46';
       const sampleLog = logs.find(l => (l.projectType || 'General') === type);
       if (sampleLog?.projectTypeColor && NOTION_COLOR_MAP[sampleLog.projectTypeColor]) {
@@ -205,8 +204,7 @@ function App() {
       }
 
       projs.forEach((proj, idx) => {
-        // Distribute lightness gradient from -20% to +20% across projects in this type
-        const percent = total <= 1 ? 0 : -20 + (idx / (total - 1)) * 40;
+        const percent = total <= 1 ? 0 : -15 + (idx / (total - 1)) * 25;
         newColorMap[proj] = adjustHexColor(baseHex, percent);
       });
     });
@@ -281,12 +279,10 @@ function App() {
     });
   };
 
-  // Helper to determine active thumbnail log & halftone status for a date
   const getThumbnailLogForDate = (dateObj, logs) => {
     if (!logs || logs.length === 0) return { primaryLog: null, isHalftoned: false };
     const dateKey = dateObj.toISOString().split('T')[0];
 
-    // If hovering over a project, check if this day has an entry for that project
     if (hoveredProjectTitle) {
       const matchingProjectLog = logs.find(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
       if (matchingProjectLog) {
@@ -534,21 +530,26 @@ function App() {
             <div className="flex-1 overflow-y-auto pr-1 space-y-3 min-h-0">
               {Object.entries(groupedProjects).map(([type, projs]) => {
                 const isHidden = collapsedTypes[type] === true;
+                const baseTypeHex = projs[0]?.projectTypeColor && NOTION_COLOR_MAP[projs[0].projectTypeColor] 
+                  ? NOTION_COLOR_MAP[projs[0].projectTypeColor] 
+                  : (themeTokens?.colour?.dot?.[type]?.$value?.hex || '#7c7c7c');
+                const categoryTabBg = adjustHexColor(baseTypeHex, 90);
+                const categoryBorderColor = adjustHexColor(baseTypeHex, 60);
+
                 return (
-                  <div key={type} className="border border-slate-200 rounded-md bg-slate-50/50 overflow-hidden shrink-0">
-                    <div onClick={() => toggleTypeAccordion(type)} className="text-[10px] font-bold uppercase tracking-wider p-2 text-slate-500 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-colors">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: projs[0]?.projectTypeColor && NOTION_COLOR_MAP[projs[0].projectTypeColor] ? NOTION_COLOR_MAP[projs[0].projectTypeColor] : '#7c7c7c' }} />
-                        {type}
-                      </div>
+                  <div key={type} className="border rounded-md overflow-hidden shrink-0 shadow-2xs" style={{ backgroundColor: categoryTabBg, borderColor: categoryBorderColor }}>
+                    <div onClick={() => toggleTypeAccordion(type)} className="text-[10px] font-bold uppercase tracking-wider p-2.5 text-slate-800 flex items-center justify-between cursor-pointer hover:bg-black/5 transition-colors">
+                      <span className="tracking-wide font-black">{type}</span>
                       <span className="text-[9px] font-mono opacity-60">{isHidden ? '▼' : '▲'}</span>
                     </div>
                     {!isHidden && (
-                      <div className="p-2 pt-0 space-y-1.5 border-t border-slate-150">
+                      <div className="p-2 pt-0 space-y-1.5 border-t bg-white" style={{ borderColor: categoryBorderColor }}>
                         {projs.map((p, i) => {
                           const isSelected = selectedProjectFilters.includes(p.title);
                           const dynamicFilterActive = selectedProjectFilters.length > 0;
                           const isHovered = hoveredProjectTitle === p.title;
+                          const projectDotHex = projectColorMap[p.title] || baseTypeHex;
+
                           let cardStyles = 'border-slate-300 font-medium text-slate-800 shadow-2xs hover:border-amber-400';
                           
                           if (isHovered) {
@@ -559,8 +560,15 @@ function App() {
                               : 'border-slate-200 opacity-30 font-normal text-slate-400 hover:opacity-60';
                           }
                           return (
-                            <div key={i} onClick={() => toggleProjectFilter(p.title)} onMouseEnter={() => setHoveredProjectTitle(p.title)} onMouseLeave={() => setHoveredProjectTitle(null)} className={`text-xs p-2.5 rounded border transition-all cursor-pointer bg-white ${cardStyles}`}>
-                              {p.title}
+                            <div 
+                              key={i} 
+                              onClick={() => toggleProjectFilter(p.title)} 
+                              onMouseEnter={() => setHoveredProjectTitle(p.title)} 
+                              onMouseLeave={() => setHoveredProjectTitle(null)} 
+                              className={`text-xs p-2.5 rounded border transition-all cursor-pointer bg-white flex items-center gap-2 ${cardStyles}`}
+                            >
+                              <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-white shadow-2xs" style={{ backgroundColor: projectDotHex }} />
+                              <span className="truncate">{p.title}</span>
                             </div>
                           );
                         })}
