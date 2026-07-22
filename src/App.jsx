@@ -450,7 +450,7 @@ function App() {
   // -------------------------------------------------------------
   return (
     <div className={`w-full h-screen flex flex-col p-4 sm:p-6 overflow-hidden select-none transition-colors duration-300 ${
-      isDarkMode ? 'bg-[#0B0B0C] text-white' : 'bg-slate-50 text-slate-900'
+      isDarkMode ? 'bg-[#191919] text-zinc-100' : 'bg-slate-50 text-slate-900'
     }`}>
       
       {/* HEADER */}
@@ -475,14 +475,18 @@ function App() {
               <span className="text-rose-500">{year}</span> Projects Overview
             </h1>
           )}
-          <p className={`text-sm mt-1 ${isDarkMode ? 'text-zinc-500' : 'text-slate-500'}`}>Driven by Figma Tokens & Notion Data.</p>
+          <p className={`text-sm mt-1 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Driven by Figma Tokens & Notion Data.</p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowSettings(true)}
             title="Notion Integration Settings"
-            className="px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 bg-white text-slate-600 border-slate-300 shadow-xs hover:bg-slate-50"
+            className={`px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-xs transition-colors ${
+              isDarkMode 
+                ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' 
+                : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+            }`}
           >
             <span>⚙️</span><span>Settings</span>
           </button>
@@ -490,7 +494,9 @@ function App() {
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className={`px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 ${
-              isSidebarOpen ? 'bg-zinc-800 text-white border-zinc-700' : 'bg-white text-slate-600 border-slate-300 shadow-xs'
+              isSidebarOpen 
+                ? (isDarkMode ? 'bg-zinc-700 text-zinc-100 border-zinc-600' : 'bg-zinc-800 text-white border-zinc-700') 
+                : (isDarkMode ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' : 'bg-white text-slate-600 border-slate-300 shadow-xs hover:bg-slate-50')
             }`}
           >
             <span>📁</span><span>{isSidebarOpen ? 'Hide Projects' : 'Projects'}</span>
@@ -498,27 +504,31 @@ function App() {
 
           <button
             onClick={() => setCurrentDate(today)}
-            className="px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 cursor-pointer"
+            className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 border cursor-pointer ${
+              isDarkMode 
+                ? 'bg-rose-950/40 text-rose-400 border-rose-800/60 hover:bg-rose-900/50' 
+                : 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100'
+            }`}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />Today
           </button>
 
-          <div className={`flex items-center p-0.5 rounded-lg border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-slate-200 border-slate-300'}`}>
-            <button onClick={() => setViewMode('year')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'year' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-zinc-400'}`}>Year</button>
-            <button onClick={() => setViewMode('month')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'month' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-zinc-400'}`}>Month</button>
-            <button onClick={() => setViewMode('week')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'week' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-zinc-400'}`}>Week</button>
+          <div className={`flex items-center p-0.5 rounded-lg border ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-slate-200 border-slate-300'}`}>
+            <button onClick={() => setViewMode('year')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'year' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-xs font-bold' : 'bg-white text-slate-900 shadow-xs font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Year</button>
+            <button onClick={() => setViewMode('month')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'month' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-xs font-bold' : 'bg-white text-slate-900 shadow-xs font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Month</button>
+            <button onClick={() => setViewMode('week')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'week' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-xs font-bold' : 'bg-white text-slate-900 shadow-xs font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Week</button>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button onClick={handlePrev} className="px-3 py-1.5 text-xs font-semibold border rounded-md bg-white text-slate-700 border-slate-300 hover:bg-slate-100 cursor-pointer">← Prev</button>
-            <button onClick={handleNext} className="px-3 py-1.5 text-xs font-semibold border rounded-md bg-white text-slate-700 border-slate-300 hover:bg-slate-100 cursor-pointer">Next →</button>
+            <button onClick={handlePrev} className={`px-3 py-1.5 text-xs font-semibold border rounded-md cursor-pointer transition-colors ${isDarkMode ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}>← Prev</button>
+            <button onClick={handleNext} className={`px-3 py-1.5 text-xs font-semibold border rounded-md cursor-pointer transition-colors ${isDarkMode ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}>Next →</button>
           </div>
         </div>
       </header>
 
       {/* GLOBAL LOADING / ERROR ALERTS */}
       {isLoading && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40 bg-white/90 backdrop-blur border border-slate-200 px-6 py-3 rounded-full shadow-lg flex items-center gap-3 text-sm font-semibold text-slate-700">
+        <div className={`absolute top-20 left-1/2 -translate-x-1/2 z-40 backdrop-blur border px-6 py-3 rounded-full shadow-lg flex items-center gap-3 text-sm font-semibold ${isDarkMode ? 'bg-zinc-900/90 border-zinc-700 text-zinc-200' : 'bg-white/90 border-slate-200 text-slate-700'}`}>
           <span className="w-4 h-4 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
           Syncing Notion Data...
         </div>
@@ -535,13 +545,13 @@ function App() {
         
         {/* SIDEBAR */}
         {isSidebarOpen && (
-          <aside className="w-[260px] shrink-0 h-full flex flex-col p-4 rounded-xl border bg-white border-slate-200 shadow-xs" style={{ borderRadius: `${cardRadius}px` }}>
+          <aside className={`w-[260px] shrink-0 h-full flex flex-col p-4 rounded-xl border shadow-xs ${isDarkMode ? 'bg-[#191919] border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} style={{ borderRadius: `${cardRadius}px` }}>
             <div className="mb-3 shrink-0">
-              <h2 className="text-sm font-bold text-slate-800 mb-2">Categories</h2>
-              <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-slate-100">
-                <button onClick={handleExpandAllCategories} className="text-[10px] font-bold text-slate-500 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 px-2 py-1 rounded cursor-pointer">Expand All</button>
-                <button onClick={handleCollapseAllCategories} className="text-[10px] font-bold text-slate-500 hover:text-rose-500 bg-slate-100 hover:bg-rose-50 px-2 py-1 rounded cursor-pointer">Collapse All</button>
-                <button onClick={handleShowAllFilters} className="text-[10px] font-bold text-rose-600 hover:bg-rose-100 bg-rose-50 px-2 py-1 rounded cursor-pointer ml-auto">Show All</button>
+              <h2 className={`text-sm font-bold mb-2 ${isDarkMode ? 'text-zinc-200' : 'text-slate-800'}`}>Categories</h2>
+              <div className={`flex flex-wrap items-center gap-1.5 pb-2 border-b ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
+                <button onClick={handleExpandAllCategories} className={`text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors ${isDarkMode ? 'text-zinc-400 hover:text-rose-400 bg-zinc-800 hover:bg-rose-950/40' : 'text-slate-500 hover:text-rose-500 bg-slate-100 hover:bg-rose-50'}`}>Expand All</button>
+                <button onClick={handleCollapseAllCategories} className={`text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors ${isDarkMode ? 'text-zinc-400 hover:text-rose-400 bg-zinc-800 hover:bg-rose-950/40' : 'text-slate-500 hover:text-rose-500 bg-slate-100 hover:bg-rose-50'}`}>Collapse All</button>
+                <button onClick={handleShowAllFilters} className={`text-[10px] font-bold px-2 py-1 rounded cursor-pointer ml-auto transition-colors ${isDarkMode ? 'text-rose-400 hover:bg-rose-950/50 bg-rose-950/30' : 'text-rose-600 hover:bg-rose-100 bg-rose-50'}`}>Show All</button>
               </div>
             </div>
             
@@ -554,27 +564,31 @@ function App() {
                 const categoryBorderColor = adjustHexColor(baseTypeHex, 40);
 
                 return (
-                  <div key={type} className="border rounded-md overflow-hidden shrink-0 shadow-2xs bg-white" style={{ borderColor: categoryBorderColor }}>
-                    <div onClick={() => toggleTypeAccordion(type)} className="text-[10px] font-bold uppercase tracking-wider p-2.5 text-slate-800 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
+                  <div key={type} className={`border rounded-md overflow-hidden shrink-0 shadow-2xs ${isDarkMode ? 'bg-[#191919]' : 'bg-white'}`} style={{ borderColor: categoryBorderColor }}>
+                    <div onClick={() => toggleTypeAccordion(type)} className={`text-[10px] font-bold uppercase tracking-wider p-2.5 flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800/60' : 'text-slate-800 hover:bg-slate-50'}`}>
                       <span className="tracking-wide font-black">{type}</span>
                       <span className="text-[9px] font-mono opacity-60">{isHidden ? '▼' : '▲'}</span>
                     </div>
                     {!isHidden && (
-                      <div className="p-2 pt-0 space-y-1.5 border-t bg-white" style={{ borderColor: categoryBorderColor }}>
+                      <div className={`p-2 pt-0 space-y-1.5 border-t ${isDarkMode ? 'bg-[#191919]' : 'bg-white'}`} style={{ borderColor: categoryBorderColor }}>
                         {projs.map((p, i) => {
                           const isSelected = selectedProjectFilters.includes(p.title);
                           const dynamicFilterActive = selectedProjectFilters.length > 0;
                           const isHovered = hoveredProjectTitle === p.title;
                           const projectDotHex = projectColorMap[p.title] || baseTypeHex;
 
-                          let cardStyles = 'border-slate-300 font-medium text-slate-800 shadow-2xs hover:border-amber-400';
+                          let cardStyles = isDarkMode 
+                            ? 'border-zinc-700 bg-zinc-800/80 font-medium text-zinc-200 shadow-2xs hover:border-amber-400' 
+                            : 'border-slate-300 bg-white font-medium text-slate-800 shadow-2xs hover:border-amber-400';
                           
                           if (isHovered) {
-                            cardStyles = 'border-amber-500 bg-amber-50 font-bold text-amber-800 shadow-sm ring-1 ring-amber-500/50 scale-[1.02] z-10 relative transition-all duration-200';
+                            cardStyles = isDarkMode 
+                              ? 'border-amber-500 bg-amber-950/40 font-bold text-amber-200 shadow-sm ring-1 ring-amber-500/50 scale-[1.02] z-10 relative transition-all duration-200' 
+                              : 'border-amber-500 bg-amber-50 font-bold text-amber-800 shadow-sm ring-1 ring-amber-500/50 scale-[1.02] z-10 relative transition-all duration-200';
                           } else if (dynamicFilterActive) {
                             cardStyles = isSelected 
-                              ? 'border-amber-400 font-bold text-slate-900 shadow-xs ring-1 ring-amber-400/20' 
-                              : 'border-slate-200 opacity-30 font-normal text-slate-400 hover:opacity-60';
+                              ? (isDarkMode ? 'border-amber-400 bg-zinc-800 font-bold text-zinc-100 shadow-xs ring-1 ring-amber-400/20' : 'border-amber-400 font-bold text-slate-900 shadow-xs ring-1 ring-amber-400/20 bg-white')
+                              : (isDarkMode ? 'border-zinc-800 bg-zinc-900 opacity-30 font-normal text-zinc-500 hover:opacity-60' : 'border-slate-200 opacity-30 font-normal text-slate-400 hover:opacity-60 bg-white');
                           }
                           return (
                             <div 
@@ -582,9 +596,9 @@ function App() {
                               onClick={() => toggleProjectFilter(p.title)} 
                               onMouseEnter={() => setHoveredProjectTitle(p.title)} 
                               onMouseLeave={() => setHoveredProjectTitle(null)} 
-                              className={`text-xs p-2.5 rounded border transition-all cursor-pointer bg-white flex items-center gap-2 ${cardStyles}`}
+                              className={`text-xs p-2.5 rounded border transition-all cursor-pointer flex items-center gap-2 ${cardStyles}`}
                             >
-                              <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-white shadow-2xs" style={{ backgroundColor: projectDotHex }} />
+                              <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20 shadow-2xs" style={{ backgroundColor: projectDotHex }} />
                               <span className="truncate">{p.title}</span>
                             </div>
                           );
@@ -599,7 +613,7 @@ function App() {
         )}
 
         {/* CALENDAR CANVAS (Adapts fluidly based on view) */}
-        <main ref={calendarRef} className="flex-1 h-full min-h-0 min-w-0 bg-white border border-gray-200 rounded-xl shadow-sm p-4 overflow-hidden flex flex-col relative" style={{ borderRadius: `${cardRadius}px` }}>
+        <main ref={calendarRef} className={`flex-1 h-full min-h-0 min-w-0 border rounded-xl shadow-sm p-4 overflow-hidden flex flex-col relative transition-colors ${isDarkMode ? 'bg-[#191919] border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-slate-900'}`} style={{ borderRadius: `${cardRadius}px` }}>
           
           {/* A. MONTH VIEW */}
           {viewMode === 'month' && (
@@ -608,7 +622,7 @@ function App() {
                 <div className="w-5 shrink-0" />
                 <div className="grid w-full flex-1 text-center text-xs font-semibold uppercase tracking-wider" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                   {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
-                    <div key={day} className={idx === 0 || idx === 6 ? 'text-rose-500 font-bold' : 'text-slate-500'}>{day}</div>
+                    <div key={day} className={idx === 0 || idx === 6 ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-400' : 'text-slate-500')}>{day}</div>
                   ))}
                 </div>
               </div>
@@ -619,13 +633,13 @@ function App() {
                     <button
                       onClick={() => { const targetSlot = rowSlots.find(s => s.isValid && s.dateObj) || rowSlots[0]; if (targetSlot && targetSlot.dateObj) { setCurrentDate(targetSlot.dateObj); setViewMode('week'); } }}
                       title="Open Weekly View"
-                      className="w-5 shrink-0 rounded-md bg-slate-100 hover:bg-rose-500 text-slate-400 hover:text-white transition-all flex items-center justify-center cursor-pointer group border border-slate-200 hover:border-rose-500 shadow-2xs"
+                      className={`w-5 shrink-0 rounded-md transition-all flex items-center justify-center cursor-pointer group border shadow-2xs ${isDarkMode ? 'bg-zinc-800 hover:bg-rose-600 text-zinc-400 hover:text-white border-zinc-700 hover:border-rose-600' : 'bg-slate-100 hover:bg-rose-505 text-slate-400 hover:text-white border-slate-200 hover:border-rose-500'}`}
                     >
                       <span className="text-[10px] font-bold group-hover:scale-125 transition-transform">›</span>
                     </button>
                     <div className="grid w-full flex-1 min-w-0 h-full" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                       {rowSlots.map((slot, slotIndex) => {
-                        if (!slot.isValid) return <div key={slotIndex} className="h-full w-full opacity-5 bg-slate-200" style={{ borderRadius: `${cardRadius}px` }} />;
+                        if (!slot.isValid) return <div key={slotIndex} className={`h-full w-full opacity-5 ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-200'}`} style={{ borderRadius: `${cardRadius}px` }} />;
                         const logs = getLogsForDate(slot.dateObj);
                         const hasLog = logs.length > 0;
                         const { primaryLog, isHalftoned } = getThumbnailLogForDate(slot.dateObj, logs);
@@ -638,7 +652,7 @@ function App() {
                             onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
                             onMouseEnter={() => { if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }}
                             onMouseLeave={() => setHoveredProjectTitle(null)}
-                            className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all bg-white border-slate-200 hover:shadow-md ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.02] z-20 bg-amber-50/20' : isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`}
+                            className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all shadow-2xs ${isDarkMode ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' : 'bg-white border-slate-200 hover:shadow-md'} ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.02] z-20 bg-amber-500/10' : isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`}
                             style={{ borderRadius: `${cardRadius}px` }}
                           >
                             {hasLog && primaryLog?.imageUrl && (
@@ -648,8 +662,8 @@ function App() {
                                 alt="" 
                               />
                             )}
-                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border ${hasLog ? 'border-white' : 'border-slate-300'} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{slot.dayNum}</div>
-                            {hasLog && primaryLog && <div className="relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/60 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{primaryLog.title}</div>}
+                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{slot.dayNum}</div>
+                            {hasLog && primaryLog && <div className="relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/70 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{primaryLog.title}</div>}
                           </div>
                         );
                       })}
@@ -665,7 +679,7 @@ function App() {
             <div className="flex flex-col h-full w-full min-h-0">
               <div className="grid text-center text-xs font-semibold uppercase tracking-wider mb-2 shrink-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
-                  <div key={day} className={idx === 0 || idx === 6 ? 'text-rose-500 font-bold' : 'text-slate-500'}>{day}</div>
+                  <div key={day} className={idx === 0 || idx === 6 ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-400' : 'text-slate-500')}>{day}</div>
                 ))}
               </div>
               
@@ -680,14 +694,14 @@ function App() {
                   return (
                     <div 
                       key={index} 
-                      className={`flex flex-col h-full bg-white border border-slate-200 shadow-2xs overflow-hidden transition-all ${isHoveredProject ? 'ring-2 ring-amber-500 z-20' : isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`} 
+                      className={`flex flex-col h-full border shadow-2xs overflow-hidden transition-all ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200'} ${isHoveredProject ? 'ring-2 ring-amber-500 z-20' : isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`} 
                       style={{ borderRadius: `${cardRadius}px` }}
                     >
                       <div 
                         onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
                         onMouseEnter={() => { if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }}
                         onMouseLeave={() => setHoveredProjectTitle(null)}
-                        className={`relative h-[120px] shrink-0 overflow-hidden p-3 border-b border-slate-100 cursor-pointer flex flex-col justify-end transition-all ${isHoveredProject ? 'bg-amber-50/20' : ''}`}
+                        className={`relative h-[120px] shrink-0 overflow-hidden p-3 border-b cursor-pointer flex flex-col justify-end transition-all ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'} ${isHoveredProject ? 'bg-amber-500/10' : ''}`}
                       >
                         {hasLog && primaryLog?.imageUrl && (
                           <img 
@@ -696,11 +710,11 @@ function App() {
                             alt="" 
                           />
                         )}
-                        <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border ${hasLog ? 'border-white' : 'border-slate-300'} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{slot.dayNum}</div>
-                        {hasLog && primaryLog && <div className="relative z-10 text-[11px] font-bold text-white bg-black/60 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{primaryLog.title}</div>}
+                        <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{slot.dayNum}</div>
+                        {hasLog && primaryLog && <div className="relative z-10 text-[11px] font-bold text-white bg-black/70 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight">{primaryLog.title}</div>}
                       </div>
                       <div className="p-3 flex-1 overflow-y-auto min-h-0">
-                        {hasLog && primaryLog?.pageContent && <p className="text-[11px] text-slate-500 leading-normal whitespace-pre-wrap">{primaryLog.pageContent}</p>}
+                        {hasLog && primaryLog?.pageContent && <p className={`text-[11px] leading-normal whitespace-pre-wrap ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>{primaryLog.pageContent}</p>}
                       </div>
                     </div>
                   );
@@ -714,25 +728,25 @@ function App() {
             <div className="flex flex-col h-full w-full min-w-0 min-h-0 relative">
               
               {/* Manual Override UI Toggle */}
-              <div className="absolute top-0 right-0 z-50 flex items-center bg-white border border-slate-200 shadow-sm rounded-md p-1 text-[10px] font-bold text-slate-500">
+              <div className={`absolute top-0 right-0 z-50 flex items-center border shadow-sm rounded-md p-1 text-[10px] font-bold ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300' : 'bg-white border-slate-200 text-slate-500'}`}>
                 <button 
                   onClick={() => setYearOrientationMode('auto')}
-                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'auto' ? 'bg-rose-50 text-rose-600' : 'hover:bg-slate-50'}`}
+                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'auto' ? (isDarkMode ? 'bg-rose-950/60 text-rose-400' : 'bg-rose-50 text-rose-600') : (isDarkMode ? 'hover:bg-zinc-700' : 'hover:bg-slate-50')}`}
                   title="Auto Switch based on container width vs height"
                 >
                   AUTO
                 </button>
-                <div className="w-px h-3 bg-slate-200 mx-1"></div>
+                <div className={`w-px h-3 mx-1 ${isDarkMode ? 'bg-zinc-700' : 'bg-slate-200'}`}></div>
                 <button 
                   onClick={() => setYearOrientationMode('landscape')}
-                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'landscape' ? 'bg-slate-100 text-slate-800' : 'hover:bg-slate-50'}`}
+                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'landscape' ? (isDarkMode ? 'bg-zinc-700 text-zinc-100' : 'bg-slate-100 text-slate-800') : (isDarkMode ? 'hover:bg-zinc-700' : 'hover:bg-slate-50')}`}
                   title="Force Landscape (Months on Y-Axis)"
                 >
                   ↔
                 </button>
                 <button 
                   onClick={() => setYearOrientationMode('portrait')}
-                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'portrait' ? 'bg-slate-100 text-slate-800' : 'hover:bg-slate-50'}`}
+                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'portrait' ? (isDarkMode ? 'bg-zinc-700 text-zinc-100' : 'bg-slate-100 text-slate-800') : (isDarkMode ? 'hover:bg-zinc-700' : 'hover:bg-slate-50')}`}
                   title="Force Portrait (Months on X-Axis)"
                 >
                   ↕
@@ -742,13 +756,17 @@ function App() {
               {activeYearOrientation === 'portrait' ? (
                 /* --- PORTRAIT LAYOUT (Months on X, Days on Y) --- */
                 <div className="flex flex-col h-full w-full min-w-0 min-h-0 mt-8 relative">
-                  <div className="grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center mb-2 border-b border-slate-100 pb-2 shrink-0">
-                    <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 text-center">Day</div>
+                  <div className={`grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center mb-2 border-b pb-2 shrink-0 ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 text-center">Day</div>
                     {MONTH_NAMES.map((monthLabel, mIdx) => (
                       <div
                         key={monthLabel}
                         onClick={() => { setCurrentDate(new Date(year, mIdx, 1)); setViewMode('month'); }}
-                        className="text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border bg-slate-50 border-slate-200 text-slate-600 hover:border-rose-400 hover:text-rose-600 transition-all cursor-pointer"
+                        className={`text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer ${
+                          isDarkMode 
+                            ? 'bg-zinc-800/80 border-zinc-700 text-zinc-300 hover:border-rose-500 hover:text-rose-400' 
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-rose-400 hover:text-rose-600'
+                        }`}
                       >
                         {monthLabel}
                       </div>
@@ -761,7 +779,7 @@ function App() {
                       <div />
                       {MONTH_NAMES.map((_, mIdx) => (
                         <div key={mIdx} className="relative h-full flex justify-center">
-                          <div className="absolute top-0 bottom-0 w-[1.5px] bg-slate-200" />
+                          <div className={`absolute top-0 bottom-0 w-[1.5px] ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-200'}`} />
                         </div>
                       ))}
                     </div>
@@ -772,9 +790,9 @@ function App() {
                       const weekIndex = Math.floor(rowIndex / 7);
                       
                       return (
-                        <div key={rowIndex} className="flex-1 grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center min-h-0 border-b border-dashed border-slate-100/50 last:border-0 relative z-10">
+                        <div key={rowIndex} className={`flex-1 grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center min-h-0 border-b border-dashed last:border-0 relative z-10 ${isDarkMode ? 'border-zinc-800/50' : 'border-slate-100/50'}`}>
                           <div className="h-full flex items-center justify-center">
-                             <div className={`w-full text-[8px] sm:text-[9px] font-black tracking-tight py-0.5 text-center rounded ${isWeekendRow ? 'text-rose-500 font-bold' : 'text-slate-400'}`}>
+                             <div className={`w-full text-[8px] sm:text-[9px] font-black tracking-tight py-0.5 text-center rounded ${isWeekendRow ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-500' : 'text-slate-400')}`}>
                                {weekdayStr.slice(0, 2)}
                              </div>
                           </div>
@@ -787,7 +805,7 @@ function App() {
                             const isValidCalendarDay = targetDayNum > 0 && targetDayNum <= daysInMonth;
 
                             const isHoveredWeekCell = hoveredWeek?.mIdx === mIdx && hoveredWeek?.weekIndex === weekIndex;
-                            const weekHighlightStyle = isHoveredWeekCell ? `bg-amber-100 border-x border-amber-300/80 z-20 ${rowIndex % 7 === 0 ? 'border-t rounded-t-md' : ''} ${rowIndex % 7 === 6 || rowIndex === 36 ? 'border-b rounded-b-md' : ''}` : '';
+                            const weekHighlightStyle = isHoveredWeekCell ? (isDarkMode ? `bg-amber-950/40 border-x border-amber-500/40 z-20 ${rowIndex % 7 === 0 ? 'border-t rounded-t-md' : ''} ${rowIndex % 7 === 6 || rowIndex === 36 ? 'border-b rounded-b-md' : ''}` : `bg-amber-100 border-x border-amber-300/80 z-20 ${rowIndex % 7 === 0 ? 'border-t rounded-t-md' : ''} ${rowIndex % 7 === 6 || rowIndex === 36 ? 'border-b rounded-b-md' : ''}`) : '';
 
                             if (!isValidCalendarDay) {
                               return <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full w-full flex items-center justify-center transition-colors cursor-pointer ${isHoveredWeekCell ? weekHighlightStyle : ''}`} />;
@@ -804,18 +822,22 @@ function App() {
 
                             const slotBackground = isHoveredWeekCell ? weekHighlightStyle : '';
 
-                            let dotStyles = 'border bg-white text-slate-500 font-normal hover:border-slate-400 hover:text-slate-700';
+                            let dotStyles = isDarkMode ? 'border bg-zinc-900 text-zinc-400 font-normal hover:border-zinc-600 hover:text-zinc-200' : 'border bg-white text-slate-500 font-normal hover:border-slate-400 hover:text-slate-700';
                             if (hasLog) {
                               let ringClass = isStatHoliday ? 'ring-2 ring-amber-400/60' : isWeekend ? 'ring-2 ring-rose-400/50' : '';
                               if (isHoveredProject) ringClass = 'ring-2 ring-amber-500 scale-125 z-30';
-                              dotStyles = `text-white font-bold border border-white shadow-xs scale-110 ${ringClass}`;
-                            } else if (isStatHoliday) dotStyles = 'border border-amber-300 bg-white text-amber-600 font-medium hover:border-amber-400 hover:text-amber-700';
-                            else if (isWeekend) dotStyles = 'border border-rose-300 bg-white text-rose-500 font-medium hover:border-rose-400 hover:text-rose-600';
-                            else dotStyles = 'border border-slate-300 bg-white text-slate-500 font-normal';
+                              dotStyles = `text-white font-bold border border-white/80 shadow-xs scale-110 ${ringClass}`;
+                            } else if (isStatHoliday) {
+                              dotStyles = isDarkMode ? 'border border-amber-600/70 bg-zinc-900 text-amber-400 font-medium hover:border-amber-500' : 'border border-amber-300 bg-white text-amber-600 font-medium hover:border-amber-400 hover:text-amber-700';
+                            } else if (isWeekend) {
+                              dotStyles = isDarkMode ? 'border border-rose-800/70 bg-zinc-900 text-rose-400 font-medium hover:border-rose-700' : 'border border-rose-300 bg-white text-rose-500 font-medium hover:border-rose-400 hover:text-rose-600';
+                            } else {
+                              dotStyles = isDarkMode ? 'border border-zinc-700 bg-zinc-900 text-zinc-400 font-normal hover:border-zinc-500' : 'border border-slate-300 bg-white text-slate-500 font-normal';
+                            }
 
                             return (
                               <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${slotBackground}`}>
-                                <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} ${hasLog ? 'border-white' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{targetDayNum}</div>
+                                <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{targetDayNum}</div>
                               </div>
                             );
                           })}
@@ -827,13 +849,13 @@ function App() {
               ) : (
                 /* --- LANDSCAPE LAYOUT (Days on X, Months on Y) --- */
                 <div className="flex flex-col h-full w-full min-w-0 min-h-0 mt-8">
-                  <div className="grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center mb-2 border-b border-slate-100 pb-2 shrink-0">
-                    <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 text-center">Month</div>
+                  <div className={`grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center mb-2 border-b pb-2 shrink-0 ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 text-center">Month</div>
                     <div className="grid gap-0.5 sm:gap-1 text-center min-w-0" style={{ gridTemplateColumns: 'repeat(37, minmax(0, 1fr))' }}>
                       {Array.from({ length: 37 }).map((_, colIndex) => {
                         const weekdayStr = TIMELINE_WEEKDAYS[colIndex % 7];
                         const isWeekend = weekdayStr === 'SUN' || weekdayStr === 'SAT';
-                        return <div key={colIndex} className={`text-[8px] sm:text-[9px] font-black tracking-tight py-1 rounded ${isWeekend ? 'text-rose-500 font-bold' : 'text-slate-400'}`}>{weekdayStr.slice(0, 2)}</div>;
+                        return <div key={colIndex} className={`text-[8px] sm:text-[9px] font-black tracking-tight py-1 rounded ${isWeekend ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-500' : 'text-slate-400')}`}>{weekdayStr.slice(0, 2)}</div>;
                       })}
                     </div>
                   </div>
@@ -844,13 +866,13 @@ function App() {
                       const startOffsetColumn = firstDayOfMonthObj.getDay(); 
                       const daysInMonth = new Date(year, mIdx + 1, 0).getDate();
                       return (
-                        <div key={monthLabel} className="grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center h-full min-h-0 min-w-0 relative group border-b border-dashed border-slate-100/50 last:border-0">
-                          <div onClick={() => { setCurrentDate(new Date(year, mIdx, 1)); setViewMode('month'); }} className="text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border bg-slate-50 border-slate-200 text-slate-600 hover:border-rose-400 hover:text-rose-600 transition-all cursor-pointer">
+                        <div key={monthLabel} className={`grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center h-full min-h-0 min-w-0 relative group border-b border-dashed last:border-0 ${isDarkMode ? 'border-zinc-800/50' : 'border-slate-100/50'}`}>
+                          <div onClick={() => { setCurrentDate(new Date(year, mIdx, 1)); setViewMode('month'); }} className={`text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer ${isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-zinc-300 hover:border-rose-500 hover:text-rose-400' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-rose-400 hover:text-rose-600'}`}>
                             {monthLabel}
                           </div>
                           <div className="grid gap-0.5 sm:gap-1 items-center relative h-full min-w-0" style={{ gridTemplateColumns: 'repeat(37, minmax(0, 1fr))' }}>
                             {/* Connecting line behind month dots */}
-                            <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[1.5px] bg-slate-200 z-0 pointer-events-none" />
+                            <div className={`absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[1.5px] z-0 pointer-events-none ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-200'}`} />
 
                             {Array.from({ length: 37 }).map((_, colIndex) => {
                               const weekIndex = Math.floor(colIndex / 7);
@@ -859,7 +881,7 @@ function App() {
                               const targetDayNum = colIndex - startOffsetColumn + 1;
                               const isValidCalendarDay = targetDayNum > 0 && targetDayNum <= daysInMonth;
                               const weekRoundClass = colIndex % 7 === 0 ? 'rounded-l-md -ml-0.5' : colIndex % 7 === 6 || colIndex === 36 ? 'rounded-r-md -mr-0.5' : 'rounded-none';
-                              const weekHighlightStyle = isHoveredWeekCell ? `bg-amber-100 border-y border-amber-300/80 z-20 ${colIndex % 7 === 0 ? 'border-l' : ''} ${colIndex % 7 === 6 || colIndex === 36 ? 'border-r' : ''}` : '';
+                              const weekHighlightStyle = isHoveredWeekCell ? (isDarkMode ? `bg-amber-950/40 border-y border-amber-500/40 z-20 ${colIndex % 7 === 0 ? 'border-l' : ''} ${colIndex % 7 === 6 || colIndex === 36 ? 'border-r' : ''}` : `bg-amber-100 border-y border-amber-300/80 z-20 ${colIndex % 7 === 0 ? 'border-l' : ''} ${colIndex % 7 === 6 || colIndex === 36 ? 'border-r' : ''}`) : '';
 
                               if (!isValidCalendarDay) {
                                 return <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full flex items-center justify-center transition-colors cursor-pointer ${weekRoundClass} ${isHoveredWeekCell ? weekHighlightStyle : 'z-10'}`} />;
@@ -876,18 +898,22 @@ function App() {
                               
                               const slotBackground = isHoveredWeekCell ? weekHighlightStyle : '';
                               
-                              let dotStyles = 'border bg-white text-slate-500 font-normal hover:border-slate-400 hover:text-slate-700';
+                              let dotStyles = isDarkMode ? 'border bg-zinc-900 text-zinc-400 font-normal hover:border-zinc-600 hover:text-zinc-200' : 'border bg-white text-slate-500 font-normal hover:border-slate-400 hover:text-slate-700';
                               if (hasLog) {
                                 let ringClass = isStatHoliday ? 'ring-2 ring-amber-400/60' : isWeekend ? 'ring-2 ring-rose-400/50' : '';
                                 if (isHoveredProject) ringClass = 'ring-2 ring-amber-500 scale-125 z-30';
-                                dotStyles = `text-white font-bold border border-white shadow-xs scale-110 ${ringClass}`;
-                              } else if (isStatHoliday) dotStyles = 'border border-amber-300 bg-white text-amber-600 font-medium hover:border-amber-400 hover:text-amber-700';
-                              else if (isWeekend) dotStyles = 'border border-rose-300 bg-white text-rose-500 font-medium hover:border-rose-400 hover:text-rose-600';
-                              else dotStyles = 'border border-slate-300 bg-white text-slate-500 font-normal';
+                                dotStyles = `text-white font-bold border border-white/80 shadow-xs scale-110 ${ringClass}`;
+                              } else if (isStatHoliday) {
+                                dotStyles = isDarkMode ? 'border border-amber-600/70 bg-zinc-900 text-amber-400 font-medium hover:border-amber-500' : 'border border-amber-300 bg-white text-amber-600 font-medium hover:border-amber-400 hover:text-amber-700';
+                              } else if (isWeekend) {
+                                dotStyles = isDarkMode ? 'border border-rose-800/70 bg-zinc-900 text-rose-400 font-medium hover:border-rose-700' : 'border border-rose-300 bg-white text-rose-500 font-medium hover:border-rose-400 hover:text-rose-600';
+                              } else {
+                                dotStyles = isDarkMode ? 'border border-zinc-700 bg-zinc-900 text-zinc-400 font-normal hover:border-zinc-500' : 'border border-slate-300 bg-white text-slate-500 font-normal';
+                              }
 
                               return (
                                 <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekRoundClass} ${slotBackground}`}>
-                                  <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} ${hasLog ? 'border-white' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{targetDayNum}</div>
+                                  <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{targetDayNum}</div>
                                 </div>
                               );
                             })}
@@ -907,29 +933,29 @@ function App() {
       {/* SETTINGS MODAL */}
       {/* ------------------------------------------------------------- */}
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs text-slate-800">
-          <div className="w-full max-w-md bg-white rounded-xl shadow-xl border border-slate-200 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs text-slate-800">
+          <div className={`w-full max-w-md rounded-xl shadow-xl border p-6 ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
             <h2 className="text-lg font-bold mb-4">Widget Setup</h2>
-            <p className="text-xs text-slate-500 mb-6">Enter your Notion Integration Token and Database ID to fetch your personal logs.</p>
+            <p className={`text-xs mb-6 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Enter your Notion Integration Token and Database ID to fetch your personal logs.</p>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Notion Integration Token</label>
+                <label className={`block text-xs font-bold mb-1 ${isDarkMode ? 'text-zinc-300' : 'text-slate-700'}`}>Notion Integration Token</label>
                 <input 
                   type="password" 
                   value={notionToken} 
                   onChange={(e) => setNotionToken(e.target.value)} 
-                  className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none"
+                  className={`w-full border rounded px-3 py-2 text-sm outline-none ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 focus:border-rose-500' : 'border-slate-300 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'}`}
                   placeholder="secret_..."
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Notion Database ID</label>
+                <label className={`block text-xs font-bold mb-1 ${isDarkMode ? 'text-zinc-300' : 'text-slate-700'}`}>Notion Database ID</label>
                 <input 
                   type="text" 
                   value={databaseId} 
                   onChange={(e) => setDatabaseId(e.target.value)} 
-                  className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none"
+                  className={`w-full border rounded px-3 py-2 text-sm outline-none ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 focus:border-rose-500' : 'border-slate-300 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'}`}
                   placeholder="3728d5a5..."
                 />
               </div>
@@ -938,7 +964,7 @@ function App() {
             <div className="mt-8 flex items-center justify-end gap-3">
               <button 
                 onClick={() => setShowSettings(false)} 
-                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800 cursor-pointer"
+                className={`px-4 py-2 text-sm font-semibold cursor-pointer ${isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-slate-600 hover:text-slate-800'}`}
               >
                 Cancel
               </button>
@@ -962,21 +988,21 @@ function App() {
         const currentThumbId = thumbnailOverrides[dateKey] || (selectedLogModal.logs[0]?.id);
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs" onClick={() => setSelectedLogModal(null)}>
-            <div className="w-full max-w-3xl max-h-[85vh] bg-white rounded-xl flex flex-col overflow-hidden shadow-xl border border-slate-200" onClick={(e) => e.stopPropagation()}>
-              <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs" onClick={() => setSelectedLogModal(null)}>
+            <div className={`w-full max-w-3xl max-h-[85vh] rounded-xl flex flex-col overflow-hidden shadow-xl border ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} onClick={(e) => e.stopPropagation()}>
+              <div className={`px-5 py-3.5 border-b flex items-center justify-between shrink-0 ${isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-bold text-rose-500 tracking-wider">
                     {selectedLogModal.dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
                   {getOntarioStatHolidayName(selectedLogModal.dateObj) && (
-                    <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+                    <span className="text-xs font-bold text-amber-500 bg-amber-950/40 border border-amber-800/60 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
                       <span>—</span>
                       <span>{getOntarioStatHolidayName(selectedLogModal.dateObj)}</span>
                     </span>
                   )}
                 </div>
-                <button onClick={() => setSelectedLogModal(null)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
+                <button onClick={() => setSelectedLogModal(null)} className={`font-bold cursor-pointer ${isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-slate-400 hover:text-slate-600'}`}>✕</button>
               </div>
               
               <div className="p-5 overflow-x-auto flex gap-4 min-h-0 items-start" ref={carouselRef}>
@@ -987,26 +1013,28 @@ function App() {
                       <div 
                         key={log.id} 
                         onClick={() => setThumbnailOverrides(prev => ({ ...prev, [dateKey]: log.id }))}
-                        className={`shrink-0 w-[320px] p-4 border rounded-xl bg-slate-50 flex flex-col gap-3 shadow-2xs cursor-pointer transition-all ${
-                          isThumbnail ? 'border-2 border-amber-500 bg-amber-50/20 ring-2 ring-amber-500/20' : 'border-slate-200 hover:border-slate-400'
+                        className={`shrink-0 w-[320px] p-4 border rounded-xl flex flex-col gap-3 shadow-2xs cursor-pointer transition-all ${
+                          isThumbnail 
+                            ? (isDarkMode ? 'border-2 border-amber-500 bg-amber-950/20 ring-2 ring-amber-500/20' : 'border-2 border-amber-500 bg-amber-50/20 ring-2 ring-amber-500/20')
+                            : (isDarkMode ? 'border-zinc-700 bg-zinc-800/80 hover:border-zinc-500' : 'border-slate-200 bg-slate-50 hover:border-slate-400')
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 border rounded inline-block" style={{ color: getDotColor(log), borderColor: getDotColor(log) }}>{log.projectType}</span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isThumbnail ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isThumbnail ? 'bg-amber-500 text-white' : (isDarkMode ? 'bg-zinc-700 text-zinc-300' : 'bg-slate-200 text-slate-600')}`}>
                             {isThumbnail ? '★ Current Thumbnail' : 'Click to set as thumbnail'}
                           </span>
                         </div>
-                        {log.imageUrl && <img src={log.imageUrl} className="max-h-[180px] rounded object-contain bg-white border border-slate-100 p-1" alt="" />}
+                        {log.imageUrl && <img src={log.imageUrl} className={`max-h-[180px] rounded object-contain p-1 border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-slate-100'}`} alt="" />}
                         <div>
-                          <h3 className="text-sm font-bold text-slate-800">{log.title}</h3>
+                          <h3 className={`text-sm font-bold ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>{log.title}</h3>
                         </div>
-                        {log.pageContent && <div className="text-xs text-slate-600 p-2 bg-white rounded border border-slate-150 whitespace-pre-wrap leading-normal">{log.pageContent}</div>}
+                        {log.pageContent && <div className={`text-xs p-2 rounded border leading-normal whitespace-pre-wrap ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-300' : 'bg-white border-slate-150 text-slate-600'}`}>{log.pageContent}</div>}
                       </div>
                     );
                   })
                 ) : (
-                  <div className="text-center py-6 w-full text-slate-400 italic text-xs">No logged actions for this target date.</div>
+                  <div className={`text-center py-6 w-full italic text-xs ${isDarkMode ? 'text-zinc-500' : 'text-slate-400'}`}>No logged actions for this target date.</div>
                 )}
               </div>
             </div>
