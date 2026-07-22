@@ -982,7 +982,7 @@ function App() {
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* DETAIL LOG MODAL (HORIZONTAL SLIDER WITH ARROWS & NOTION LINK) */}
+      {/* DETAIL LOG MODAL (FULL IMAGE FILL, CHEVRON ARROWS & POP-UP) */}
       {/* ------------------------------------------------------------- */}
       {selectedLogModal && (() => {
         const dateKey = selectedLogModal.dateObj.toISOString().split('T')[0];
@@ -1015,10 +1015,10 @@ function App() {
                 <button onClick={() => setSelectedLogModal(null)} className={`font-bold cursor-pointer text-base ${isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-slate-400 hover:text-slate-600'}`}>✕</button>
               </div>
               
-              {/* Modal Body Carousel Container with Edge Arrows */}
+              {/* Modal Body Carousel Container with Chevron Arrows */}
               <div className="relative flex-1 flex items-center overflow-hidden p-6 sm:p-8">
                 
-                {/* Left Arrow Button */}
+                {/* Left Chevron Button */}
                 {logs.length > 1 && (
                   <button 
                     onClick={() => scrollCarousel('left')}
@@ -1029,7 +1029,9 @@ function App() {
                     }`}
                     title="Scroll Left"
                   >
-                    ←
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
                   </button>
                 )}
 
@@ -1048,7 +1050,7 @@ function App() {
                         <div 
                           key={log.id} 
                           onClick={() => setThumbnailOverrides(prev => ({ ...prev, [dateKey]: log.id }))}
-                          className={`shrink-0 w-[420px] sm:w-[460px] h-full flex flex-col p-5 sm:p-6 border rounded-xl gap-4 shadow-sm cursor-pointer transition-all ${
+                          className={`shrink-0 w-[420px] sm:w-[460px] h-full my-auto flex flex-col p-5 sm:p-6 border rounded-xl gap-4 shadow-sm cursor-pointer transition-all ${
                             isThumbnail 
                               ? (isDarkMode ? 'border-2 border-amber-500 bg-amber-950/20 ring-2 ring-amber-500/20' : 'border-2 border-amber-500 bg-amber-50/20 ring-2 ring-amber-500/20')
                               : (isDarkMode ? 'border-zinc-700 bg-zinc-800/80 hover:border-zinc-500' : 'border-slate-200 bg-slate-50 hover:border-slate-400')
@@ -1064,28 +1066,29 @@ function App() {
                           {log.imageUrl && (
                             <img 
                               src={log.imageUrl} 
-                              className={`max-h-[220px] w-full rounded object-contain p-1 border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-slate-100'}`} 
+                              className={`h-[210px] w-full rounded-md object-cover border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-slate-100'}`} 
                               alt="" 
                             />
                           )}
 
                           <div className="flex items-center justify-between gap-2">
                             <h3 className={`text-base font-bold truncate ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>{log.title}</h3>
-                            <a 
-                              href={notionPageUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              onClick={(e) => e.stopPropagation()}
-                              className={`text-xs font-semibold px-2.5 py-1 rounded border shrink-0 flex items-center gap-1 transition-colors ${
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(notionPageUrl, 'NotionModalPopup', 'width=920,height=720,resizable=yes,scrollbars=yes');
+                              }}
+                              className={`text-xs font-semibold px-2.5 py-1 rounded border shrink-0 flex items-center gap-1 transition-colors cursor-pointer ${
                                 isDarkMode 
                                   ? 'bg-zinc-800 border-zinc-700 text-rose-400 hover:bg-rose-950/40 hover:border-rose-700' 
                                   : 'bg-white border-slate-300 text-rose-600 hover:bg-rose-50 hover:border-rose-300'
                               }`}
-                              title="Open original page in Notion"
+                              title="Open original page in Notion pop-up"
                             >
                               <span>Open in Notion</span>
                               <span className="text-[10px]">↗</span>
-                            </a>
+                            </button>
                           </div>
 
                           {log.pageContent && (
@@ -1103,7 +1106,7 @@ function App() {
                   )}
                 </div>
 
-                {/* Right Arrow Button */}
+                {/* Right Chevron Button */}
                 {logs.length > 1 && (
                   <button 
                     onClick={() => scrollCarousel('right')}
@@ -1114,7 +1117,9 @@ function App() {
                     }`}
                     title="Scroll Right"
                   >
-                    →
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                   </button>
                 )}
               </div>
