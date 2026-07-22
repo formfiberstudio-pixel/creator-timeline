@@ -21,6 +21,24 @@ const MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SE
 const TIMELINE_WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 // -------------------------------------------------------------
+// HELPER: HEX COLOR SHADE ADJUSTMENT FOR PROJECT GRADIENTS
+// -------------------------------------------------------------
+const adjustHexColor = (hex, percent) => {
+  if (!hex || !hex.startsWith('#')) return hex;
+  let num = parseInt(hex.replace('#',''), 16);
+  let amt = Math.round(2.55 * percent);
+  let R = (num >> 16) + amt;
+  let G = (num >> 8 & 0x00FF) + amt;
+  let B = (num & 0x0000FF) + amt;
+  return '#' + (
+    0x1000000 +
+    (R < 255 ? (R < 0 ? 0 : R) : 255) * 0x10000 +
+    (G < 255 ? (G < 0 ? 0 : G) : 255) * 0x100 +
+    (B < 255 ? (B < 0 ? 0 : B) : 255)
+  ).toString(16).slice(1);
+};
+
+// -------------------------------------------------------------
 // ONTARIO STATUTORY HOLIDAY CALCULATOR & NAME RETRIEVAL
 // -------------------------------------------------------------
 const getOntarioStatHolidayName = (dateObj) => {
@@ -88,6 +106,9 @@ function App() {
   const [notionToken, setNotionToken] = useState('');
   const [databaseId, setDatabaseId] = useState('');
 
+  // --- PROJECT GRADIENT SHADE MAP ---
+  const [projectColorMap, setProjectColorMap] = useState({});
+
   // --- RESPONSIVE ROTATION VARS ---
   const [yearOrientationMode, setYearOrientationMode] = useState('auto'); // 'auto', 'landscape', 'portrait'
   const [isPortraitFrame, setIsPortraitFrame] = useState(true);
@@ -120,7 +141,7 @@ function App() {
     : yearOrientationMode;
 
   // -------------------------------------------------------------
-  // 2. API FETCHING LOGIC
+  // 2. API FETCHING & GRADIENT COLOR MAPPING LOGIC
   // -------------------------------------------------------------
   useEffect(() => {
     const savedToken = localStorage.getItem('notionToken');
@@ -147,6 +168,7 @@ function App() {
       const result = await response.json();
       if (result.success) {
         setTimelineLogs(result.data);
+        generateProjectColorMap(result.data);
       } else {
         setFetchError(result.error || 'Failed to sync with Notion.');
       }
@@ -155,6 +177,41 @@ function App() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const generateProjectColorMap = (logs) => {
+    if (!Array.isArray(logs)) return;
+    const typeToProjects = {};
+    
+    logs.forEach(log => {
+      const type = log.projectType || 'General';
+      const proj = log.Projects || 'Untitled Project';
+      if (!typeToProjects[type]) typeToProjects[type] = new Set();
+      typeToProjects[type].add(proj);
+    });
+
+    const newColorMap = {};
+    Object.entries(typeToProjects).forEach(([type, projSet]) => {
+      const projs = Array.from(projSet).sort();
+      const total = projs.length;
+      
+      // Determine base hex for this project type
+      let baseHex = '#3F3F46';
+      const sampleLog = logs.find(l => (l.projectType || 'General') === type);
+      if (sampleLog?.projectTypeColor && NOTION_COLOR_MAP[sampleLog.projectTypeColor]) {
+        baseHex = NOTION_COLOR_MAP[sampleLog.projectTypeColor];
+      } else if (themeTokens?.colour?.dot?.[type]?.$value?.hex) {
+        baseHex = themeTokens.colour.dot[type].$value.hex;
+      }
+
+      projs.forEach((proj, idx) => {
+        // Distribute lightness gradient from -20% to +20% across projects in this type
+        const percent = total <= 1 ? 0 : -20 + (idx / (total - 1)) * 40;
+        newColorMap[proj] = adjustHexColor(baseHex, percent);
+      });
+    });
+
+    setProjectColorMap(newColorMap);
   };
 
   const handleSaveSettings = () => {
@@ -175,6 +232,10 @@ function App() {
 
   const getDotColor = (log) => {
     if (!log) return isDarkMode ? '#27272A' : '#E4E4E7';
+    const projName = log.Projects || 'Untitled Project';
+    if (projectColorMap[projName]) {
+      return projectColorMap[projName];
+    }
     if (log.projectTypeColor && NOTION_COLOR_MAP[log.projectTypeColor]) {
       return NOTION_COLOR_MAP[log.projectTypeColor];
     }
@@ -231,14 +292,12 @@ function App() {
       if (matchingProjectLog) {
         return { primaryLog: matchingProjectLog, isHalftoned: false };
       } else {
-        // Day has logs, but none for the hovered project -> halftone (dim) the default thumbnail
         const overrideId = thumbnailOverrides[dateKey];
         const primaryLog = overrideId ? logs.find(l => l.id === overrideId) || logs[0] : logs[0];
         return { primaryLog, isHalftoned: true };
       }
     }
 
-    // Normal state with user-selected thumbnail override
     const overrideId = thumbnailOverrides[dateKey];
     const primaryLog = overrideId ? logs.find(l => l.id === overrideId) || logs[0] : logs[0];
     return { primaryLog, isHalftoned: false };
