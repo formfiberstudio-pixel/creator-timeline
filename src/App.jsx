@@ -104,6 +104,54 @@ function App() {
   const [hoveredWeek, setHoveredWeek] = useState(null);
   const [collapsedTypes, setCollapsedTypes] = useState({});
 
+  // --- WEEK VIEW CARD HEIGHT & RESIZING STATE ---
+  const [weekCardHeight, setWeekCardHeight] = useState(() => {
+    const saved = localStorage.getItem('notionWidgetWeekCardHeight');
+    return saved ? Number(saved) : 110;
+  });
+  const [isResizingCardHeight, setIsResizingCardHeight] = useState(false);
+  const dragStartY = useRef(0);
+  const dragStartHeight = useRef(110);
+
+  useEffect(() => {
+    localStorage.setItem('notionWidgetWeekCardHeight', weekCardHeight);
+  }, [weekCardHeight]);
+
+  const handleMouseDownResize = (e) => {
+    e.preventDefault();
+    setIsResizingCardHeight(true);
+    dragStartY.current = e.clientY;
+    dragStartHeight.current = weekCardHeight;
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizingCardHeight) return;
+      const deltaY = e.clientY - dragStartY.current;
+      const newHeight = Math.min(Math.max(dragStartHeight.current + deltaY, 80), 320);
+      setWeekCardHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      if (isResizingCardHeight) {
+        setIsResizingCardHeight(false);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    };
+
+    if (isResizingCardHeight) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizingCardHeight]);
+
   // --- API STATE VARS ---
   const [timelineLogs, setTimelineLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -729,9 +777,9 @@ function App() {
             </div>
           )}
 
-          {/* B. WEEK VIEW (ALL ENTRIES STACKED IN DAY FRAME) */}
+          {/* B. WEEK VIEW (WITH DYNAMIC CARD HEIGHT DRAG GUIDE) */}
           {viewMode === 'week' && (
-            <div className="flex flex-col h-full w-full min-h-0">
+            <div className="flex flex-col h-full w-full min-h-0 relative">
               {/* Day Header Row */}
               <div className="grid text-center text-xs font-semibold uppercase tracking-wider mb-2 shrink-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
@@ -740,7 +788,29 @@ function App() {
               </div>
               
               {/* Columns Container */}
-              <div className="grid flex-1 min-h-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
+              <div className="grid flex-1 min-h-0 relative" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
+                
+                {/* INTERACTIVE PULL-DOWN DRAG GUIDE BAR */}
+                <div 
+                  onMouseDown={handleMouseDownResize}
+                  className="group absolute left-0 right-0 z-30 flex items-center justify-center cursor-ns-resize py-1 -mt-2 transition-all pointer-events-auto"
+                  style={{ top: `${weekCardHeight + 52}px` }}
+                  title="Drag down or up to dynamically scale card proportions"
+                >
+                  <div className={`w-full h-[2px] transition-colors flex items-center justify-center ${
+                    isResizingCardHeight 
+                      ? 'bg-rose-500' 
+                      : (isDarkMode ? 'bg-rose-500/30 group-hover:bg-rose-500' : 'bg-rose-400/40 group-hover:bg-rose-500')
+                  }`}>
+                    <div className={`text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1.5 transition-transform ${
+                      isResizingCardHeight ? 'bg-rose-600 scale-110' : 'bg-rose-500/90 group-hover:scale-105'
+                    }`}>
+                      <span>↕</span>
+                      <span>{Math.round(weekCardHeight)}px</span>
+                    </div>
+                  </div>
+                </div>
+
                 {slots.map((slot, index) => {
                   const logs = getLogsForDate(slot.dateObj);
                   const hasLog = logs.length > 0;
@@ -788,7 +858,8 @@ function App() {
                                 onClick={() => setSelectedLogModal({ dateObj: slot.dateObj, logs })}
                                 onMouseEnter={() => setHoveredProjectTitle(log.Projects || 'Untitled Project')}
                                 onMouseLeave={() => setHoveredProjectTitle(null)}
-                                className={`relative overflow-hidden rounded-lg border shadow-xs min-h-[110px] p-2 flex flex-col justify-between transition-all cursor-pointer ${
+                                style={{ height: `${weekCardHeight}px` }}
+                                className={`relative overflow-hidden rounded-lg border shadow-xs p-2 shrink-0 flex flex-col justify-between transition-all cursor-pointer ${
                                   isDarkMode ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-500' : 'bg-white border-slate-200 hover:border-slate-400'
                                 } ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.01] z-10' : ''} ${
                                   isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''
@@ -812,16 +883,11 @@ function App() {
                                   </span>
                                 </div>
 
-                                {/* Translucent Title Overlay */}
-                                <div className="relative z-10 mt-auto pt-2 space-y-1">
+                                {/* Translucent Title Overlay (Text preview snippet removed) */}
+                                <div className="relative z-10 mt-auto">
                                   <div className="text-[10px] sm:text-[11px] font-bold text-white bg-black/30 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight">
                                     {log.title}
                                   </div>
-                                  {log.pageContent && (
-                                    <div className="text-[9px] text-zinc-200 bg-black/40 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-snug">
-                                      {log.pageContent}
-                                    </div>
-                                  )}
                                 </div>
                               </div>
                             );
