@@ -672,10 +672,10 @@ function App() {
                         if (!slot.isValid) return <div key={slotIndex} className={`h-full w-full opacity-5 ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-200'}`} style={{ borderRadius: `${cardRadius}px` }} />;
                         const logs = getLogsForDate(slot.dateObj);
                         const hasLog = logs.length > 0;
+                        const hasMultipleLogs = logs.length > 1;
                         const { primaryLog, isHalftoned } = getThumbnailLogForDate(slot.dateObj, logs);
                         const displayDotHex = getDisplayDotColor(logs, slot.dateObj);
                         
-                        // NEW HALIFTONE LOGIC 
                         const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                         const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
 
@@ -685,7 +685,6 @@ function App() {
                             onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
                             onMouseEnter={() => { if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }}
                             onMouseLeave={() => setHoveredProjectTitle(null)}
-                            // Changed the Today ring logic below to mute the ring if unrelated
                             className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all shadow-2xs ${isDarkMode ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' : 'bg-white border-slate-200 hover:shadow-md'} ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.02] z-20 bg-amber-500/10' : isToday(slot.dateObj) ? (isUnrelatedHover ? 'ring-2 ring-zinc-500/40 z-10' : 'ring-2 ring-rose-500 ring-offset-1 z-10') : ''}`}
                             style={{ borderRadius: `${cardRadius}px` }}
                           >
@@ -696,9 +695,15 @@ function App() {
                                 alt="" 
                               />
                             )}
-                            {/* Added conditional transition-opacity, opacity-40 and grayscale to the Day Dot wrapper */}
-                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border transition-opacity duration-200 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{slot.dayNum}</div>
-                            {/* Added conditional transition-opacity, opacity-40 and grayscale to the entry title banner */}
+                            {/* Day Dot with + indicator for multiple logs */}
+                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border transition-opacity duration-200 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
+                              {slot.dayNum}
+                              {hasMultipleLogs && (
+                                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center border border-white shadow-2xs leading-none">
+                                  +
+                                </span>
+                              )}
+                            </div>
                             {hasLog && primaryLog && <div className={`relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/70 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>{primaryLog.title}</div>}
                           </div>
                         );
@@ -726,14 +731,12 @@ function App() {
                   const { primaryLog, isHalftoned } = getThumbnailLogForDate(slot.dateObj, logs);
                   const displayDotHex = getDisplayDotColor(logs, slot.dateObj);
                   
-                  // NEW HALIFTONE LOGIC
                   const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                   const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
 
                   return (
                     <div 
                       key={index} 
-                      // Changed the Today ring logic below to mute the ring if unrelated
                       className={`flex flex-col h-full border shadow-2xs overflow-hidden transition-all ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200'} ${isHoveredProject ? 'ring-2 ring-amber-500 z-20' : isToday(slot.dateObj) ? (isUnrelatedHover ? 'ring-2 ring-zinc-500/40 z-10' : 'ring-2 ring-rose-500 ring-offset-1 z-10') : ''}`} 
                       style={{ borderRadius: `${cardRadius}px` }}
                     >
@@ -750,13 +753,10 @@ function App() {
                             alt="" 
                           />
                         )}
-                        {/* Added conditional transition-opacity, opacity-40 and grayscale to the Day Dot wrapper */}
                         <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border transition-opacity duration-200 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{slot.dayNum}</div>
-                        {/* Added conditional transition-opacity, opacity-40 and grayscale to the entry title banner */}
                         {hasLog && primaryLog && <div className={`relative z-10 text-[11px] font-bold text-white bg-black/70 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>{primaryLog.title}</div>}
                       </div>
                       <div className="p-3 flex-1 overflow-y-auto min-h-0">
-                        {/* Added conditional opacity to the paragraph text inside the week view to match the title dimming */}
                         {hasLog && primaryLog?.pageContent && <p className={`text-[11px] leading-normal whitespace-pre-wrap transition-opacity duration-200 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'} ${isUnrelatedHover ? 'opacity-40' : ''}`}>{primaryLog.pageContent}</p>}
                       </div>
                     </div>
@@ -859,10 +859,10 @@ function App() {
                             const isStatHoliday = getOntarioStatHolidayName(targetDate) !== null;
                             const logs = getLogsForDate(targetDate);
                             const hasLog = logs.length > 0;
+                            const hasMultipleLogs = logs.length > 1;
                             const primaryLog = hasLog ? logs[0] : null;
                             const displayDotHex = getDisplayDotColor(logs, targetDate);
                             
-                            // NEW HALIFTONE LOGIC
                             const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                             const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
 
@@ -883,8 +883,15 @@ function App() {
 
                             return (
                               <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${slotBackground}`}>
-                                {/* Added conditional transition-opacity, opacity-40 and grayscale to the Year Dot wrapper */}
-                                <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{targetDayNum}</div>
+                                {/* Day Dot with + indicator for multiple logs in Year Portrait View */}
+                                <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
+                                  {targetDayNum}
+                                  {hasMultipleLogs && (
+                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none border border-white/80 shadow-2xs">
+                                      +
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             );
                           })}
@@ -939,10 +946,10 @@ function App() {
                               const isStatHoliday = getOntarioStatHolidayName(targetDate) !== null;
                               const logs = getLogsForDate(targetDate);
                               const hasLog = logs.length > 0;
+                              const hasMultipleLogs = logs.length > 1;
                               const primaryLog = hasLog ? logs[0] : null;
                               const displayDotHex = getDisplayDotColor(logs, targetDate);
                               
-                              // NEW HALIFTONE LOGIC
                               const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                               const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
                               
@@ -963,8 +970,15 @@ function App() {
 
                               return (
                                 <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekRoundClass} ${slotBackground}`}>
-                                  {/* Added conditional transition-opacity, opacity-40 and grayscale to the Year Dot wrapper */}
-                                  <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{targetDayNum}</div>
+                                  {/* Day Dot with + indicator for multiple logs in Year Landscape View */}
+                                  <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
+                                    {targetDayNum}
+                                    {hasMultipleLogs && (
+                                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none border border-white/80 shadow-2xs">
+                                        +
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               );
                             })}
