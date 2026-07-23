@@ -107,11 +107,11 @@ function App() {
   // --- WEEK VIEW CARD HEIGHT & RESIZING STATE ---
   const [weekCardHeight, setWeekCardHeight] = useState(() => {
     const saved = localStorage.getItem('notionWidgetWeekCardHeight');
-    return saved ? Number(saved) : 110;
+    return saved ? Number(saved) : 120;
   });
   const [isResizingCardHeight, setIsResizingCardHeight] = useState(false);
   const dragStartY = useRef(0);
-  const dragStartHeight = useRef(110);
+  const dragStartHeight = useRef(120);
 
   useEffect(() => {
     localStorage.setItem('notionWidgetWeekCardHeight', weekCardHeight);
@@ -130,7 +130,7 @@ function App() {
     const handleMouseMove = (e) => {
       if (!isResizingCardHeight) return;
       const deltaY = e.clientY - dragStartY.current;
-      const newHeight = Math.min(Math.max(dragStartHeight.current + deltaY, 80), 320);
+      const newHeight = Math.min(Math.max(dragStartHeight.current + deltaY, 70), 320);
       setWeekCardHeight(newHeight);
     };
 
@@ -777,36 +777,54 @@ function App() {
             </div>
           )}
 
-          {/* B. WEEK VIEW (WITH DYNAMIC CARD HEIGHT DRAG GUIDE) */}
+          {/* B. WEEK VIEW (WITH INTERACTIVE PULL-DOWN CARD HEIGHT GUIDE) */}
           {viewMode === 'week' && (
             <div className="flex flex-col h-full w-full min-h-0 relative">
-              {/* Day Header Row */}
-              <div className="grid text-center text-xs font-semibold uppercase tracking-wider mb-2 shrink-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
-                  <div key={day} className={idx === 0 || idx === 6 ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-400' : 'text-slate-500')}>{day}</div>
-                ))}
+              {/* Day Header Row + Height Slider Control */}
+              <div className="flex items-center justify-between mb-2 shrink-0">
+                <div className="grid text-center text-xs font-semibold uppercase tracking-wider w-full" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
+                    <div key={day} className={idx === 0 || idx === 6 ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-400' : 'text-slate-500')}>{day}</div>
+                  ))}
+                </div>
+
+                {/* Auxiliary Height Range Control */}
+                <div className={`absolute top-0 right-0 z-40 flex items-center gap-2 border px-2 py-0.5 rounded-md text-[10px] font-bold shadow-xs ${
+                  isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300' : 'bg-white border-slate-200 text-slate-600'
+                }`}>
+                  <span className="opacity-70">Card Height:</span>
+                  <input 
+                    type="range" 
+                    min="70" 
+                    max="320" 
+                    value={weekCardHeight} 
+                    onChange={(e) => setWeekCardHeight(Number(e.target.value))}
+                    className="w-16 h-1 accent-rose-500 cursor-pointer" 
+                  />
+                  <span className="w-8 text-right font-mono text-rose-500">{Math.round(weekCardHeight)}px</span>
+                </div>
               </div>
               
-              {/* Columns Container */}
+              {/* Columns Grid Container */}
               <div className="grid flex-1 min-h-0 relative" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 
-                {/* INTERACTIVE PULL-DOWN DRAG GUIDE BAR */}
+                {/* INTERACTIVE PULL-DOWN DRAG GUIDE BAR (Positioned on bottom border of Row 1 cards) */}
                 <div 
                   onMouseDown={handleMouseDownResize}
-                  className="group absolute left-0 right-0 z-30 flex items-center justify-center cursor-ns-resize py-1 -mt-2 transition-all pointer-events-auto"
-                  style={{ top: `${weekCardHeight + 52}px` }}
-                  title="Drag down or up to dynamically scale card proportions"
+                  className="group absolute left-0 right-0 z-30 flex items-center justify-center cursor-ns-resize py-1.5 transition-all pointer-events-auto"
+                  style={{ top: `${weekCardHeight + 81}px` }}
+                  title="Click & Drag down/up to scale entry card aspect ratio"
                 >
-                  <div className={`w-full h-[2px] transition-colors flex items-center justify-center ${
+                  <div className={`w-full h-[2px] transition-all flex items-center justify-center ${
                     isResizingCardHeight 
-                      ? 'bg-rose-500' 
-                      : (isDarkMode ? 'bg-rose-500/30 group-hover:bg-rose-500' : 'bg-rose-400/40 group-hover:bg-rose-500')
+                      ? 'bg-rose-500 shadow-md' 
+                      : (isDarkMode ? 'bg-rose-500/40 group-hover:bg-rose-500' : 'bg-rose-400/50 group-hover:bg-rose-500')
                   }`}>
-                    <div className={`text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-1.5 transition-transform ${
-                      isResizingCardHeight ? 'bg-rose-600 scale-110' : 'bg-rose-500/90 group-hover:scale-105'
+                    <div className={`text-white text-[9px] font-black px-3 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 transition-transform ${
+                      isResizingCardHeight ? 'bg-rose-600 scale-110 ring-2 ring-rose-400' : 'bg-rose-500/90 group-hover:scale-105'
                     }`}>
-                      <span>↕</span>
-                      <span>{Math.round(weekCardHeight)}px</span>
+                      <span>↕ PULL TO RESIZE</span>
+                      <span className="font-mono">({Math.round(weekCardHeight)}px)</span>
                     </div>
                   </div>
                 </div>
@@ -824,7 +842,7 @@ function App() {
                       } ${isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`} 
                       style={{ borderRadius: `${cardRadius}px` }}
                     >
-                      {/* Day Frame Top Badge */}
+                      {/* Day Frame Header */}
                       <div className={`p-2 shrink-0 border-b flex items-center justify-between ${
                         isDarkMode ? 'border-zinc-800 bg-zinc-800/40' : 'border-slate-200 bg-white'
                       }`}>
