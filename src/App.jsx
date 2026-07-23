@@ -196,7 +196,7 @@ function App() {
       }
     } catch (err) {
       setFetchError('Network error occurred while fetching logs.');
-    } finally {
+    } fontally {
       setIsLoading(false);
     }
   };
@@ -373,7 +373,8 @@ function App() {
       if (!grouped[type]) grouped[type] = [];
       grouped[type].push(proj);
     });
-    return grouped;})();
+    return grouped;
+  })();
 
   const toggleTypeAccordion = (type) => setCollapsedTypes(prev => ({ ...prev, [type]: !prev[type] }));
   const handleExpandAllCategories = () => { const s = {}; Object.keys(groupedProjects).forEach(t => { s[t] = false; }); setCollapsedTypes(s); };
@@ -696,7 +697,7 @@ function App() {
                               />
                             )}
 
-                            {/* Top row container: Day Dot + Project Name Tag */}
+                            {/* Top row container: Day Dot + Pill Shaped Project Name Tag matching Dot Color */}
                             <div className="absolute top-2 left-2 right-2 flex items-center gap-1.5 z-10 pointer-events-none">
                               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-2xs border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
                                 {slot.dayNum}
@@ -707,13 +708,16 @@ function App() {
                                 )}
                               </div>
                               {hasLog && primaryLog && (
-                                <span className={`text-[9px] sm:text-[10px] font-bold text-white bg-black/70 px-1.5 py-0.5 rounded-xs backdrop-blur-xs truncate max-w-[calc(100%-2rem)] leading-tight transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>
+                                <span 
+                                  className={`text-[9px] sm:text-[10px] font-bold text-white px-2 py-0.5 rounded-full backdrop-blur-xs truncate max-w-[calc(100%-2rem)] leading-tight transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
+                                  style={{ backgroundColor: displayDotHex }}
+                                >
                                   {primaryLog.Projects}
                                 </span>
                               )}
                             </div>
 
-                            {hasLog && primaryLog && <div className={`relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/70 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>{primaryLog.title}</div>}
+                            {hasLog && primaryLog && <div className={`relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/35 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>{primaryLog.title}</div>}
                           </div>
                         );
                       })}
@@ -765,7 +769,7 @@ function App() {
                           />
                         )}
 
-                        {/* Top row container: Day Dot + Project Name Tag */}
+                        {/* Top row container: Day Dot + Pill Shaped Project Name Tag matching Dot Color */}
                         <div className="absolute top-2 left-2 right-2 flex items-center gap-1.5 z-10 pointer-events-none">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-2xs border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
                             {slot.dayNum}
@@ -776,13 +780,16 @@ function App() {
                             )}
                           </div>
                           {hasLog && primaryLog && (
-                            <span className={`text-[9px] sm:text-[10px] font-bold text-white bg-black/70 px-1.5 py-0.5 rounded-xs backdrop-blur-xs truncate max-w-[calc(100%-2rem)] leading-tight transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>
+                            <span 
+                              className={`text-[9px] sm:text-[10px] font-bold text-white px-2 py-0.5 rounded-full backdrop-blur-xs truncate max-w-[calc(100%-2rem)] leading-tight transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
+                              style={{ backgroundColor: displayDotHex }}
+                            >
                               {primaryLog.Projects}
                             </span>
                           )}
                         </div>
 
-                        {hasLog && primaryLog && <div className={`relative z-10 text-[11px] font-bold text-white bg-black/70 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>{primaryLog.title}</div>}
+                        {hasLog && primaryLog && <div className={`relative z-10 text-[11px] font-bold text-white bg-black/35 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>{primaryLog.title}</div>}
                       </div>
                       <div className="p-3 flex-1 overflow-y-auto min-h-0">
                         {hasLog && primaryLog?.pageContent && <p className={`text-[11px] leading-normal whitespace-pre-wrap transition-opacity duration-200 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'} ${isUnrelatedHover ? 'opacity-40' : ''}`}>{primaryLog.pageContent}</p>}
