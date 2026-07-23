@@ -373,8 +373,7 @@ function App() {
       if (!grouped[type]) grouped[type] = [];
       grouped[type].push(proj);
     });
-    return grouped;
-  })();
+    return grouped;})();
 
   const toggleTypeAccordion = (type) => setCollapsedTypes(prev => ({ ...prev, [type]: !prev[type] }));
   const handleExpandAllCategories = () => { const s = {}; Object.keys(groupedProjects).forEach(t => { s[t] = false; }); setCollapsedTypes(s); };
@@ -672,7 +671,8 @@ function App() {
                         if (!slot.isValid) return <div key={slotIndex} className={`h-full w-full opacity-5 ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-200'}`} style={{ borderRadius: `${cardRadius}px` }} />;
                         const logs = getLogsForDate(slot.dateObj);
                         const hasLog = logs.length > 0;
-                        const hasMultipleLogs = logs.length > 1;
+                        const uniqueProjects = new Set(logs.map(l => l.Projects || 'Untitled Project'));
+                        const hasMultipleProjects = uniqueProjects.size > 1;
                         const { primaryLog, isHalftoned } = getThumbnailLogForDate(slot.dateObj, logs);
                         const displayDotHex = getDisplayDotColor(logs, slot.dateObj);
                         
@@ -695,15 +695,24 @@ function App() {
                                 alt="" 
                               />
                             )}
-                            {/* Day Dot with + indicator for multiple logs */}
-                            <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border transition-opacity duration-200 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
-                              {slot.dayNum}
-                              {hasMultipleLogs && (
-                                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center border border-white shadow-2xs leading-none">
-                                  +
+
+                            {/* Top row container: Day Dot + Project Name Tag */}
+                            <div className="absolute top-2 left-2 right-2 flex items-center gap-1.5 z-10 pointer-events-none">
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-2xs border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
+                                {slot.dayNum}
+                                {hasMultipleProjects && (
+                                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none p-0 border border-white shadow-2xs select-none">
+                                    +
+                                  </span>
+                                )}
+                              </div>
+                              {hasLog && primaryLog && (
+                                <span className={`text-[9px] sm:text-[10px] font-bold text-white bg-black/70 px-1.5 py-0.5 rounded-xs backdrop-blur-xs truncate max-w-[calc(100%-2rem)] leading-tight transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>
+                                  {primaryLog.Projects}
                                 </span>
                               )}
                             </div>
+
                             {hasLog && primaryLog && <div className={`relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/70 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>{primaryLog.title}</div>}
                           </div>
                         );
@@ -728,6 +737,8 @@ function App() {
                 {slots.map((slot, index) => {
                   const logs = getLogsForDate(slot.dateObj);
                   const hasLog = logs.length > 0;
+                  const uniqueProjects = new Set(logs.map(l => l.Projects || 'Untitled Project'));
+                  const hasMultipleProjects = uniqueProjects.size > 1;
                   const { primaryLog, isHalftoned } = getThumbnailLogForDate(slot.dateObj, logs);
                   const displayDotHex = getDisplayDotColor(logs, slot.dateObj);
                   
@@ -753,7 +764,24 @@ function App() {
                             alt="" 
                           />
                         )}
-                        <div className={`absolute top-2 left-2 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10 text-white shadow-2xs border transition-opacity duration-200 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>{slot.dayNum}</div>
+
+                        {/* Top row container: Day Dot + Project Name Tag */}
+                        <div className="absolute top-2 left-2 right-2 flex items-center gap-1.5 z-10 pointer-events-none">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-2xs border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
+                            {slot.dayNum}
+                            {hasMultipleProjects && (
+                              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none p-0 border border-white shadow-2xs select-none">
+                                +
+                              </span>
+                            )}
+                          </div>
+                          {hasLog && primaryLog && (
+                            <span className={`text-[9px] sm:text-[10px] font-bold text-white bg-black/70 px-1.5 py-0.5 rounded-xs backdrop-blur-xs truncate max-w-[calc(100%-2rem)] leading-tight transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>
+                              {primaryLog.Projects}
+                            </span>
+                          )}
+                        </div>
+
                         {hasLog && primaryLog && <div className={`relative z-10 text-[11px] font-bold text-white bg-black/70 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>{primaryLog.title}</div>}
                       </div>
                       <div className="p-3 flex-1 overflow-y-auto min-h-0">
@@ -859,7 +887,8 @@ function App() {
                             const isStatHoliday = getOntarioStatHolidayName(targetDate) !== null;
                             const logs = getLogsForDate(targetDate);
                             const hasLog = logs.length > 0;
-                            const hasMultipleLogs = logs.length > 1;
+                            const uniqueProjects = new Set(logs.map(l => l.Projects || 'Untitled Project'));
+                            const hasMultipleProjects = uniqueProjects.size > 1;
                             const primaryLog = hasLog ? logs[0] : null;
                             const displayDotHex = getDisplayDotColor(logs, targetDate);
                             
@@ -883,11 +912,10 @@ function App() {
 
                             return (
                               <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${slotBackground}`}>
-                                {/* Day Dot with + indicator for multiple logs in Year Portrait View */}
                                 <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
                                   {targetDayNum}
-                                  {hasMultipleLogs && (
-                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none border border-white/80 shadow-2xs">
+                                  {hasMultipleProjects && (
+                                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 text-white text-[6px] font-black flex items-center justify-center leading-none p-0 border border-white/80 shadow-2xs select-none">
                                       +
                                     </span>
                                   )}
@@ -946,7 +974,8 @@ function App() {
                               const isStatHoliday = getOntarioStatHolidayName(targetDate) !== null;
                               const logs = getLogsForDate(targetDate);
                               const hasLog = logs.length > 0;
-                              const hasMultipleLogs = logs.length > 1;
+                              const uniqueProjects = new Set(logs.map(l => l.Projects || 'Untitled Project'));
+                              const hasMultipleProjects = uniqueProjects.size > 1;
                               const primaryLog = hasLog ? logs[0] : null;
                               const displayDotHex = getDisplayDotColor(logs, targetDate);
                               
@@ -970,11 +999,10 @@ function App() {
 
                               return (
                                 <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekRoundClass} ${slotBackground}`}>
-                                  {/* Day Dot with + indicator for multiple logs in Year Landscape View */}
                                   <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
                                     {targetDayNum}
-                                    {hasMultipleLogs && (
-                                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none border border-white/80 shadow-2xs">
+                                    {hasMultipleProjects && (
+                                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 text-white text-[6px] font-black flex items-center justify-center leading-none p-0 border border-white/80 shadow-2xs select-none">
                                         +
                                       </span>
                                     )}
