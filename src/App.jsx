@@ -929,9 +929,9 @@ function App() {
             </div>
           )}
 
-          {/* B. WEEK VIEW (WITH HOVER-ONLY RESIZE GUIDE & CUSTOM OVERFLOW ARROWS) */}
+          {/* B. WEEK VIEW (STRICT PROXIMITY HOVER RESIZE GUIDE & END TRIANGLES) */}
           {viewMode === 'week' && (
-            <div className="flex flex-col h-full w-full min-h-0 relative group/week-canvas">
+            <div className="flex flex-col h-full w-full min-h-0 relative">
               {/* Day Header Row */}
               <div className="grid text-center text-xs font-semibold uppercase tracking-wider mb-2 shrink-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
@@ -942,19 +942,27 @@ function App() {
               {/* Columns Grid Container */}
               <div className="grid flex-1 min-h-0 relative" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 
-                {/* HOVER-ONLY PULL TO RESIZE DRAG GUIDE (CENTERED IN GAP BETWEEN ROW 1 & 2) */}
+                {/* PROXIMITY-ONLY DRAG GUIDE BAR WITH END TRIANGLES */}
                 <div 
                   onMouseDown={handleMouseDownResize}
-                  className={`group/handle absolute left-0 right-0 z-30 flex items-center justify-center cursor-ns-resize py-2 transition-opacity duration-200 pointer-events-auto ${
-                    isResizingCardHeight ? 'opacity-100' : 'opacity-0 group-hover/week-canvas:opacity-100'
+                  className={`group/handle absolute left-0 right-0 z-30 h-6 -translate-y-1/2 flex items-center justify-between cursor-ns-resize pointer-events-auto transition-opacity duration-150 ${
+                    isResizingCardHeight ? 'opacity-100' : 'opacity-0 hover:opacity-100'
                   }`}
-                  style={{ top: `${weekCardHeight + 54}px` }}
+                  style={{ top: `${weekCardHeight + 55}px` }}
                   title="Click & Drag down/up to scale entry card aspect ratio"
                 >
-                  <div className={`w-full h-[2px] transition-all flex items-center justify-center ${
+                  {/* Left Triangle End-Cap Indicator */}
+                  <div className="pl-0.5 flex items-center pointer-events-none">
+                    <svg className="w-2.5 h-3 fill-rose-500 text-rose-500 drop-shadow-xs" viewBox="0 0 8 10">
+                      <polygon points="0,0 8,5 0,10" />
+                    </svg>
+                  </div>
+
+                  {/* Guideline Bar & Center Pill Badge */}
+                  <div className={`flex-1 h-[2px] mx-1 transition-all flex items-center justify-center ${
                     isResizingCardHeight 
                       ? 'bg-rose-500 shadow-md' 
-                      : (isDarkMode ? 'bg-rose-500/40 group-hover/handle:bg-rose-500' : 'bg-rose-400/50 group-hover/handle:bg-rose-500')
+                      : (isDarkMode ? 'bg-rose-500/70 group-hover/handle:bg-rose-500' : 'bg-rose-400/80 group-hover/handle:bg-rose-500')
                   }`}>
                     <div className={`text-white text-[9px] font-black px-3 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 transition-transform ${
                       isResizingCardHeight ? 'bg-rose-600 scale-110 ring-2 ring-rose-400' : 'bg-rose-500/90 group-hover/handle:scale-105'
@@ -962,6 +970,13 @@ function App() {
                       <span>↕ PULL TO RESIZE</span>
                       <span className="font-mono">({Math.round(weekCardHeight)}px)</span>
                     </div>
+                  </div>
+
+                  {/* Right Triangle End-Cap Indicator */}
+                  <div className="pr-0.5 flex items-center pointer-events-none">
+                    <svg className="w-2.5 h-3 fill-rose-500 text-rose-500 drop-shadow-xs" viewBox="0 0 8 10">
+                      <polygon points="8,0 0,5 8,10" />
+                    </svg>
                   </div>
                 </div>
 
