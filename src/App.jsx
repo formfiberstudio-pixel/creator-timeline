@@ -21,7 +21,97 @@ const MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SE
 const TIMELINE_WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 // -------------------------------------------------------------
-// HELPER: HEX COLOR SHADE ADJUSTMENT (WITH CONTRAST SAFEGUARD)
+// BUILT-IN THEME PRESETS
+// -------------------------------------------------------------
+const DEFAULT_THEME_PRESETS = [
+  {
+    id: 'default-rose',
+    name: 'Default Rose',
+    isCustom: false,
+    light: {
+      bg: '#F8FAFC',
+      card: '#FFFFFF',
+      border: '#E2E8F0',
+      text: '#0F172A',
+      primary: '#F43F5E',
+      secondary: '#F59E0B',
+    },
+    dark: {
+      bg: '#191919',
+      card: '#27272A',
+      border: '#3F3F46',
+      text: '#F4F4F5',
+      primary: '#F43F5E',
+      secondary: '#F59E0B',
+    },
+  },
+  {
+    id: 'nordic-slate',
+    name: 'Nordic Slate',
+    isCustom: false,
+    light: {
+      bg: '#F1F5F9',
+      card: '#FFFFFF',
+      border: '#CBD5E1',
+      text: '#1E293B',
+      primary: '#0284C7',
+      secondary: '#0D9488',
+    },
+    dark: {
+      bg: '#0F172A',
+      card: '#1E293B',
+      border: '#334155',
+      text: '#F8FAFC',
+      primary: '#38BDF8',
+      secondary: '#2DD4BF',
+    },
+  },
+  {
+    id: 'emerald-forest',
+    name: 'Emerald Forest',
+    isCustom: false,
+    light: {
+      bg: '#F0FDF4',
+      card: '#FFFFFF',
+      border: '#DCFCE7',
+      text: '#14532D',
+      primary: '#16A34A',
+      secondary: '#CA8A04',
+    },
+    dark: {
+      bg: '#064E3B',
+      card: '#065F46',
+      border: '#047857',
+      text: '#ECFDF5',
+      primary: '#34D399',
+      secondary: '#FBBF24',
+    },
+  },
+  {
+    id: 'cyberpunk-neon',
+    name: 'Cyberpunk Neon',
+    isCustom: false,
+    light: {
+      bg: '#FAF5FF',
+      card: '#FFFFFF',
+      border: '#E9D5FF',
+      text: '#581C87',
+      primary: '#C084FC',
+      secondary: '#06B6D4',
+    },
+    dark: {
+      bg: '#180220',
+      card: '#2A083B',
+      border: '#4C1D95',
+      text: '#F3E8FF',
+      primary: '#E879F9',
+      secondary: '#22D3EE',
+    },
+  },
+];
+
+// -------------------------------------------------------------
+// HELPER: HEX COLOR SHADE ADJUSTMENT
 // -------------------------------------------------------------
 const adjustHexColor = (hex, percent) => {
   if (!hex || !hex.startsWith('#')) return hex;
@@ -29,7 +119,7 @@ const adjustHexColor = (hex, percent) => {
   let amt = Math.round(2.55 * percent);
   let R = (num >> 16) + amt;
   let G = (num >> 8 & 0x00FF) + amt;
-  let B = (num & 0x0000FF) + amt;
+  let B = (num >> 0x0000FF) + amt;
   return '#' + (
     0x1000000 +
     (R < 230 ? (R < 15 ? 15 : R) : 230) * 0x10000 +
@@ -39,7 +129,7 @@ const adjustHexColor = (hex, percent) => {
 };
 
 // -------------------------------------------------------------
-// ONTARIO STATUTORY HOLIDAY CALCULATOR & NAME RETRIEVAL
+// ONTARIO STATUTORY HOLIDAY CALCULATOR
 // -------------------------------------------------------------
 const getOntarioStatHolidayName = (dateObj) => {
   if (!dateObj) return null;
@@ -81,7 +171,7 @@ const getOntarioStatHolidayName = (dateObj) => {
 };
 
 // -------------------------------------------------------------
-// SUB-COMPONENT: WEEK DAY COLUMN (WITH OVERFLOW SCROLL ARROWS)
+// SUB-COMPONENT: WEEK DAY COLUMN
 // -------------------------------------------------------------
 function WeekDayColumn({ 
   slot, 
@@ -116,46 +206,58 @@ function WeekDayColumn({
   return (
     <div 
       className={`flex flex-col h-full border shadow-sm overflow-hidden transition-all relative ${
-        isDarkMode ? 'bg-zinc-900/60 border-zinc-800 text-zinc-100' : 'bg-slate-50/50 border-slate-200 text-slate-900'
-      } ${isTodayDate ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`} 
-      style={{ borderRadius: `${cardRadius}px` }}
+        isTodayDate ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 z-10' : ''
+      }`} 
+      style={{ 
+        borderRadius: `${cardRadius}px`,
+        backgroundColor: 'var(--theme-card)',
+        borderColor: 'var(--theme-border)',
+        color: 'var(--theme-text)'
+      }}
     >
       {/* Day Frame Header */}
-      <div className={`p-2 shrink-0 border-b flex items-center justify-between z-10 relative ${
-        isDarkMode ? 'border-zinc-800 bg-zinc-800/40' : 'border-slate-200 bg-white'
-      }`}>
+      <div 
+        className="p-2 shrink-0 border-b flex items-center justify-between z-10 relative"
+        style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}
+      >
         <div 
           className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm border transition-all ${
-            hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')
-          } ${isTodayDate && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''}`} 
-          style={{ backgroundColor: hasLog ? displayDotHex : undefined }}
+            hasLog ? 'border-white/80' : 'border-zinc-700/30 text-zinc-400'
+          } ${isTodayDate && !hasLog ? 'ring-2 ring-[var(--theme-primary)] text-white' : ''}`} 
+          style={{ backgroundColor: hasLog ? displayDotHex : (isTodayDate ? 'var(--theme-primary)' : undefined) }}
         >
           {slot.dayNum}
         </div>
 
         {logs.length > 1 && (
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30">
+          <span 
+            className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border"
+            style={{ 
+              backgroundColor: 'var(--theme-secondary-20, rgba(245, 158, 11, 0.2))', 
+              color: 'var(--theme-secondary)', 
+              borderColor: 'var(--theme-secondary)' 
+            }}
+          >
             {logs.length}
           </span>
         )}
       </div>
 
-      {/* TOP OVERFLOW SCROLL ARROW (WIDE OBLIQUE ANGLE) */}
+      {/* TOP OVERFLOW SCROLL ARROW */}
       {canScrollUp && (
         <button 
           onClick={() => scrollRef.current?.scrollBy({ top: -(weekCardHeight + 10), behavior: 'smooth' })}
-          className={`absolute top-[41px] left-0 right-0 z-20 flex items-center justify-center py-1.5 cursor-pointer bg-gradient-to-b ${
-            isDarkMode ? 'from-zinc-900 via-zinc-900/90 to-transparent' : 'from-slate-100 via-slate-100/90 to-transparent'
-          } hover:opacity-100 opacity-80 transition-all`}
+          className="absolute top-[41px] left-0 right-0 z-20 flex items-center justify-center py-1.5 cursor-pointer hover:opacity-100 opacity-80 transition-all"
+          style={{ background: 'linear-gradient(to bottom, var(--theme-card), transparent)' }}
           title="Scroll up"
         >
-          <svg className="w-6 h-2.5 stroke-rose-500 fill-none" viewBox="0 0 24 10" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="w-6 h-2.5 fill-none" style={{ stroke: 'var(--theme-primary)' }} viewBox="0 0 24 10" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="2 8 12 2 22 8" />
           </svg>
         </button>
       )}
 
-      {/* Vertically Stacked Cards Container (Native Scrollbar Hidden) */}
+      {/* Vertically Stacked Cards Container */}
       <div 
         ref={scrollRef}
         onScroll={checkScroll}
@@ -173,12 +275,14 @@ function WeekDayColumn({
                 onClick={() => setSelectedLogModal({ dateObj: slot.dateObj, logs })}
                 onMouseEnter={() => setHoveredProjectTitle(log.Projects || 'Untitled Project')}
                 onMouseLeave={() => setHoveredProjectTitle(null)}
-                style={{ height: `${weekCardHeight}px` }}
+                style={{ 
+                  height: `${weekCardHeight}px`,
+                  backgroundColor: 'var(--theme-bg)',
+                  borderColor: isHoveredProject ? 'var(--theme-secondary)' : 'var(--theme-border)'
+                }}
                 className={`relative overflow-hidden rounded-lg border shadow-xs p-2 shrink-0 flex flex-col justify-between transition-all cursor-pointer ${
-                  isDarkMode ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-500' : 'bg-white border-slate-200 hover:border-slate-400'
-                } ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.01] z-10' : ''} ${
-                  isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''
-                }`}
+                  isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] shadow-md scale-[1.01] z-10' : ''
+                } ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
               >
                 {log.imageUrl && (
                   <img 
@@ -200,7 +304,7 @@ function WeekDayColumn({
 
                 {/* Translucent Title Overlay */}
                 <div className="relative z-10 mt-auto">
-                  <div className="text-[10px] sm:text-[11px] font-bold text-white bg-black/30 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight">
+                  <div className="text-[10px] sm:text-[11px] font-bold text-white bg-black/40 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight">
                     {log.title}
                   </div>
                 </div>
@@ -208,22 +312,21 @@ function WeekDayColumn({
             );
           })
         ) : (
-          <div className={`h-full flex items-center justify-center text-[10px] italic ${isDarkMode ? 'text-zinc-600' : 'text-slate-300'}`}>
+          <div className="h-full flex items-center justify-center text-[10px] italic opacity-40">
             No entries
           </div>
         )}
       </div>
 
-      {/* BOTTOM OVERFLOW SCROLL ARROW (WIDE OBLIQUE ANGLE) */}
+      {/* BOTTOM OVERFLOW SCROLL ARROW */}
       {canScrollDown && (
         <button 
           onClick={() => scrollRef.current?.scrollBy({ top: weekCardHeight + 10, behavior: 'smooth' })}
-          className={`absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center py-1.5 cursor-pointer bg-gradient-to-t ${
-            isDarkMode ? 'from-zinc-900 via-zinc-900/90 to-transparent' : 'from-slate-100 via-slate-100/90 to-transparent'
-          } hover:opacity-100 opacity-80 transition-all`}
+          className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center py-1.5 cursor-pointer hover:opacity-100 opacity-80 transition-all"
+          style={{ background: 'linear-gradient(to top, var(--theme-card), transparent)' }}
           title="Scroll down"
         >
-          <svg className="w-6 h-2.5 stroke-rose-500 fill-none" viewBox="0 0 24 10" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <svg className="w-6 h-2.5 fill-none" style={{ stroke: 'var(--theme-primary)' }} viewBox="0 0 24 10" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="2 2 12 8 22 2" />
           </svg>
         </button>
@@ -255,6 +358,31 @@ function App() {
   const [hoveredProjectTitle, setHoveredProjectTitle] = useState(null);
   const [hoveredWeek, setHoveredWeek] = useState(null);
   const [collapsedTypes, setCollapsedTypes] = useState({});
+
+  // --- THEME MANAGER STATE ---
+  const [customThemes, setCustomThemes] = useState(() => {
+    const saved = localStorage.getItem('notionWidgetCustomThemes');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [activeThemeId, setActiveThemeId] = useState(() => {
+    const saved = localStorage.getItem('notionWidgetActiveThemeId');
+    return saved || 'default-rose';
+  });
+
+  const [settingsTab, setSettingsTab] = useState('theme'); // 'notion' | 'theme'
+  const [themeEditMode, setThemeEditMode] = useState('dark'); // 'light' | 'dark'
+
+  useEffect(() => {
+    localStorage.setItem('notionWidgetCustomThemes', JSON.stringify(customThemes));
+  }, [customThemes]);
+
+  useEffect(() => {
+    localStorage.setItem('notionWidgetActiveThemeId', activeThemeId);
+  }, [activeThemeId]);
+
+  const allThemes = [...DEFAULT_THEME_PRESETS, ...customThemes];
+  const activeTheme = allThemes.find(t => t.id === activeThemeId) || DEFAULT_THEME_PRESETS[0];
 
   // --- WEEK VIEW CARD HEIGHT & RESIZING STATE ---
   const [weekCardHeight, setWeekCardHeight] = useState(() => {
@@ -352,8 +480,49 @@ function App() {
     ? (calendarSize.width >= calendarSize.height ? 'landscape' : 'portrait') 
     : yearOrientationMode;
 
+  // Active theme colors depending on current dark/light mode state
+  const currentThemeColors = isDarkMode ? activeTheme.dark : activeTheme.light;
+
   // -------------------------------------------------------------
-  // 2. API FETCHING & GRADIENT COLOR MAPPING LOGIC
+  // THEME DUPLICATION & EDITING ACTIONS
+  // -------------------------------------------------------------
+  const handleDuplicateTheme = (sourceTheme) => {
+    const newThemeId = `custom-${Date.now()}`;
+    const newCustomTheme = {
+      id: newThemeId,
+      name: `${sourceTheme.name} (Copy)`,
+      isCustom: true,
+      light: { ...sourceTheme.light },
+      dark: { ...sourceTheme.dark },
+    };
+    setCustomThemes(prev => [...prev, newCustomTheme]);
+    setActiveThemeId(newThemeId);
+  };
+
+  const handleUpdateCustomThemeName = (name) => {
+    setCustomThemes(prev => prev.map(t => t.id === activeThemeId ? { ...t, name } : t));
+  };
+
+  const handleUpdateCustomThemeColor = (mode, key, hexValue) => {
+    setCustomThemes(prev => prev.map(t => {
+      if (t.id !== activeThemeId) return t;
+      return {
+        ...t,
+        [mode]: {
+          ...t[mode],
+          [key]: hexValue
+        }
+      };
+    }));
+  };
+
+  const handleDeleteCustomTheme = (themeId) => {
+    setCustomThemes(prev => prev.filter(t => t.id !== themeId));
+    setActiveThemeId('default-rose');
+  };
+
+  // -------------------------------------------------------------
+  // API FETCHING LOGIC
   // -------------------------------------------------------------
   useEffect(() => {
     const savedToken = localStorage.getItem('notionToken');
@@ -413,7 +582,7 @@ function App() {
       const projs = Array.from(projSet).sort();
       const total = projs.length;
       
-      let baseHex = '#3F3F46';
+      let baseHex = currentThemeColors.primary;
       const sampleLog = logs.find(l => (l.projectType || 'General') === type);
       if (sampleLog?.projectTypeColor && NOTION_COLOR_MAP[sampleLog.projectTypeColor]) {
         baseHex = NOTION_COLOR_MAP[sampleLog.projectTypeColor];
@@ -437,9 +606,6 @@ function App() {
     fetchLogsFromNotion(notionToken, databaseId);
   };
 
-  // -------------------------------------------------------------
-  // 3. STYLING CONTEXTS (FIGMA DESIGN TOKENS)
-  // -------------------------------------------------------------
   const gap = themeTokens?.layout?.gridGap?.$value ?? 12;
   const cardRadius = themeTokens?.card?.radius?.$value ?? 6;
 
@@ -447,7 +613,7 @@ function App() {
   const month = currentDate.getMonth();
 
   const getDotColor = (log) => {
-    if (!log) return isDarkMode ? '#3F3F46' : '#CBD5E1';
+    if (!log) return currentThemeColors.border;
     const projName = log.Projects || 'Untitled Project';
     if (projectColorMap[projName]) {
       return projectColorMap[projName];
@@ -459,11 +625,11 @@ function App() {
       const tokenHex = themeTokens?.colour?.dot?.[log.projectType]?.$value?.hex;
       if (tokenHex) return tokenHex;
     }
-    return '#3F3F46';
+    return currentThemeColors.primary;
   };
 
   const getDisplayDotColor = (logs, dateObj) => {
-    if (!logs || logs.length === 0) return isDarkMode ? '#3F3F46' : '#CBD5E1';
+    if (!logs || logs.length === 0) return currentThemeColors.border;
     if (hoveredProjectTitle) {
       const matchingLog = logs.find(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
       if (matchingLog) {
@@ -483,9 +649,6 @@ function App() {
     );
   };
 
-  // -------------------------------------------------------------
-  // 4. CALENDAR & DATA QUERY FILTERS
-  // -------------------------------------------------------------
   const getLogsForDate = (dateObj) => {
     if (!dateObj || !Array.isArray(timelineLogs)) return [];
     const targetYear = dateObj.getFullYear();
@@ -599,9 +762,6 @@ function App() {
     }
   };
 
-  // -------------------------------------------------------------
-  // 5. TIMELINE SLOTS SETUP
-  // -------------------------------------------------------------
   let slots = [];
   let startOfWeek = null;
   let endOfWeek = null;
@@ -658,12 +818,23 @@ function App() {
   };
 
   // -------------------------------------------------------------
-  // 6. RENDER (FIXED VIEWPORT / FLUID CONTENT)
+  // DYNAMIC THEME INJECTION IN RENDER
   // -------------------------------------------------------------
+  const themeVars = {
+    '--theme-bg': currentThemeColors.bg,
+    '--theme-card': currentThemeColors.card,
+    '--theme-border': currentThemeColors.border,
+    '--theme-text': currentThemeColors.text,
+    '--theme-primary': currentThemeColors.primary,
+    '--theme-secondary': currentThemeColors.secondary,
+  };
+
   return (
-    <div ref={appRef} className={`w-full h-screen flex flex-col p-4 sm:p-6 overflow-hidden select-none transition-colors duration-300 ${
-      isDarkMode ? 'bg-[#191919] text-zinc-100' : 'bg-slate-50 text-slate-900'
-    }`}>
+    <div 
+      ref={appRef} 
+      style={{ ...themeVars, backgroundColor: 'var(--theme-bg)', color: 'var(--theme-text)' }}
+      className="w-full h-screen flex flex-col p-4 sm:p-6 overflow-hidden select-none transition-colors duration-300"
+    >
       
       {/* HEADER */}
       <header className="shrink-0 mb-5 flex flex-wrap items-center justify-between gap-4">
@@ -671,23 +842,23 @@ function App() {
           {viewMode === 'month' ? (
             <h1 className="text-2xl font-bold tracking-tight inline-flex items-center gap-2">
               <span>{currentDate.toLocaleDateString('en-US', { month: 'long' })}</span>
-              <button onClick={() => setViewMode('year')} className="text-rose-500 cursor-pointer hover:underline">{currentDate.getFullYear()}</button>
+              <button onClick={() => setViewMode('year')} className="cursor-pointer hover:underline" style={{ color: 'var(--theme-primary)' }}>{currentDate.getFullYear()}</button>
             </h1>
           ) : viewMode === 'week' ? (
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-1.5">
-              <span className="cursor-pointer hover:text-rose-500" onClick={() => setViewMode('month')}>
+              <span className="cursor-pointer hover:opacity-80" onClick={() => setViewMode('month')}>
                 {startOfWeek?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
               <span>–</span>
               <span>{endOfWeek?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })},</span>
-              <span className="text-rose-500 cursor-pointer" onClick={() => setViewMode('year')}>{endOfWeek?.getFullYear()}</span>
+              <span className="cursor-pointer" style={{ color: 'var(--theme-primary)' }} onClick={() => setViewMode('year')}>{endOfWeek?.getFullYear()}</span>
             </h1>
           ) : (
             <h1 className="text-2xl font-bold tracking-tight">
-              <span className="text-rose-500">{year}</span> Projects Overview
+              <span style={{ color: 'var(--theme-primary)' }}>{year}</span> Projects Overview
             </h1>
           )}
-          <p className={`text-sm mt-1 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Driven by Figma Tokens & Notion Data.</p>
+          <p className="text-sm mt-1 opacity-60">Driven by Figma Tokens & Notion Data.</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -695,11 +866,8 @@ function App() {
             onClick={() => { if (notionToken && databaseId) fetchLogsFromNotion(notionToken, databaseId); }}
             disabled={isLoading || !notionToken || !databaseId}
             title="Sync Notion Data"
-            className={`px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors ${
-              isDarkMode 
-                ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700 disabled:opacity-50' 
-                : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50 disabled:opacity-50'
-            }`}
+            style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
+            className="px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors disabled:opacity-50"
           >
             <span className={isLoading ? "animate-spin inline-block" : "inline-block"}>↻</span>
             <span>Sync</span>
@@ -707,55 +875,50 @@ function App() {
 
           <button
             onClick={() => setShowSettings(true)}
-            title="Notion Integration Settings"
-            className={`px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors ${
-              isDarkMode 
-                ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' 
-                : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
-            }`}
+            title="Widget Settings & Theme Manager"
+            style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
+            className="px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors"
           >
             <span>⚙️</span><span>Settings</span>
           </button>
 
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={`px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 ${
-              isSidebarOpen 
-                ? (isDarkMode ? 'bg-zinc-700 text-zinc-100 border-zinc-600' : 'bg-zinc-800 text-white border-zinc-700') 
-                : (isDarkMode ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' : 'bg-white text-slate-600 border-slate-300 shadow-sm hover:bg-slate-50')
-            }`}
+            style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
+            className="px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5"
           >
             <span>📁</span><span>{isSidebarOpen ? 'Hide Projects' : 'Projects'}</span>
           </button>
 
           <button
             onClick={() => setCurrentDate(today)}
-            className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 border cursor-pointer ${
-              isDarkMode 
-                ? 'bg-rose-950/40 text-rose-400 border-rose-800/60 hover:bg-rose-900/50' 
-                : 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100'
-            }`}
+            style={{ 
+              backgroundColor: 'var(--theme-card)', 
+              borderColor: 'var(--theme-primary)',
+              color: 'var(--theme-primary)'
+            }}
+            className="px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 border cursor-pointer"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />Today
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: 'var(--theme-primary)' }} />Today
           </button>
 
-          <div className={`flex items-center p-0.5 rounded-lg border ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-slate-200 border-slate-300'}`}>
-            <button onClick={() => setViewMode('year')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'year' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-sm font-bold' : 'bg-white text-slate-900 shadow-sm font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Year</button>
-            <button onClick={() => setViewMode('month')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'month' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-sm font-bold' : 'bg-white text-slate-900 shadow-sm font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Month</button>
-            <button onClick={() => setViewMode('week')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'week' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-sm font-bold' : 'bg-white text-slate-900 shadow-sm font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Week</button>
+          <div className="flex items-center p-0.5 rounded-lg border" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
+            <button onClick={() => setViewMode('year')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'year' ? 'bg-black/20 font-bold' : 'opacity-60'}`}>Year</button>
+            <button onClick={() => setViewMode('month')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'month' ? 'bg-black/20 font-bold' : 'opacity-60'}`}>Month</button>
+            <button onClick={() => setViewMode('week')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'week' ? 'bg-black/20 font-bold' : 'opacity-60'}`}>Week</button>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button onClick={handlePrev} className={`px-3 py-1.5 text-xs font-semibold border rounded-md cursor-pointer transition-colors ${isDarkMode ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}>← Prev</button>
-            <button onClick={handleNext} className={`px-3 py-1.5 text-xs font-semibold border rounded-md cursor-pointer transition-colors ${isDarkMode ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}`}>Next →</button>
+            <button onClick={handlePrev} style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }} className="px-3 py-1.5 text-xs font-semibold border rounded-md cursor-pointer transition-colors">← Prev</button>
+            <button onClick={handleNext} style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }} className="px-3 py-1.5 text-xs font-semibold border rounded-md cursor-pointer transition-colors">Next →</button>
           </div>
         </div>
       </header>
 
       {/* GLOBAL LOADING / ERROR ALERTS */}
       {isLoading && (
-        <div className={`absolute top-20 left-1/2 -translate-x-1/2 z-40 backdrop-blur border px-6 py-3 rounded-full shadow-lg flex items-center gap-3 text-sm font-semibold ${isDarkMode ? 'bg-zinc-900/90 border-zinc-700 text-zinc-200' : 'bg-white/90 border-slate-200 text-slate-700'}`}>
-          <span className="w-4 h-4 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+        <div style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }} className="absolute top-20 left-1/2 -translate-x-1/2 z-40 backdrop-blur border px-6 py-3 rounded-full shadow-lg flex items-center gap-3 text-sm font-semibold">
+          <span className="w-4 h-4 border-2 border-[var(--theme-primary)] border-t-transparent rounded-full animate-spin" />
           Syncing Notion Data...
         </div>
       )}
@@ -771,13 +934,16 @@ function App() {
         
         {/* SIDEBAR */}
         {isSidebarOpen && (
-          <aside className={`w-[260px] shrink-0 h-full flex flex-col p-4 rounded-xl border shadow-sm ${isDarkMode ? 'bg-[#191919] border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} style={{ borderRadius: `${cardRadius}px` }}>
+          <aside 
+            style={{ borderRadius: `${cardRadius}px`, backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
+            className="w-[260px] shrink-0 h-full flex flex-col p-4 rounded-xl border shadow-sm"
+          >
             <div className="mb-3 shrink-0">
-              <h2 className={`text-sm font-bold mb-2 ${isDarkMode ? 'text-zinc-200' : 'text-slate-800'}`}>Categories</h2>
-              <div className={`flex flex-wrap items-center gap-1.5 pb-2 border-b ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
-                <button onClick={handleExpandAllCategories} className={`text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors ${isDarkMode ? 'text-zinc-400 hover:text-rose-400 bg-zinc-800 hover:bg-rose-950/40' : 'text-slate-500 hover:text-rose-500 bg-slate-100 hover:bg-rose-50'}`}>Expand All</button>
-                <button onClick={handleCollapseAllCategories} className={`text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors ${isDarkMode ? 'text-zinc-400 hover:text-rose-400 bg-zinc-800 hover:bg-rose-950/40' : 'text-slate-500 hover:text-rose-500 bg-slate-100 hover:bg-rose-50'}`}>Collapse All</button>
-                <button onClick={handleShowAllFilters} className={`text-[10px] font-bold px-2 py-1 rounded cursor-pointer ml-auto transition-colors ${isDarkMode ? 'text-rose-400 hover:bg-rose-950/50 bg-rose-950/30' : 'text-rose-600 hover:bg-rose-100 bg-rose-50'}`}>Show All</button>
+              <h2 className="text-sm font-bold mb-2">Categories</h2>
+              <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b" style={{ borderColor: 'var(--theme-border)' }}>
+                <button onClick={handleExpandAllCategories} style={{ backgroundColor: 'var(--theme-bg)' }} className="text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors opacity-70 hover:opacity-100">Expand All</button>
+                <button onClick={handleCollapseAllCategories} style={{ backgroundColor: 'var(--theme-bg)' }} className="text-[10px] font-bold px-2 py-1 rounded cursor-pointer transition-colors opacity-70 hover:opacity-100">Collapse All</button>
+                <button onClick={handleShowAllFilters} style={{ color: 'var(--theme-primary)', backgroundColor: 'var(--theme-bg)' }} className="text-[10px] font-bold px-2 py-1 rounded cursor-pointer ml-auto transition-colors">Show All</button>
               </div>
             </div>
             
@@ -786,43 +952,37 @@ function App() {
                 const isHidden = collapsedTypes[type] === true;
                 const baseTypeHex = projs[0]?.projectTypeColor && NOTION_COLOR_MAP[projs[0].projectTypeColor] 
                   ? NOTION_COLOR_MAP[projs[0].projectTypeColor] 
-                  : (themeTokens?.colour?.dot?.[type]?.$value?.hex || '#7c7c7c');
+                  : (themeTokens?.colour?.dot?.[type]?.$value?.hex || currentThemeColors.primary);
                 const categoryBorderColor = adjustHexColor(baseTypeHex, 40);
 
                 return (
-                  <div key={type} className={`border rounded-md overflow-hidden shrink-0 shadow-sm ${isDarkMode ? 'bg-[#191919]' : 'bg-white'}`} style={{ borderColor: categoryBorderColor }}>
-                    <div onClick={() => toggleTypeAccordion(type)} className={`text-[10px] font-bold uppercase tracking-wider p-2.5 flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800/60' : 'text-slate-800 hover:bg-slate-50'}`}>
+                  <div key={type} className="border rounded-md overflow-hidden shrink-0 shadow-sm" style={{ borderColor: categoryBorderColor, backgroundColor: 'var(--theme-card)' }}>
+                    <div onClick={() => toggleTypeAccordion(type)} className="text-[10px] font-bold uppercase tracking-wider p-2.5 flex items-center justify-between cursor-pointer transition-colors hover:opacity-80">
                       <span className="tracking-wide font-black">{type}</span>
                       <span className="text-[9px] font-mono opacity-60">{isHidden ? '▼' : '▲'}</span>
                     </div>
                     {!isHidden && (
-                      <div className={`p-2 pt-0 space-y-1.5 border-t ${isDarkMode ? 'bg-[#191919]' : 'bg-white'}`} style={{ borderColor: categoryBorderColor }}>
+                      <div className="p-2 pt-0 space-y-1.5 border-t" style={{ borderColor: categoryBorderColor, backgroundColor: 'var(--theme-card)' }}>
                         {projs.map((p, i) => {
                           const isSelected = selectedProjectFilters.includes(p.title);
                           const dynamicFilterActive = selectedProjectFilters.length > 0;
                           const isHovered = hoveredProjectTitle === p.title;
                           const projectDotHex = projectColorMap[p.title] || baseTypeHex;
 
-                          let cardStyles = isDarkMode 
-                            ? 'border-zinc-700 bg-zinc-800/80 font-medium text-zinc-200 shadow-sm hover:border-amber-400' 
-                            : 'border-slate-300 bg-white font-medium text-slate-800 shadow-sm hover:border-amber-400';
-                          
-                          if (isHovered) {
-                            cardStyles = isDarkMode 
-                              ? 'border-amber-500 bg-amber-950/40 font-bold text-amber-200 shadow-sm ring-1 ring-amber-500/50 scale-[1.02] z-10 relative transition-all duration-200' 
-                              : 'border-amber-500 bg-amber-50 font-bold text-amber-800 shadow-sm ring-1 ring-amber-500/50 scale-[1.02] z-10 relative transition-all duration-200';
-                          } else if (dynamicFilterActive) {
-                            cardStyles = isSelected 
-                              ? (isDarkMode ? 'border-amber-400 bg-zinc-800 font-bold text-zinc-100 shadow-sm ring-1 ring-amber-400/20' : 'border-amber-400 font-bold text-slate-900 shadow-sm ring-1 ring-amber-400/20 bg-white')
-                              : (isDarkMode ? 'border-zinc-800 bg-zinc-900 opacity-30 font-normal text-zinc-500 hover:opacity-60' : 'border-slate-200 opacity-30 font-normal text-slate-400 hover:opacity-60 bg-white');
-                          }
                           return (
                             <div 
                               key={i} 
                               onClick={() => toggleProjectFilter(p.title)} 
                               onMouseEnter={() => setHoveredProjectTitle(p.title)} 
                               onMouseLeave={() => setHoveredProjectTitle(null)} 
-                              className={`text-xs p-2.5 rounded border transition-all cursor-pointer flex items-center gap-2 ${cardStyles}`}
+                              style={{ 
+                                backgroundColor: 'var(--theme-bg)',
+                                borderColor: isHovered || isSelected ? 'var(--theme-secondary)' : 'var(--theme-border)',
+                                opacity: dynamicFilterActive && !isSelected && !isHovered ? 0.35 : 1
+                              }}
+                              className={`text-xs p-2.5 rounded border transition-all cursor-pointer flex items-center gap-2 ${
+                                isHovered ? 'ring-1 ring-[var(--theme-secondary)] scale-[1.02] font-bold z-10 relative' : ''
+                              }`}
                             >
                               <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20 shadow-sm" style={{ backgroundColor: projectDotHex }} />
                               <span className="truncate">{p.title}</span>
@@ -839,7 +999,11 @@ function App() {
         )}
 
         {/* CALENDAR CANVAS */}
-        <main ref={calendarRef} className={`flex-1 h-full min-h-0 min-w-0 border rounded-xl shadow-sm p-4 overflow-hidden flex flex-col relative transition-colors ${isDarkMode ? 'bg-[#191919] border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-slate-900'}`} style={{ borderRadius: `${cardRadius}px` }}>
+        <main 
+          ref={calendarRef} 
+          style={{ borderRadius: `${cardRadius}px`, backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
+          className="flex-1 h-full min-h-0 min-w-0 border rounded-xl shadow-sm p-4 overflow-hidden flex flex-col relative transition-colors"
+        >
           
           {/* A. MONTH VIEW */}
           {viewMode === 'month' && (
@@ -848,7 +1012,7 @@ function App() {
                 <div className="w-5 shrink-0" />
                 <div className="grid w-full flex-1 text-center text-xs font-semibold uppercase tracking-wider" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                   {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
-                    <div key={day} className={idx === 0 || idx === 6 ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-400' : 'text-slate-500')}>{day}</div>
+                    <div key={day} className={idx === 0 || idx === 6 ? 'font-bold' : 'opacity-60'} style={{ color: idx === 0 || idx === 6 ? 'var(--theme-primary)' : undefined }}>{day}</div>
                   ))}
                 </div>
               </div>
@@ -859,13 +1023,14 @@ function App() {
                     <button
                       onClick={() => { const targetSlot = rowSlots.find(s => s.isValid && s.dateObj) || rowSlots[0]; if (targetSlot && targetSlot.dateObj) { setCurrentDate(targetSlot.dateObj); setViewMode('week'); } }}
                       title="Open Weekly View"
-                      className={`w-5 shrink-0 rounded-md transition-all flex items-center justify-center cursor-pointer group border shadow-sm ${isDarkMode ? 'bg-zinc-800 hover:bg-rose-600 text-zinc-400 hover:text-white border-zinc-700 hover:border-rose-600' : 'bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-white border-slate-200 hover:border-rose-500'}`}
+                      style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)' }}
+                      className="w-5 shrink-0 rounded-md transition-all flex items-center justify-center cursor-pointer group border shadow-sm hover:border-[var(--theme-primary)]"
                     >
                       <span className="text-[10px] font-bold group-hover:scale-125 transition-transform">›</span>
                     </button>
                     <div className="grid w-full flex-1 min-w-0 h-full" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                       {rowSlots.map((slot, slotIndex) => {
-                        if (!slot.isValid) return <div key={slotIndex} className={`h-full w-full opacity-5 ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-200'}`} style={{ borderRadius: `${cardRadius}px` }} />;
+                        if (!slot.isValid) return <div key={slotIndex} className="h-full w-full opacity-5 rounded-md" style={{ backgroundColor: 'var(--theme-bg)' }} />;
                         const logs = getLogsForDate(slot.dateObj);
                         const hasLog = logs.length > 0;
                         const uniqueProjects = new Set(logs.map(l => l.Projects || 'Untitled Project'));
@@ -882,8 +1047,14 @@ function App() {
                             onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
                             onMouseEnter={() => { if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }}
                             onMouseLeave={() => setHoveredProjectTitle(null)}
-                            className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all shadow-sm ${isDarkMode ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' : 'bg-white border-slate-200 hover:shadow-md'} ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.02] z-20 bg-amber-500/10' : isToday(slot.dateObj) ? (isUnrelatedHover ? 'ring-2 ring-zinc-500/40 z-10' : 'ring-2 ring-rose-500 ring-offset-1 z-10') : ''}`}
-                            style={{ borderRadius: `${cardRadius}px` }}
+                            style={{ 
+                              borderRadius: `${cardRadius}px`,
+                              backgroundColor: 'var(--theme-bg)',
+                              borderColor: isHoveredProject ? 'var(--theme-secondary)' : 'var(--theme-border)'
+                            }}
+                            className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all shadow-sm ${
+                              isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] shadow-md scale-[1.02] z-20' : isToday(slot.dateObj) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 z-10' : ''
+                            }`}
                           >
                             {hasLog && primaryLog?.imageUrl && (
                               <img 
@@ -893,12 +1064,17 @@ function App() {
                               />
                             )}
 
-                            {/* Top row container: Day Dot + Pill-Shaped Project Tag matching Dot Color */}
+                            {/* Top row container */}
                             <div className="absolute top-2 left-2 right-2 flex items-center gap-1.5 z-10 pointer-events-none">
-                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
+                              <div 
+                                className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${
+                                  hasLog ? 'border-white/80' : 'border-zinc-700/30 text-zinc-400'
+                                } ${isToday(slot.dateObj) && !hasLog ? 'ring-2 ring-[var(--theme-primary)] text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} 
+                                style={{ backgroundColor: hasLog ? displayDotHex : (isToday(slot.dateObj) ? 'var(--theme-primary)' : undefined) }}
+                              >
                                 {slot.dayNum}
                                 {hasMultipleProjects && (
-                                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none p-0 border border-white shadow-sm select-none">
+                                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full text-white text-[7px] font-black flex items-center justify-center leading-none p-0 border border-white shadow-sm select-none" style={{ backgroundColor: 'var(--theme-secondary)' }}>
                                     +
                                   </span>
                                 )}
@@ -913,9 +1089,9 @@ function App() {
                               )}
                             </div>
 
-                            {/* Translucent Entry Page Title Overlay */}
+                            {/* Translucent Entry Title Overlay */}
                             {hasLog && primaryLog && (
-                              <div className={`relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/30 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>
+                              <div className={`relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/40 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>
                                 {primaryLog.title}
                               </div>
                             )}
@@ -929,20 +1105,20 @@ function App() {
             </div>
           )}
 
-          {/* B. WEEK VIEW (STRICT PROXIMITY HOVER RESIZE GUIDE & END TRIANGLES) */}
+          {/* B. WEEK VIEW */}
           {viewMode === 'week' && (
             <div className="flex flex-col h-full w-full min-h-0 relative">
               {/* Day Header Row */}
               <div className="grid text-center text-xs font-semibold uppercase tracking-wider mb-2 shrink-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
-                  <div key={day} className={idx === 0 || idx === 6 ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-400' : 'text-slate-500')}>{day}</div>
+                  <div key={day} className={idx === 0 || idx === 6 ? 'font-bold' : 'opacity-60'} style={{ color: idx === 0 || idx === 6 ? 'var(--theme-primary)' : undefined }}>{day}</div>
                 ))}
               </div>
               
               {/* Columns Grid Container */}
               <div className="grid flex-1 min-h-0 relative" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 
-                {/* PROXIMITY-ONLY DRAG GUIDE BAR WITH END TRIANGLES */}
+                {/* PROXIMITY-ONLY RESIZE GUIDE BAR WITH END TRIANGLES */}
                 <div 
                   onMouseDown={handleMouseDownResize}
                   className={`group/handle absolute left-0 right-0 z-30 h-6 -translate-y-1/2 flex items-center justify-between cursor-ns-resize pointer-events-auto transition-opacity duration-150 ${
@@ -951,30 +1127,26 @@ function App() {
                   style={{ top: `${weekCardHeight + 55}px` }}
                   title="Click & Drag down/up to scale entry card aspect ratio"
                 >
-                  {/* Left Triangle End-Cap Indicator */}
+                  {/* Left Triangle End-Cap */}
                   <div className="pl-0.5 flex items-center pointer-events-none">
-                    <svg className="w-2.5 h-3 fill-rose-500 text-rose-500 drop-shadow-xs" viewBox="0 0 8 10">
+                    <svg className="w-2.5 h-3 drop-shadow-xs" style={{ fill: 'var(--theme-primary)' }} viewBox="0 0 8 10">
                       <polygon points="0,0 8,5 0,10" />
                     </svg>
                   </div>
 
                   {/* Guideline Bar & Center Pill Badge */}
                   <div className={`flex-1 h-[2px] mx-1 transition-all flex items-center justify-center ${
-                    isResizingCardHeight 
-                      ? 'bg-rose-500 shadow-md' 
-                      : (isDarkMode ? 'bg-rose-500/70 group-hover/handle:bg-rose-500' : 'bg-rose-400/80 group-hover/handle:bg-rose-500')
-                  }`}>
-                    <div className={`text-white text-[9px] font-black px-3 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 transition-transform ${
-                      isResizingCardHeight ? 'bg-rose-600 scale-110 ring-2 ring-rose-400' : 'bg-rose-500/90 group-hover/handle:scale-105'
-                    }`}>
+                    isResizingCardHeight ? 'shadow-md' : ''
+                  }`} style={{ backgroundColor: 'var(--theme-primary)' }}>
+                    <div className="text-white text-[9px] font-black px-3 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 transition-transform" style={{ backgroundColor: 'var(--theme-primary)' }}>
                       <span>↕ PULL TO RESIZE</span>
                       <span className="font-mono">({Math.round(weekCardHeight)}px)</span>
                     </div>
                   </div>
 
-                  {/* Right Triangle End-Cap Indicator */}
+                  {/* Right Triangle End-Cap */}
                   <div className="pr-0.5 flex items-center pointer-events-none">
-                    <svg className="w-2.5 h-3 fill-rose-500 text-rose-500 drop-shadow-xs" viewBox="0 0 8 10">
+                    <svg className="w-2.5 h-3 drop-shadow-xs" style={{ fill: 'var(--theme-primary)' }} viewBox="0 0 8 10">
                       <polygon points="8,0 0,5 8,10" />
                     </svg>
                   </div>
@@ -1006,30 +1178,30 @@ function App() {
             </div>
           )}
 
-          {/* C. YEAR VIEW (Dynamic Axis Layout) */}
+          {/* C. YEAR VIEW */}
           {viewMode === 'year' && (
             <div className="flex flex-col h-full w-full min-w-0 min-h-0 relative">
               
               {/* Manual Override UI Toggle */}
-              <div className={`absolute top-0 right-0 z-50 flex items-center border shadow-sm rounded-md p-1 text-[10px] font-bold ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300' : 'bg-white border-slate-200 text-slate-500'}`}>
+              <div className="absolute top-0 right-0 z-50 flex items-center border shadow-sm rounded-md p-1 text-[10px] font-bold" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
                 <button 
                   onClick={() => setYearOrientationMode('auto')}
-                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'auto' ? (isDarkMode ? 'bg-rose-950/60 text-rose-400' : 'bg-rose-50 text-rose-600') : (isDarkMode ? 'hover:bg-zinc-700' : 'hover:bg-slate-50')}`}
+                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'auto' ? 'bg-black/20 font-bold' : 'opacity-60'}`}
                   title="Auto Switch based on container width vs height"
                 >
                   AUTO
                 </button>
-                <div className={`w-px h-3 mx-1 ${isDarkMode ? 'bg-zinc-700' : 'bg-slate-200'}`}></div>
+                <div className="w-px h-3 mx-1" style={{ backgroundColor: 'var(--theme-border)' }}></div>
                 <button 
                   onClick={() => setYearOrientationMode('landscape')}
-                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'landscape' ? (isDarkMode ? 'bg-zinc-700 text-zinc-100' : 'bg-slate-100 text-slate-800') : (isDarkMode ? 'hover:bg-zinc-700' : 'hover:bg-slate-50')}`}
+                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'landscape' ? 'bg-black/20 font-bold' : 'opacity-60'}`}
                   title="Force Landscape (Months on Y-Axis)"
                 >
                   ↔
                 </button>
                 <button 
                   onClick={() => setYearOrientationMode('portrait')}
-                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'portrait' ? (isDarkMode ? 'bg-zinc-700 text-zinc-100' : 'bg-slate-100 text-slate-800') : (isDarkMode ? 'hover:bg-zinc-700' : 'hover:bg-slate-50')}`}
+                  className={`px-2 py-1 rounded-sm transition-colors ${yearOrientationMode === 'portrait' ? 'bg-black/20 font-bold' : 'opacity-60'}`}
                   title="Force Portrait (Months on X-Axis)"
                 >
                   ↕
@@ -1039,17 +1211,14 @@ function App() {
               {activeYearOrientation === 'portrait' ? (
                 /* --- PORTRAIT LAYOUT --- */
                 <div className="flex flex-col h-full w-full min-w-0 min-h-0 mt-8 relative">
-                  <div className={`grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center mb-2 border-b pb-2 shrink-0 ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
-                    <div className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 text-center">Day</div>
+                  <div className="grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center mb-2 border-b pb-2 shrink-0" style={{ borderColor: 'var(--theme-border)' }}>
+                    <div className="text-[9px] font-bold uppercase tracking-wider opacity-50 text-center">Day</div>
                     {MONTH_NAMES.map((monthLabel, mIdx) => (
                       <div
                         key={monthLabel}
                         onClick={() => { setCurrentDate(new Date(year, mIdx, 1)); setViewMode('month'); }}
-                        className={`text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer ${
-                          isDarkMode 
-                            ? 'bg-zinc-800/80 border-zinc-700 text-zinc-300 hover:border-rose-500 hover:text-rose-400' 
-                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-rose-400 hover:text-rose-600'
-                        }`}
+                        style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)' }}
+                        className="text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer hover:border-[var(--theme-primary)]"
                       >
                         {monthLabel}
                       </div>
@@ -1061,7 +1230,7 @@ function App() {
                       <div />
                       {MONTH_NAMES.map((_, mIdx) => (
                         <div key={mIdx} className="relative h-full flex justify-center">
-                          <div className={`absolute top-0 bottom-0 w-[1.5px] ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-200'}`} />
+                          <div className="absolute top-0 bottom-0 w-[1.5px]" style={{ backgroundColor: 'var(--theme-border)' }} />
                         </div>
                       ))}
                     </div>
@@ -1074,9 +1243,9 @@ function App() {
                       const isEndOfWeek = rowIndex % 7 === 6 || rowIndex === 36;
                       
                       return (
-                        <div key={rowIndex} className={`flex-1 grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center min-h-0 border-b border-dashed last:border-0 relative z-10 ${isDarkMode ? 'border-zinc-800/50' : 'border-slate-100/50'}`}>
+                        <div key={rowIndex} className="flex-1 grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center min-h-0 border-b border-dashed last:border-0 relative z-10" style={{ borderColor: 'var(--theme-border)' }}>
                           <div className="h-full flex items-center justify-center">
-                             <div className={`w-full text-[8px] sm:text-[9px] font-black tracking-tight py-0.5 text-center rounded ${isWeekendRow ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-500' : 'text-slate-400')}`}>
+                             <div className={`w-full text-[8px] sm:text-[9px] font-black tracking-tight py-0.5 text-center rounded ${isWeekendRow ? 'font-bold' : 'opacity-40'}`} style={{ color: isWeekendRow ? 'var(--theme-primary)' : undefined }}>
                                {weekdayStr.slice(0, 2)}
                              </div>
                           </div>
@@ -1092,21 +1261,12 @@ function App() {
 
                             let weekHighlightStyle = '';
                             if (isHoveredWeekCell) {
-                              if (isDarkMode) {
-                                const bgBorder = 'bg-amber-950/70 border-amber-500/50 z-20';
-                                weekHighlightStyle = isStartOfWeek
-                                  ? `${bgBorder} border-x border-t rounded-t-full -mb-1`
-                                  : isEndOfWeek
-                                  ? `${bgBorder} border-x border-b rounded-b-full -mt-1`
-                                  : `${bgBorder} border-x -my-1`;
-                              } else {
-                                const bgBorder = 'bg-amber-100 border-amber-300/90 z-20';
-                                weekHighlightStyle = isStartOfWeek
-                                  ? `${bgBorder} border-x border-t rounded-t-full -mb-1`
-                                  : isEndOfWeek
-                                  ? `${bgBorder} border-x border-b rounded-b-full -mt-1`
-                                  : `${bgBorder} border-x -my-1`;
-                              }
+                              const bgBorder = 'bg-amber-500/20 border-amber-500 z-20';
+                              weekHighlightStyle = isStartOfWeek
+                                ? `${bgBorder} border-x border-t rounded-t-full -mb-1`
+                                : isEndOfWeek
+                                ? `${bgBorder} border-x border-b rounded-b-full -mt-1`
+                                : `${bgBorder} border-x -my-1`;
                             }
 
                             if (!isValidCalendarDay) {
@@ -1126,25 +1286,18 @@ function App() {
                             const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                             const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
 
-                            let dotStyles = isDarkMode ? 'border bg-zinc-900 text-zinc-400 font-normal hover:border-zinc-600 hover:text-zinc-200' : 'border bg-white text-slate-500 font-normal hover:border-slate-400 hover:text-slate-700';
-                            if (hasLog) {
-                              let ringClass = isStatHoliday ? 'ring-2 ring-amber-400/60' : isWeekend ? 'ring-2 ring-rose-400/50' : '';
-                              if (isHoveredProject) ringClass = 'ring-2 ring-amber-500 scale-125 z-30';
-                              dotStyles = `text-white font-bold border border-white/80 shadow-xs scale-110 ${ringClass}`;
-                            } else if (isStatHoliday) {
-                              dotStyles = isDarkMode ? 'border border-amber-600/70 bg-zinc-900 text-amber-400 font-medium hover:border-amber-500' : 'border border-amber-300 bg-white text-amber-600 font-medium hover:border-amber-400 hover:text-amber-700';
-                            } else if (isWeekend) {
-                              dotStyles = isDarkMode ? 'border border-rose-800/70 bg-zinc-900 text-rose-400 font-medium hover:border-rose-700' : 'border border-rose-300 bg-white text-rose-500 font-medium hover:border-rose-400 hover:text-rose-600';
-                            } else {
-                              dotStyles = isDarkMode ? 'border border-zinc-700 bg-zinc-900 text-zinc-400 font-normal hover:border-zinc-500' : 'border border-slate-300 bg-white text-slate-500 font-normal';
-                            }
-
                             return (
                               <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekHighlightStyle}`}>
-                                <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
+                                <div 
+                                  onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} 
+                                  style={{ backgroundColor: hasLog ? displayDotHex : 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
+                                  className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 border ${
+                                    hasLog ? 'text-white font-bold border-white/80 shadow-xs scale-110' : ''
+                                  } ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
+                                >
                                   {targetDayNum}
                                   {hasMultipleProjects && (
-                                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 text-white text-[6px] font-black flex items-center justify-center leading-none p-0 border border-white/80 shadow-xs select-none">
+                                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full text-white text-[6px] font-black flex items-center justify-center leading-none p-0 border border-white/80 shadow-xs select-none" style={{ backgroundColor: 'var(--theme-secondary)' }}>
                                       +
                                     </span>
                                   )}
@@ -1160,13 +1313,13 @@ function App() {
               ) : (
                 /* --- LANDSCAPE LAYOUT --- */
                 <div className="flex flex-col h-full w-full min-w-0 min-h-0 mt-8">
-                  <div className={`grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center mb-2 border-b pb-2 shrink-0 ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
-                    <div className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 text-center">Month</div>
+                  <div className="grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center mb-2 border-b pb-2 shrink-0" style={{ borderColor: 'var(--theme-border)' }}>
+                    <div className="text-[9px] font-bold uppercase tracking-wider opacity-50 text-center">Month</div>
                     <div className="grid gap-0.5 sm:gap-1 text-center min-w-0" style={{ gridTemplateColumns: 'repeat(37, minmax(0, 1fr))' }}>
                       {Array.from({ length: 37 }).map((_, colIndex) => {
                         const weekdayStr = TIMELINE_WEEKDAYS[colIndex % 7];
                         const isWeekend = weekdayStr === 'SUN' || weekdayStr === 'SAT';
-                        return <div key={colIndex} className={`text-[8px] sm:text-[9px] font-black tracking-tight py-1 rounded ${isWeekend ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-500' : 'text-slate-400')}`}>{weekdayStr.slice(0, 2)}</div>;
+                        return <div key={colIndex} className={`text-[8px] sm:text-[9px] font-black tracking-tight py-1 rounded ${isWeekend ? 'font-bold' : 'opacity-40'}`} style={{ color: isWeekend ? 'var(--theme-primary)' : undefined }}>{weekdayStr.slice(0, 2)}</div>;
                       })}
                     </div>
                   </div>
@@ -1177,12 +1330,12 @@ function App() {
                       const startOffsetColumn = firstDayOfMonthObj.getDay(); 
                       const daysInMonth = new Date(year, mIdx + 1, 0).getDate();
                       return (
-                        <div key={monthLabel} className={`grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center h-full min-h-0 min-w-0 relative group border-b border-dashed last:border-0 ${isDarkMode ? 'border-zinc-800/50' : 'border-slate-100/50'}`}>
-                          <div onClick={() => { setCurrentDate(new Date(year, mIdx, 1)); setViewMode('month'); }} className={`text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer ${isDarkMode ? 'bg-zinc-800/80 border-zinc-700 text-zinc-300 hover:border-rose-500 hover:text-rose-400' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-rose-400 hover:text-rose-600'}`}>
+                        <div key={monthLabel} className="grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center h-full min-h-0 min-w-0 relative group border-b border-dashed last:border-0" style={{ borderColor: 'var(--theme-border)' }}>
+                          <div onClick={() => { setCurrentDate(new Date(year, mIdx, 1)); setViewMode('month'); }} style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)' }} className="text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer hover:border-[var(--theme-primary)]">
                             {monthLabel}
                           </div>
                           <div className="grid gap-0.5 sm:gap-1 items-center relative h-full min-w-0" style={{ gridTemplateColumns: 'repeat(37, minmax(0, 1fr))' }}>
-                            <div className={`absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[1.5px] z-0 pointer-events-none ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-200'}`} />
+                            <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[1.5px] z-0 pointer-events-none" style={{ backgroundColor: 'var(--theme-border)' }} />
 
                             {Array.from({ length: 37 }).map((_, colIndex) => {
                               const weekIndex = Math.floor(colIndex / 7);
@@ -1195,21 +1348,12 @@ function App() {
 
                               let weekHighlightStyle = '';
                               if (isHoveredWeekCell) {
-                                if (isDarkMode) {
-                                  const bgBorder = 'bg-amber-950/70 border-amber-500/50 z-20';
-                                  weekHighlightStyle = isStartOfWeek
-                                    ? `${bgBorder} border-y border-l rounded-l-full -mr-1 sm:-mr-1.5`
-                                    : isEndOfWeek
-                                    ? `${bgBorder} border-y border-r rounded-r-full -ml-1 sm:-ml-1.5`
-                                    : `${bgBorder} border-y -mx-1 sm:-mx-1.5`;
-                                } else {
-                                  const bgBorder = 'bg-amber-100 border-amber-300/90 z-20';
-                                  weekHighlightStyle = isStartOfWeek
-                                    ? `${bgBorder} border-y border-l rounded-l-full -mr-1 sm:-mr-1.5`
-                                    : isEndOfWeek
-                                    ? `${bgBorder} border-y border-r rounded-r-full -ml-1 sm:-ml-1.5`
-                                    : `${bgBorder} border-y -mx-1 sm:-mx-1.5`;
-                                }
+                                const bgBorder = 'bg-amber-500/20 border-amber-500 z-20';
+                                weekHighlightStyle = isStartOfWeek
+                                  ? `${bgBorder} border-y border-l rounded-l-full -mr-1 sm:-mr-1.5`
+                                  : isEndOfWeek
+                                  ? `${bgBorder} border-y border-r rounded-r-full -ml-1 sm:-ml-1.5`
+                                  : `${bgBorder} border-y -mx-1 sm:-mx-1.5`;
                               }
 
                               if (!isValidCalendarDay) {
@@ -1229,25 +1373,18 @@ function App() {
                               const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                               const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
                               
-                              let dotStyles = isDarkMode ? 'border bg-zinc-900 text-zinc-400 font-normal hover:border-zinc-600 hover:text-zinc-200' : 'border bg-white text-slate-500 font-normal hover:border-slate-400 hover:text-slate-700';
-                              if (hasLog) {
-                                let ringClass = isStatHoliday ? 'ring-2 ring-amber-400/60' : isWeekend ? 'ring-2 ring-rose-400/50' : '';
-                                if (isHoveredProject) ringClass = 'ring-2 ring-amber-500 scale-125 z-30';
-                                dotStyles = `text-white font-bold border border-white/80 shadow-xs scale-110 ${ringClass}`;
-                              } else if (isStatHoliday) {
-                                dotStyles = isDarkMode ? 'border border-amber-600/70 bg-zinc-900 text-amber-400 font-medium hover:border-amber-500' : 'border border-amber-300 bg-white text-amber-600 font-medium hover:border-amber-400 hover:text-amber-700';
-                              } else if (isWeekend) {
-                                dotStyles = isDarkMode ? 'border border-rose-800/70 bg-zinc-900 text-rose-400 font-medium hover:border-rose-700' : 'border border-rose-300 bg-white text-rose-500 font-medium hover:border-rose-400 hover:text-rose-600';
-                              } else {
-                                dotStyles = isDarkMode ? 'border border-zinc-700 bg-zinc-900 text-zinc-400 font-normal hover:border-zinc-500' : 'border border-slate-300 bg-white text-slate-500 font-normal';
-                              }
-
                               return (
                                 <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekHighlightStyle}`}>
-                                  <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
+                                  <div 
+                                    onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} 
+                                    style={{ backgroundColor: hasLog ? displayDotHex : 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
+                                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 border ${
+                                      hasLog ? 'text-white font-bold border-white/80 shadow-xs scale-110' : ''
+                                    } ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
+                                  >
                                     {targetDayNum}
                                     {hasMultipleProjects && (
-                                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 text-white text-[6px] font-black flex items-center justify-center leading-none p-0 border border-white/80 shadow-xs select-none">
+                                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full text-white text-[6px] font-black flex items-center justify-center leading-none p-0 border border-white/80 shadow-xs select-none" style={{ backgroundColor: 'var(--theme-secondary)' }}>
                                         +
                                       </span>
                                     )}
@@ -1267,50 +1404,190 @@ function App() {
         </main>
       </div>
 
-      {/* SETTINGS MODAL */}
+      {/* SETTINGS & THEME MANAGER MODAL */}
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm text-slate-800">
-          <div className={`w-full max-w-md rounded-xl shadow-xl border p-6 ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
-            <h2 className="text-lg font-bold mb-4">Widget Setup</h2>
-            <p className={`text-xs mb-6 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Enter your Notion Integration Token and Database ID to fetch your personal logs.</p>
-            
-            <div className="space-y-4">
-              <div>
-                <label className={`block text-xs font-bold mb-1 ${isDarkMode ? 'text-zinc-300' : 'text-slate-700'}`}>Notion Integration Token</label>
-                <input 
-                  type="password" 
-                  value={notionToken} 
-                  onChange={(e) => setNotionToken(e.target.value)} 
-                  className={`w-full border rounded px-3 py-2 text-sm outline-none ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 focus:border-rose-500' : 'border-slate-300 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'}`}
-                  placeholder="secret_..."
-                />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm">
+          <div 
+            style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
+            className="w-full max-w-lg rounded-xl shadow-2xl border p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: 'var(--theme-border)' }}>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setSettingsTab('theme')} 
+                  className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
+                    settingsTab === 'theme' ? 'bg-black/20 font-bold' : 'opacity-60'
+                  }`}
+                >
+                  🎨 Theme Manager
+                </button>
+                <button 
+                  onClick={() => setSettingsTab('notion')} 
+                  className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
+                    settingsTab === 'notion' ? 'bg-black/20 font-bold' : 'opacity-60'
+                  }`}
+                >
+                  🔗 Notion Sync
+                </button>
               </div>
-              <div>
-                <label className={`block text-xs font-bold mb-1 ${isDarkMode ? 'text-zinc-300' : 'text-slate-700'}`}>Notion Database ID</label>
-                <input 
-                  type="text" 
-                  value={databaseId} 
-                  onChange={(e) => setDatabaseId(e.target.value)} 
-                  className={`w-full border rounded px-3 py-2 text-sm outline-none ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-100 focus:border-rose-500' : 'border-slate-300 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'}`}
-                  placeholder="3728d5a5..."
-                />
-              </div>
+              <button onClick={() => setShowSettings(false)} className="font-bold opacity-60 hover:opacity-100">✕</button>
             </div>
 
-            <div className="mt-8 flex items-center justify-end gap-3">
+            {/* TAB 1: THEME MANAGER */}
+            {settingsTab === 'theme' && (
+              <div className="space-y-5">
+                {/* Theme Selector & Duplicate Controls */}
+                <div>
+                  <label className="block text-xs font-bold mb-1.5">Active Preset / Theme</label>
+                  <div className="flex items-center gap-2">
+                    <select 
+                      value={activeThemeId}
+                      onChange={(e) => setActiveThemeId(e.target.value)}
+                      style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
+                      className="flex-1 border rounded px-3 py-2 text-xs font-bold outline-none cursor-pointer"
+                    >
+                      <optgroup label="Built-in Presets">
+                        {DEFAULT_THEME_PRESETS.map(preset => (
+                          <option key={preset.id} value={preset.id}>{preset.name}</option>
+                        ))}
+                      </optgroup>
+                      {customThemes.length > 0 && (
+                        <optgroup label="Custom User Themes">
+                          {customThemes.map(ct => (
+                            <option key={ct.id} value={ct.id}>{ct.name}</option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
+
+                    <button 
+                      onClick={() => handleDuplicateTheme(activeTheme)}
+                      style={{ backgroundColor: 'var(--theme-primary)' }}
+                      className="px-3 py-2 text-xs font-bold text-white rounded cursor-pointer shadow-xs hover:opacity-90 shrink-0"
+                    >
+                      + Duplicate
+                    </button>
+                  </div>
+                </div>
+
+                {/* Custom Theme Editor Section */}
+                {activeTheme.isCustom ? (
+                  <div className="p-4 border rounded-lg space-y-4" style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1">
+                        <label className="block text-[10px] font-bold uppercase opacity-60 mb-1">Theme Name</label>
+                        <input 
+                          type="text" 
+                          value={activeTheme.name} 
+                          onChange={(e) => handleUpdateCustomThemeName(e.target.value)}
+                          style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
+                          className="w-full border rounded px-2.5 py-1.5 text-xs font-bold outline-none"
+                        />
+                      </div>
+                      <button 
+                        onClick={() => handleDeleteCustomTheme(activeTheme.id)}
+                        className="text-xs font-bold text-rose-500 hover:underline px-2 py-1 mt-4 cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
+
+                    {/* Light / Dark Mode Customization Toggle */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="block text-xs font-bold">Customize Color Palette</label>
+                        <div className="flex items-center p-0.5 rounded border" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
+                          <button 
+                            onClick={() => setThemeEditMode('dark')} 
+                            className={`px-2.5 py-1 text-[10px] font-bold rounded ${themeEditMode === 'dark' ? 'bg-black/30' : 'opacity-50'}`}
+                          >
+                            🌙 Dark
+                          </button>
+                          <button 
+                            onClick={() => setThemeEditMode('light')} 
+                            className={`px-2.5 py-1 text-[10px] font-bold rounded ${themeEditMode === 'light' ? 'bg-black/30' : 'opacity-50'}`}
+                          >
+                            ☀️ Light
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 6 Core Token Color Pickers */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { key: 'bg', label: 'Canvas Background' },
+                          { key: 'card', label: 'Card Surface' },
+                          { key: 'border', label: 'Border Color' },
+                          { key: 'text', label: 'Text Color' },
+                          { key: 'primary', label: 'Primary Accent' },
+                          { key: 'secondary', label: 'Secondary Accent' },
+                        ].map((token) => (
+                          <div key={token.key} className="flex items-center justify-between p-2 border rounded" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
+                            <span className="text-[11px] font-medium truncate">{token.label}</span>
+                            <input 
+                              type="color" 
+                              value={activeTheme[themeEditMode][token.key]} 
+                              onChange={(e) => handleUpdateCustomThemeColor(themeEditMode, token.key, e.target.value)}
+                              className="w-6 h-6 rounded border-0 cursor-pointer p-0 bg-transparent"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 border rounded text-xs opacity-70 italic text-center" style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}>
+                    "{activeTheme.name}" is a read-only built-in preset. Click <strong>+ Duplicate</strong> above to create an editable copy.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 2: NOTION INTEGRATION */}
+            {settingsTab === 'notion' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold mb-1">Notion Integration Token</label>
+                  <input 
+                    type="password" 
+                    value={notionToken} 
+                    onChange={(e) => setNotionToken(e.target.value)} 
+                    style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
+                    className="w-full border rounded px-3 py-2 text-sm outline-none"
+                    placeholder="secret_..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1">Notion Database ID</label>
+                  <input 
+                    type="text" 
+                    value={databaseId} 
+                    onChange={(e) => setDatabaseId(e.target.value)} 
+                    style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
+                    className="w-full border rounded px-3 py-2 text-sm outline-none"
+                    placeholder="3728d5a5..."
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4 flex items-center justify-end gap-3 border-t pt-3" style={{ borderColor: 'var(--theme-border)' }}>
               <button 
                 onClick={() => setShowSettings(false)} 
-                className={`px-4 py-2 text-sm font-semibold cursor-pointer ${isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-slate-600 hover:text-slate-800'}`}
+                className="px-4 py-2 text-xs font-semibold cursor-pointer opacity-70 hover:opacity-100"
               >
-                Cancel
+                Close
               </button>
-              <button 
-                onClick={handleSaveSettings} 
-                disabled={!notionToken || !databaseId}
-                className="px-4 py-2 text-sm font-bold text-white bg-rose-500 rounded hover:bg-rose-600 disabled:opacity-50 cursor-pointer shadow-sm"
-              >
-                Save & Sync
-              </button>
+              {settingsTab === 'notion' && (
+                <button 
+                  onClick={handleSaveSettings} 
+                  disabled={!notionToken || !databaseId}
+                  style={{ backgroundColor: 'var(--theme-primary)' }}
+                  className="px-4 py-2 text-xs font-bold text-white rounded hover:opacity-90 disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  Save & Sync
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1331,36 +1608,36 @@ function App() {
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6 sm:p-8 bg-black/70 backdrop-blur-sm" onClick={() => setSelectedLogModal(null)}>
-            <div className={`w-[90%] max-w-[1300px] h-[85%] max-h-[850px] rounded-2xl flex flex-col overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} onClick={(e) => e.stopPropagation()}>
+            <div 
+              style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
+              className="w-[90%] max-w-[1300px] h-[85%] max-h-[850px] rounded-2xl flex flex-col overflow-hidden shadow-2xl border" 
+              onClick={(e) => e.stopPropagation()}
+            >
               
               {/* Modal Header */}
-              <div className={`px-6 py-4 border-b flex items-center justify-between shrink-0 ${isDarkMode ? 'bg-zinc-800/80 border-zinc-700' : 'bg-slate-50 border-slate-100'}`}>
+              <div className="px-6 py-4 border-b flex items-center justify-between shrink-0" style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-bold text-rose-500 tracking-wider">
+                  <span className="text-sm font-bold tracking-wider" style={{ color: 'var(--theme-primary)' }}>
                     {selectedLogModal.dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
                   {getOntarioStatHolidayName(selectedLogModal.dateObj) && (
-                    <span className="text-xs font-bold text-amber-500 bg-amber-950/40 border border-amber-800/60 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs border" style={{ color: 'var(--theme-secondary)', borderColor: 'var(--theme-secondary)', backgroundColor: 'var(--theme-card)' }}>
                       <span>—</span>
                       <span>{getOntarioStatHolidayName(selectedLogModal.dateObj)}</span>
                     </span>
                   )}
                 </div>
-                <button onClick={() => setSelectedLogModal(null)} className={`font-bold cursor-pointer text-base ${isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-slate-400 hover:text-slate-600'}`}>✕</button>
+                <button onClick={() => setSelectedLogModal(null)} className="font-bold cursor-pointer text-base opacity-60 hover:opacity-100">✕</button>
               </div>
               
-              {/* Modal Body Carousel Container */}
+              {/* Modal Body Carousel */}
               <div className="relative flex-1 flex items-center overflow-hidden p-6 sm:p-8">
                 
-                {/* Left Chevron Button */}
                 {logs.length > 1 && (
                   <button 
                     onClick={() => scrollCarousel('left')}
-                    className={`absolute left-3 z-30 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-all cursor-pointer ${
-                      isDarkMode 
-                        ? 'bg-zinc-800/90 border-zinc-700 text-zinc-200 hover:bg-rose-600 hover:border-rose-600 hover:text-white' 
-                        : 'bg-white/90 border-slate-300 text-slate-700 hover:bg-rose-500 hover:border-rose-500 hover:text-white'
-                    }`}
+                    style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
+                    className="absolute left-3 z-30 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-all cursor-pointer hover:border-[var(--theme-primary)]"
                     title="Scroll Left"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -1369,7 +1646,6 @@ function App() {
                   </button>
                 )}
 
-                {/* Horizontal Scroll Area */}
                 <div 
                   ref={modalCarouselRef} 
                   className="w-full h-full flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory items-stretch select-none"
@@ -1387,15 +1663,17 @@ function App() {
                         <div 
                           key={log.id} 
                           onClick={() => setThumbnailOverrides(prev => ({ ...prev, [dateKey]: log.id }))}
+                          style={{ 
+                            backgroundColor: 'var(--theme-bg)',
+                            borderColor: isThumbnail ? 'var(--theme-secondary)' : 'var(--theme-border)'
+                          }}
                           className={`shrink-0 w-full sm:w-[calc((100%-24px)/2)] lg:w-[calc((100%-48px)/3)] snap-start h-full my-auto flex flex-col p-5 sm:p-6 border rounded-xl gap-4 shadow-sm cursor-pointer transition-all ${
-                            isThumbnail 
-                              ? (isDarkMode ? 'border-2 border-amber-500 bg-amber-950/20 ring-2 ring-amber-500/20' : 'border-2 border-amber-500 bg-amber-50/20 ring-2 ring-amber-500/20')
-                              : (isDarkMode ? 'border-zinc-700 bg-zinc-800/80 hover:border-zinc-500' : 'border-slate-200 bg-slate-50 hover:border-slate-400')
+                            isThumbnail ? 'ring-2 ring-[var(--theme-secondary)]' : ''
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border rounded inline-block" style={{ color: getDotColor(log), borderColor: getDotColor(log) }}>{log.projectType}</span>
-                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${isThumbnail ? 'bg-amber-500 text-white' : (isDarkMode ? 'bg-zinc-700 text-zinc-300' : 'bg-slate-200 text-slate-600')}`}>
+                            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${isThumbnail ? 'bg-[var(--theme-secondary)] text-white' : 'opacity-60'}`}>
                               {isThumbnail ? '★ Current Thumbnail' : 'Click to set as thumbnail'}
                             </span>
                           </div>
@@ -1403,23 +1681,21 @@ function App() {
                           {log.imageUrl && (
                             <img 
                               src={log.imageUrl} 
-                              className={`h-[210px] w-full rounded-md object-cover border ${isDarkMode ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-slate-100'}`} 
+                              className="h-[210px] w-full rounded-md object-cover border" 
+                              style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-card)' }}
                               alt="" 
                             />
                           )}
 
                           <div className="flex items-center justify-between gap-2">
-                            <h3 className={`text-base font-bold truncate ${isDarkMode ? 'text-zinc-100' : 'text-slate-800'}`}>{log.title}</h3>
+                            <h3 className="text-base font-bold truncate">{log.title}</h3>
                             <a 
                               href={notionPageUrl} 
                               target="_blank" 
                               rel="noopener noreferrer" 
                               onClick={(e) => e.stopPropagation()}
-                              className={`text-xs font-semibold px-2.5 py-1 rounded border shrink-0 flex items-center gap-1 transition-colors ${
-                                isDarkMode 
-                                  ? 'bg-zinc-800 border-zinc-700 text-rose-400 hover:bg-rose-950/40 hover:border-rose-700' 
-                                  : 'bg-white border-slate-300 text-rose-600 hover:bg-rose-50 hover:border-rose-300'
-                              }`}
+                              style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', color: 'var(--theme-primary)' }}
+                              className="text-xs font-semibold px-2.5 py-1 rounded border shrink-0 flex items-center gap-1 transition-colors hover:border-[var(--theme-primary)]"
                               title="Open in Notion Center Peek"
                             >
                               <span>Open in Notion</span>
@@ -1428,7 +1704,7 @@ function App() {
                           </div>
 
                           {log.pageContent && (
-                            <div className={`text-xs p-3 rounded border leading-normal whitespace-pre-wrap flex-1 overflow-hidden ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-300' : 'bg-white border-slate-200 text-slate-600'}`}>
+                            <div className="text-xs p-3 rounded border leading-normal whitespace-pre-wrap flex-1 overflow-hidden" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
                               <div className="line-clamp-[12] lg:line-clamp-[16] 2xl:line-clamp-[22] text-ellipsis">
                                 {log.pageContent}
                               </div>
@@ -1438,21 +1714,17 @@ function App() {
                       );
                     })
                   ) : (
-                    <div className={`flex items-center justify-center text-center py-12 w-full italic text-sm ${isDarkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+                    <div className="flex items-center justify-center text-center py-12 w-full italic text-sm opacity-50">
                       No logged actions for this target date.
                     </div>
                   )}
                 </div>
 
-                {/* Right Chevron Button */}
                 {logs.length > 1 && (
                   <button 
                     onClick={() => scrollCarousel('right')}
-                    className={`absolute right-3 z-30 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-all cursor-pointer ${
-                      isDarkMode 
-                        ? 'bg-zinc-800/90 border-zinc-700 text-zinc-200 hover:bg-rose-600 hover:border-rose-600 hover:text-white' 
-                        : 'bg-white/90 border-slate-300 text-slate-700 hover:bg-rose-500 hover:border-rose-500 hover:text-white'
-                    }`}
+                    style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
+                    className="absolute right-3 z-30 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-all cursor-pointer hover:border-[var(--theme-primary)]"
                     title="Scroll Right"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
