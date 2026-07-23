@@ -80,10 +80,162 @@ const getOntarioStatHolidayName = (dateObj) => {
   return null;
 };
 
+// -------------------------------------------------------------
+// SUB-COMPONENT: WEEK DAY COLUMN (WITH OVERFLOW SCROLL ARROWS)
+// -------------------------------------------------------------
+function WeekDayColumn({ 
+  slot, 
+  logs, 
+  isTodayDate, 
+  displayDotHex, 
+  weekCardHeight, 
+  isDarkMode, 
+  cardRadius, 
+  hoveredProjectTitle, 
+  setHoveredProjectTitle, 
+  setSelectedLogModal, 
+  getDotColor 
+}) {
+  const scrollRef = useRef(null);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  const checkScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    setCanScrollUp(scrollTop > 4);
+    setCanScrollDown(scrollTop + clientHeight < scrollHeight - 4);
+  };
+
+  useEffect(() => {
+    checkScroll();
+  }, [logs, weekCardHeight]);
+
+  const hasLog = logs.length > 0;
+
+  return (
+    <div 
+      className={`flex flex-col h-full border shadow-sm overflow-hidden transition-all relative ${
+        isDarkMode ? 'bg-zinc-900/60 border-zinc-800 text-zinc-100' : 'bg-slate-50/50 border-slate-200 text-slate-900'
+      } ${isTodayDate ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`} 
+      style={{ borderRadius: `${cardRadius}px` }}
+    >
+      {/* Day Frame Header */}
+      <div className={`p-2 shrink-0 border-b flex items-center justify-between z-10 relative ${
+        isDarkMode ? 'border-zinc-800 bg-zinc-800/40' : 'border-slate-200 bg-white'
+      }`}>
+        <div 
+          className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm border transition-all ${
+            hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')
+          } ${isTodayDate && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''}`} 
+          style={{ backgroundColor: hasLog ? displayDotHex : undefined }}
+        >
+          {slot.dayNum}
+        </div>
+
+        {logs.length > 1 && (
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30">
+            {logs.length}
+          </span>
+        )}
+      </div>
+
+      {/* TOP OVERFLOW SCROLL ARROW (WIDE OBLIQUE ANGLE) */}
+      {canScrollUp && (
+        <button 
+          onClick={() => scrollRef.current?.scrollBy({ top: -(weekCardHeight + 10), behavior: 'smooth' })}
+          className={`absolute top-[41px] left-0 right-0 z-20 flex items-center justify-center py-1.5 cursor-pointer bg-gradient-to-b ${
+            isDarkMode ? 'from-zinc-900 via-zinc-900/90 to-transparent' : 'from-slate-100 via-slate-100/90 to-transparent'
+          } hover:opacity-100 opacity-80 transition-all`}
+          title="Scroll up"
+        >
+          <svg className="w-6 h-2.5 stroke-rose-500 fill-none" viewBox="0 0 24 10" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="2 8 12 2 22 8" />
+          </svg>
+        </button>
+      )}
+
+      {/* Vertically Stacked Cards Container (Native Scrollbar Hidden) */}
+      <div 
+        ref={scrollRef}
+        onScroll={checkScroll}
+        className="flex-1 overflow-y-auto p-2 space-y-2.5 min-h-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {hasLog ? (
+          logs.map((log) => {
+            const logDotHex = getDotColor(log);
+            const isHoveredProject = (log.Projects || 'Untitled Project') === hoveredProjectTitle;
+            const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
+
+            return (
+              <div 
+                key={log.id} 
+                onClick={() => setSelectedLogModal({ dateObj: slot.dateObj, logs })}
+                onMouseEnter={() => setHoveredProjectTitle(log.Projects || 'Untitled Project')}
+                onMouseLeave={() => setHoveredProjectTitle(null)}
+                style={{ height: `${weekCardHeight}px` }}
+                className={`relative overflow-hidden rounded-lg border shadow-xs p-2 shrink-0 flex flex-col justify-between transition-all cursor-pointer ${
+                  isDarkMode ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-500' : 'bg-white border-slate-200 hover:border-slate-400'
+                } ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.01] z-10' : ''} ${
+                  isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''
+                }`}
+              >
+                {log.imageUrl && (
+                  <img 
+                    src={log.imageUrl} 
+                    className="absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-200" 
+                    alt="" 
+                  />
+                )}
+
+                {/* Pill Project Tag */}
+                <div className="relative z-10 flex items-center gap-1.5 pointer-events-none">
+                  <span 
+                    className="inline-flex items-center text-[9px] sm:text-[10px] font-bold text-white px-2 py-0.5 rounded-full backdrop-blur-sm truncate max-w-full leading-none shadow-xs"
+                    style={{ backgroundColor: logDotHex }}
+                  >
+                    {log.Projects}
+                  </span>
+                </div>
+
+                {/* Translucent Title Overlay */}
+                <div className="relative z-10 mt-auto">
+                  <div className="text-[10px] sm:text-[11px] font-bold text-white bg-black/30 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight">
+                    {log.title}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className={`h-full flex items-center justify-center text-[10px] italic ${isDarkMode ? 'text-zinc-600' : 'text-slate-300'}`}>
+            No entries
+          </div>
+        )}
+      </div>
+
+      {/* BOTTOM OVERFLOW SCROLL ARROW (WIDE OBLIQUE ANGLE) */}
+      {canScrollDown && (
+        <button 
+          onClick={() => scrollRef.current?.scrollBy({ top: weekCardHeight + 10, behavior: 'smooth' })}
+          className={`absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center py-1.5 cursor-pointer bg-gradient-to-t ${
+            isDarkMode ? 'from-zinc-900 via-zinc-900/90 to-transparent' : 'from-slate-100 via-slate-100/90 to-transparent'
+          } hover:opacity-100 opacity-80 transition-all`}
+          title="Scroll down"
+        >
+          <svg className="w-6 h-2.5 stroke-rose-500 fill-none" viewBox="0 0 24 10" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="2 2 12 8 22 2" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// MAIN APP COMPONENT
+// -------------------------------------------------------------
 function App() {
-  // -------------------------------------------------------------
-  // 1. STATE & INITIALIZATION
-  // -------------------------------------------------------------
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(today);
   const [viewMode, setViewMode] = useState('year'); 
@@ -130,7 +282,7 @@ function App() {
     const handleMouseMove = (e) => {
       if (!isResizingCardHeight) return;
       const deltaY = e.clientY - dragStartY.current;
-      const newHeight = Math.min(Math.max(dragStartHeight.current + deltaY, 70), 320);
+      const newHeight = Math.min(Math.max(dragStartHeight.current + deltaY, 70), 340);
       setWeekCardHeight(newHeight);
     };
 
@@ -164,7 +316,7 @@ function App() {
   const [projectColorMap, setProjectColorMap] = useState({});
 
   // --- RESPONSIVE ROTATION VARS ---
-  const [yearOrientationMode, setYearOrientationMode] = useState('auto'); // 'auto', 'landscape', 'portrait'
+  const [yearOrientationMode, setYearOrientationMode] = useState('auto');
   const [calendarSize, setCalendarSize] = useState({ width: 0, height: 0 });
 
   const appRef = useRef(null);
@@ -777,51 +929,35 @@ function App() {
             </div>
           )}
 
-          {/* B. WEEK VIEW (WITH INTERACTIVE PULL-DOWN CARD HEIGHT GUIDE) */}
+          {/* B. WEEK VIEW (WITH HOVER-ONLY RESIZE GUIDE & CUSTOM OVERFLOW ARROWS) */}
           {viewMode === 'week' && (
-            <div className="flex flex-col h-full w-full min-h-0 relative">
-              {/* Day Header Row + Height Slider Control */}
-              <div className="flex items-center justify-between mb-2 shrink-0">
-                <div className="grid text-center text-xs font-semibold uppercase tracking-wider w-full" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
-                    <div key={day} className={idx === 0 || idx === 6 ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-400' : 'text-slate-500')}>{day}</div>
-                  ))}
-                </div>
-
-                {/* Auxiliary Height Range Control */}
-                <div className={`absolute top-0 right-0 z-40 flex items-center gap-2 border px-2 py-0.5 rounded-md text-[10px] font-bold shadow-xs ${
-                  isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-300' : 'bg-white border-slate-200 text-slate-600'
-                }`}>
-                  <span className="opacity-70">Card Height:</span>
-                  <input 
-                    type="range" 
-                    min="70" 
-                    max="320" 
-                    value={weekCardHeight} 
-                    onChange={(e) => setWeekCardHeight(Number(e.target.value))}
-                    className="w-16 h-1 accent-rose-500 cursor-pointer" 
-                  />
-                  <span className="w-8 text-right font-mono text-rose-500">{Math.round(weekCardHeight)}px</span>
-                </div>
+            <div className="flex flex-col h-full w-full min-h-0 relative group/week-canvas">
+              {/* Day Header Row */}
+              <div className="grid text-center text-xs font-semibold uppercase tracking-wider mb-2 shrink-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
+                  <div key={day} className={idx === 0 || idx === 6 ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-400' : 'text-slate-500')}>{day}</div>
+                ))}
               </div>
               
               {/* Columns Grid Container */}
               <div className="grid flex-1 min-h-0 relative" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 
-                {/* INTERACTIVE PULL-DOWN DRAG GUIDE BAR (Positioned on bottom border of Row 1 cards) */}
+                {/* HOVER-ONLY PULL TO RESIZE DRAG GUIDE (CENTERED IN GAP BETWEEN ROW 1 & 2) */}
                 <div 
                   onMouseDown={handleMouseDownResize}
-                  className="group absolute left-0 right-0 z-30 flex items-center justify-center cursor-ns-resize py-1.5 transition-all pointer-events-auto"
-                  style={{ top: `${weekCardHeight + 81}px` }}
+                  className={`group/handle absolute left-0 right-0 z-30 flex items-center justify-center cursor-ns-resize py-2 transition-opacity duration-200 pointer-events-auto ${
+                    isResizingCardHeight ? 'opacity-100' : 'opacity-0 group-hover/week-canvas:opacity-100'
+                  }`}
+                  style={{ top: `${weekCardHeight + 54}px` }}
                   title="Click & Drag down/up to scale entry card aspect ratio"
                 >
                   <div className={`w-full h-[2px] transition-all flex items-center justify-center ${
                     isResizingCardHeight 
                       ? 'bg-rose-500 shadow-md' 
-                      : (isDarkMode ? 'bg-rose-500/40 group-hover:bg-rose-500' : 'bg-rose-400/50 group-hover:bg-rose-500')
+                      : (isDarkMode ? 'bg-rose-500/40 group-hover/handle:bg-rose-500' : 'bg-rose-400/50 group-hover/handle:bg-rose-500')
                   }`}>
                     <div className={`text-white text-[9px] font-black px-3 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 transition-transform ${
-                      isResizingCardHeight ? 'bg-rose-600 scale-110 ring-2 ring-rose-400' : 'bg-rose-500/90 group-hover:scale-105'
+                      isResizingCardHeight ? 'bg-rose-600 scale-110 ring-2 ring-rose-400' : 'bg-rose-500/90 group-hover/handle:scale-105'
                     }`}>
                       <span>↕ PULL TO RESIZE</span>
                       <span className="font-mono">({Math.round(weekCardHeight)}px)</span>
@@ -829,94 +965,26 @@ function App() {
                   </div>
                 </div>
 
+                {/* Day Frame Columns */}
                 {slots.map((slot, index) => {
                   const logs = getLogsForDate(slot.dateObj);
-                  const hasLog = logs.length > 0;
                   const displayDotHex = getDisplayDotColor(logs, slot.dateObj);
 
                   return (
-                    <div 
-                      key={index} 
-                      className={`flex flex-col h-full border shadow-sm overflow-hidden transition-all ${
-                        isDarkMode ? 'bg-zinc-900/60 border-zinc-800 text-zinc-100' : 'bg-slate-50/50 border-slate-200 text-slate-900'
-                      } ${isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`} 
-                      style={{ borderRadius: `${cardRadius}px` }}
-                    >
-                      {/* Day Frame Header */}
-                      <div className={`p-2 shrink-0 border-b flex items-center justify-between ${
-                        isDarkMode ? 'border-zinc-800 bg-zinc-800/40' : 'border-slate-200 bg-white'
-                      }`}>
-                        <div 
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm border transition-all ${
-                            hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')
-                          } ${isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''}`} 
-                          style={{ backgroundColor: hasLog ? displayDotHex : undefined }}
-                        >
-                          {slot.dayNum}
-                        </div>
-
-                        {logs.length > 1 && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30">
-                            {logs.length}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Vertically Stacked Cards Container */}
-                      <div className="flex-1 overflow-y-auto p-2 space-y-2.5 min-h-0">
-                        {hasLog ? (
-                          logs.map((log) => {
-                            const logDotHex = getDotColor(log);
-                            const isHoveredProject = (log.Projects || 'Untitled Project') === hoveredProjectTitle;
-                            const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
-
-                            return (
-                              <div 
-                                key={log.id} 
-                                onClick={() => setSelectedLogModal({ dateObj: slot.dateObj, logs })}
-                                onMouseEnter={() => setHoveredProjectTitle(log.Projects || 'Untitled Project')}
-                                onMouseLeave={() => setHoveredProjectTitle(null)}
-                                style={{ height: `${weekCardHeight}px` }}
-                                className={`relative overflow-hidden rounded-lg border shadow-xs p-2 shrink-0 flex flex-col justify-between transition-all cursor-pointer ${
-                                  isDarkMode ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-500' : 'bg-white border-slate-200 hover:border-slate-400'
-                                } ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.01] z-10' : ''} ${
-                                  isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''
-                                }`}
-                              >
-                                {log.imageUrl && (
-                                  <img 
-                                    src={log.imageUrl} 
-                                    className="absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-200" 
-                                    alt="" 
-                                  />
-                                )}
-
-                                {/* Pill Project Tag */}
-                                <div className="relative z-10 flex items-center gap-1.5 pointer-events-none">
-                                  <span 
-                                    className="inline-flex items-center text-[9px] sm:text-[10px] font-bold text-white px-2 py-0.5 rounded-full backdrop-blur-sm truncate max-w-full leading-none shadow-xs"
-                                    style={{ backgroundColor: logDotHex }}
-                                  >
-                                    {log.Projects}
-                                  </span>
-                                </div>
-
-                                {/* Translucent Title Overlay (Text preview snippet removed) */}
-                                <div className="relative z-10 mt-auto">
-                                  <div className="text-[10px] sm:text-[11px] font-bold text-white bg-black/30 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight">
-                                    {log.title}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className={`h-full flex items-center justify-center text-[10px] italic ${isDarkMode ? 'text-zinc-600' : 'text-slate-300'}`}>
-                            No entries
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <WeekDayColumn 
+                      key={index}
+                      slot={slot}
+                      logs={logs}
+                      isTodayDate={isToday(slot.dateObj)}
+                      displayDotHex={displayDotHex}
+                      weekCardHeight={weekCardHeight}
+                      isDarkMode={isDarkMode}
+                      cardRadius={cardRadius}
+                      hoveredProjectTitle={hoveredProjectTitle}
+                      setHoveredProjectTitle={setHoveredProjectTitle}
+                      setSelectedLogModal={setSelectedLogModal}
+                      getDotColor={getDotColor}
+                    />
                   );
                 })}
               </div>
