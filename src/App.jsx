@@ -729,76 +729,108 @@ function App() {
             </div>
           )}
 
-          {/* B. WEEK VIEW */}
+          {/* B. WEEK VIEW (ALL ENTRIES STACKED IN DAY FRAME) */}
           {viewMode === 'week' && (
             <div className="flex flex-col h-full w-full min-h-0">
+              {/* Day Header Row */}
               <div className="grid text-center text-xs font-semibold uppercase tracking-wider mb-2 shrink-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
                   <div key={day} className={idx === 0 || idx === 6 ? 'text-rose-500 font-bold' : (isDarkMode ? 'text-zinc-400' : 'text-slate-500')}>{day}</div>
                 ))}
               </div>
               
+              {/* Columns Container */}
               <div className="grid flex-1 min-h-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 {slots.map((slot, index) => {
                   const logs = getLogsForDate(slot.dateObj);
                   const hasLog = logs.length > 0;
-                  const uniqueProjects = new Set(logs.map(l => l.Projects || 'Untitled Project'));
-                  const hasMultipleProjects = uniqueProjects.size > 1;
-                  const { primaryLog, isHalftoned } = getThumbnailLogForDate(slot.dateObj, logs);
                   const displayDotHex = getDisplayDotColor(logs, slot.dateObj);
-                  
-                  const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
-                  const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
 
                   return (
                     <div 
                       key={index} 
-                      className={`flex flex-col h-full border shadow-sm overflow-hidden transition-all ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200'} ${isHoveredProject ? 'ring-2 ring-amber-500 z-20' : isToday(slot.dateObj) ? (isUnrelatedHover ? 'ring-2 ring-zinc-500/40 z-10' : 'ring-2 ring-rose-500 ring-offset-1 z-10') : ''}`} 
+                      className={`flex flex-col h-full border shadow-sm overflow-hidden transition-all ${
+                        isDarkMode ? 'bg-zinc-900/60 border-zinc-800 text-zinc-100' : 'bg-slate-50/50 border-slate-200 text-slate-900'
+                      } ${isToday(slot.dateObj) ? 'ring-2 ring-rose-500 ring-offset-1 z-10' : ''}`} 
                       style={{ borderRadius: `${cardRadius}px` }}
                     >
-                      <div 
-                        onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
-                        onMouseEnter={() => { if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }}
-                        onMouseLeave={() => setHoveredProjectTitle(null)}
-                        className={`relative h-[120px] shrink-0 overflow-hidden p-3 border-b cursor-pointer flex flex-col justify-end transition-all ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'} ${isHoveredProject ? 'bg-amber-500/10' : ''}`}
-                      >
-                        {hasLog && primaryLog?.imageUrl && (
-                          <img 
-                            src={primaryLog.imageUrl} 
-                            className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-200 ${isHalftoned ? 'opacity-40 grayscale-[20%]' : ''}`} 
-                            alt="" 
-                          />
-                        )}
-
-                        {/* Top row container: Day Dot + Pill-Shaped Project Tag matching Dot Color */}
-                        <div className="absolute top-2 left-2 right-2 flex items-center gap-1.5 z-10 pointer-events-none">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
-                            {slot.dayNum}
-                            {hasMultipleProjects && (
-                              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none p-0 border border-white shadow-sm select-none">
-                                +
-                              </span>
-                            )}
-                          </div>
-                          {hasLog && primaryLog && (
-                            <span 
-                              className={`inline-flex items-center text-[9px] sm:text-[10px] font-bold text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[calc(100%-2rem)] leading-none shadow-xs transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
-                              style={{ backgroundColor: displayDotHex }}
-                            >
-                              {primaryLog.Projects}
-                            </span>
-                          )}
+                      {/* Day Frame Top Badge */}
+                      <div className={`p-2 shrink-0 border-b flex items-center justify-between ${
+                        isDarkMode ? 'border-zinc-800 bg-zinc-800/40' : 'border-slate-200 bg-white'
+                      }`}>
+                        <div 
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm border transition-all ${
+                            hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')
+                          } ${isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''}`} 
+                          style={{ backgroundColor: hasLog ? displayDotHex : undefined }}
+                        >
+                          {slot.dayNum}
                         </div>
 
-                        {/* Translucent Entry Page Title Overlay */}
-                        {hasLog && primaryLog && (
-                          <div className={`relative z-10 text-[11px] font-bold text-white bg-black/30 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>
-                            {primaryLog.title}
-                          </div>
+                        {logs.length > 1 && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30">
+                            {logs.length}
+                          </span>
                         )}
                       </div>
-                      <div className="p-3 flex-1 overflow-y-auto min-h-0">
-                        {hasLog && primaryLog?.pageContent && <p className={`text-[11px] leading-normal whitespace-pre-wrap transition-opacity duration-200 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'} ${isUnrelatedHover ? 'opacity-40' : ''}`}>{primaryLog.pageContent}</p>}
+
+                      {/* Vertically Stacked Cards Container */}
+                      <div className="flex-1 overflow-y-auto p-2 space-y-2.5 min-h-0">
+                        {hasLog ? (
+                          logs.map((log) => {
+                            const logDotHex = getDotColor(log);
+                            const isHoveredProject = (log.Projects || 'Untitled Project') === hoveredProjectTitle;
+                            const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
+
+                            return (
+                              <div 
+                                key={log.id} 
+                                onClick={() => setSelectedLogModal({ dateObj: slot.dateObj, logs })}
+                                onMouseEnter={() => setHoveredProjectTitle(log.Projects || 'Untitled Project')}
+                                onMouseLeave={() => setHoveredProjectTitle(null)}
+                                className={`relative overflow-hidden rounded-lg border shadow-xs min-h-[110px] p-2 flex flex-col justify-between transition-all cursor-pointer ${
+                                  isDarkMode ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-500' : 'bg-white border-slate-200 hover:border-slate-400'
+                                } ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.01] z-10' : ''} ${
+                                  isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''
+                                }`}
+                              >
+                                {log.imageUrl && (
+                                  <img 
+                                    src={log.imageUrl} 
+                                    className="absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-200" 
+                                    alt="" 
+                                  />
+                                )}
+
+                                {/* Pill Project Tag */}
+                                <div className="relative z-10 flex items-center gap-1.5 pointer-events-none">
+                                  <span 
+                                    className="inline-flex items-center text-[9px] sm:text-[10px] font-bold text-white px-2 py-0.5 rounded-full backdrop-blur-sm truncate max-w-full leading-none shadow-xs"
+                                    style={{ backgroundColor: logDotHex }}
+                                  >
+                                    {log.Projects}
+                                  </span>
+                                </div>
+
+                                {/* Translucent Title Overlay */}
+                                <div className="relative z-10 mt-auto pt-2 space-y-1">
+                                  <div className="text-[10px] sm:text-[11px] font-bold text-white bg-black/30 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight">
+                                    {log.title}
+                                  </div>
+                                  {log.pageContent && (
+                                    <div className="text-[9px] text-zinc-200 bg-black/40 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-snug">
+                                      {log.pageContent}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className={`h-full flex items-center justify-center text-[10px] italic ${isDarkMode ? 'text-zinc-600' : 'text-slate-300'}`}>
+                            No entries
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
