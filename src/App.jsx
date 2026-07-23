@@ -196,7 +196,7 @@ function App() {
       }
     } catch (err) {
       setFetchError('Network error occurred while fetching logs.');
-    } fontally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -499,7 +499,7 @@ function App() {
             onClick={() => { if (notionToken && databaseId) fetchLogsFromNotion(notionToken, databaseId); }}
             disabled={isLoading || !notionToken || !databaseId}
             title="Sync Notion Data"
-            className={`px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-xs transition-colors ${
+            className={`px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors ${
               isDarkMode 
                 ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700 disabled:opacity-50' 
                 : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50 disabled:opacity-50'
@@ -512,7 +512,7 @@ function App() {
           <button
             onClick={() => setShowSettings(true)}
             title="Notion Integration Settings"
-            className={`px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-xs transition-colors ${
+            className={`px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors ${
               isDarkMode 
                 ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' 
                 : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
@@ -526,7 +526,7 @@ function App() {
             className={`px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 ${
               isSidebarOpen 
                 ? (isDarkMode ? 'bg-zinc-700 text-zinc-100 border-zinc-600' : 'bg-zinc-800 text-white border-zinc-700') 
-                : (isDarkMode ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' : 'bg-white text-slate-600 border-slate-300 shadow-xs hover:bg-slate-50')
+                : (isDarkMode ? 'bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700' : 'bg-white text-slate-600 border-slate-300 shadow-sm hover:bg-slate-50')
             }`}
           >
             <span>📁</span><span>{isSidebarOpen ? 'Hide Projects' : 'Projects'}</span>
@@ -544,9 +544,9 @@ function App() {
           </button>
 
           <div className={`flex items-center p-0.5 rounded-lg border ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-slate-200 border-slate-300'}`}>
-            <button onClick={() => setViewMode('year')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'year' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-xs font-bold' : 'bg-white text-slate-900 shadow-xs font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Year</button>
-            <button onClick={() => setViewMode('month')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'month' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-xs font-bold' : 'bg-white text-slate-900 shadow-xs font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Month</button>
-            <button onClick={() => setViewMode('week')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'week' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-xs font-bold' : 'bg-white text-slate-900 shadow-xs font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Week</button>
+            <button onClick={() => setViewMode('year')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'year' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-sm font-bold' : 'bg-white text-slate-900 shadow-sm font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Year</button>
+            <button onClick={() => setViewMode('month')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'month' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-sm font-bold' : 'bg-white text-slate-900 shadow-sm font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Month</button>
+            <button onClick={() => setViewMode('week')} className={`px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${viewMode === 'week' ? (isDarkMode ? 'bg-zinc-900 text-zinc-100 shadow-sm font-bold' : 'bg-white text-slate-900 shadow-sm font-bold') : (isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-500')}`}>Week</button>
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -575,7 +575,7 @@ function App() {
         
         {/* SIDEBAR */}
         {isSidebarOpen && (
-          <aside className={`w-[260px] shrink-0 h-full flex flex-col p-4 rounded-xl border shadow-xs ${isDarkMode ? 'bg-[#191919] border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} style={{ borderRadius: `${cardRadius}px` }}>
+          <aside className={`w-[260px] shrink-0 h-full flex flex-col p-4 rounded-xl border shadow-sm ${isDarkMode ? 'bg-[#191919] border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} style={{ borderRadius: `${cardRadius}px` }}>
             <div className="mb-3 shrink-0">
               <h2 className={`text-sm font-bold mb-2 ${isDarkMode ? 'text-zinc-200' : 'text-slate-800'}`}>Categories</h2>
               <div className={`flex flex-wrap items-center gap-1.5 pb-2 border-b ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
@@ -594,7 +594,7 @@ function App() {
                 const categoryBorderColor = adjustHexColor(baseTypeHex, 40);
 
                 return (
-                  <div key={type} className={`border rounded-md overflow-hidden shrink-0 shadow-2xs ${isDarkMode ? 'bg-[#191919]' : 'bg-white'}`} style={{ borderColor: categoryBorderColor }}>
+                  <div key={type} className={`border rounded-md overflow-hidden shrink-0 shadow-sm ${isDarkMode ? 'bg-[#191919]' : 'bg-white'}`} style={{ borderColor: categoryBorderColor }}>
                     <div onClick={() => toggleTypeAccordion(type)} className={`text-[10px] font-bold uppercase tracking-wider p-2.5 flex items-center justify-between cursor-pointer transition-colors ${isDarkMode ? 'text-zinc-200 hover:bg-zinc-800/60' : 'text-slate-800 hover:bg-slate-50'}`}>
                       <span className="tracking-wide font-black">{type}</span>
                       <span className="text-[9px] font-mono opacity-60">{isHidden ? '▼' : '▲'}</span>
@@ -608,8 +608,8 @@ function App() {
                           const projectDotHex = projectColorMap[p.title] || baseTypeHex;
 
                           let cardStyles = isDarkMode 
-                            ? 'border-zinc-700 bg-zinc-800/80 font-medium text-zinc-200 shadow-2xs hover:border-amber-400' 
-                            : 'border-slate-300 bg-white font-medium text-slate-800 shadow-2xs hover:border-amber-400';
+                            ? 'border-zinc-700 bg-zinc-800/80 font-medium text-zinc-200 shadow-sm hover:border-amber-400' 
+                            : 'border-slate-300 bg-white font-medium text-slate-800 shadow-sm hover:border-amber-400';
                           
                           if (isHovered) {
                             cardStyles = isDarkMode 
@@ -617,7 +617,7 @@ function App() {
                               : 'border-amber-500 bg-amber-50 font-bold text-amber-800 shadow-sm ring-1 ring-amber-500/50 scale-[1.02] z-10 relative transition-all duration-200';
                           } else if (dynamicFilterActive) {
                             cardStyles = isSelected 
-                              ? (isDarkMode ? 'border-amber-400 bg-zinc-800 font-bold text-zinc-100 shadow-xs ring-1 ring-amber-400/20' : 'border-amber-400 font-bold text-slate-900 shadow-xs ring-1 ring-amber-400/20 bg-white')
+                              ? (isDarkMode ? 'border-amber-400 bg-zinc-800 font-bold text-zinc-100 shadow-sm ring-1 ring-amber-400/20' : 'border-amber-400 font-bold text-slate-900 shadow-sm ring-1 ring-amber-400/20 bg-white')
                               : (isDarkMode ? 'border-zinc-800 bg-zinc-900 opacity-30 font-normal text-zinc-500 hover:opacity-60' : 'border-slate-200 opacity-30 font-normal text-slate-400 hover:opacity-60 bg-white');
                           }
                           return (
@@ -628,7 +628,7 @@ function App() {
                               onMouseLeave={() => setHoveredProjectTitle(null)} 
                               className={`text-xs p-2.5 rounded border transition-all cursor-pointer flex items-center gap-2 ${cardStyles}`}
                             >
-                              <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20 shadow-2xs" style={{ backgroundColor: projectDotHex }} />
+                              <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20 shadow-sm" style={{ backgroundColor: projectDotHex }} />
                               <span className="truncate">{p.title}</span>
                             </div>
                           );
@@ -642,7 +642,7 @@ function App() {
           </aside>
         )}
 
-        {/* CALENDAR CANVAS (Adapts fluidly based on view) */}
+        {/* CALENDAR CANVAS */}
         <main ref={calendarRef} className={`flex-1 h-full min-h-0 min-w-0 border rounded-xl shadow-sm p-4 overflow-hidden flex flex-col relative transition-colors ${isDarkMode ? 'bg-[#191919] border-zinc-800 text-zinc-100' : 'bg-white border-gray-200 text-slate-900'}`} style={{ borderRadius: `${cardRadius}px` }}>
           
           {/* A. MONTH VIEW */}
@@ -663,7 +663,7 @@ function App() {
                     <button
                       onClick={() => { const targetSlot = rowSlots.find(s => s.isValid && s.dateObj) || rowSlots[0]; if (targetSlot && targetSlot.dateObj) { setCurrentDate(targetSlot.dateObj); setViewMode('week'); } }}
                       title="Open Weekly View"
-                      className={`w-5 shrink-0 rounded-md transition-all flex items-center justify-center cursor-pointer group border shadow-2xs ${isDarkMode ? 'bg-zinc-800 hover:bg-rose-600 text-zinc-400 hover:text-white border-zinc-700 hover:border-rose-600' : 'bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-white border-slate-200 hover:border-rose-500'}`}
+                      className={`w-5 shrink-0 rounded-md transition-all flex items-center justify-center cursor-pointer group border shadow-sm ${isDarkMode ? 'bg-zinc-800 hover:bg-rose-600 text-zinc-400 hover:text-white border-zinc-700 hover:border-rose-600' : 'bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-white border-slate-200 hover:border-rose-500'}`}
                     >
                       <span className="text-[10px] font-bold group-hover:scale-125 transition-transform">›</span>
                     </button>
@@ -686,7 +686,7 @@ function App() {
                             onClick={() => slot.dateObj && setSelectedLogModal({ dateObj: slot.dateObj, logs })}
                             onMouseEnter={() => { if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }}
                             onMouseLeave={() => setHoveredProjectTitle(null)}
-                            className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all shadow-2xs ${isDarkMode ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' : 'bg-white border-slate-200 hover:shadow-md'} ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.02] z-20 bg-amber-500/10' : isToday(slot.dateObj) ? (isUnrelatedHover ? 'ring-2 ring-zinc-500/40 z-10' : 'ring-2 ring-rose-500 ring-offset-1 z-10') : ''}`}
+                            className={`h-full w-full relative overflow-hidden p-2 border cursor-pointer flex flex-col justify-end transition-all shadow-sm ${isDarkMode ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' : 'bg-white border-slate-200 hover:shadow-md'} ${isHoveredProject ? 'ring-2 ring-amber-500 shadow-md scale-[1.02] z-20 bg-amber-500/10' : isToday(slot.dateObj) ? (isUnrelatedHover ? 'ring-2 ring-zinc-500/40 z-10' : 'ring-2 ring-rose-500 ring-offset-1 z-10') : ''}`}
                             style={{ borderRadius: `${cardRadius}px` }}
                           >
                             {hasLog && primaryLog?.imageUrl && (
@@ -697,19 +697,19 @@ function App() {
                               />
                             )}
 
-                            {/* Top row container: Day Dot + Pill Shaped Project Name Tag matching Dot Color */}
+                            {/* Top row container: Day Dot + Pill-Shaped Project Tag matching Dot Color */}
                             <div className="absolute top-2 left-2 right-2 flex items-center gap-1.5 z-10 pointer-events-none">
-                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-2xs border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
                                 {slot.dayNum}
                                 {hasMultipleProjects && (
-                                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none p-0 border border-white shadow-2xs select-none">
+                                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none p-0 border border-white shadow-sm select-none">
                                     +
                                   </span>
                                 )}
                               </div>
                               {hasLog && primaryLog && (
                                 <span 
-                                  className={`text-[9px] sm:text-[10px] font-bold text-white px-2 py-0.5 rounded-full backdrop-blur-xs truncate max-w-[calc(100%-2rem)] leading-tight transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
+                                  className={`inline-flex items-center text-[9px] sm:text-[10px] font-bold text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[calc(100%-2rem)] leading-none shadow-xs transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
                                   style={{ backgroundColor: displayDotHex }}
                                 >
                                   {primaryLog.Projects}
@@ -717,7 +717,12 @@ function App() {
                               )}
                             </div>
 
-                            {hasLog && primaryLog && <div className={`relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/35 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>{primaryLog.title}</div>}
+                            {/* Translucent Entry Page Title Overlay */}
+                            {hasLog && primaryLog && (
+                              <div className={`relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/30 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>
+                                {primaryLog.title}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -752,7 +757,7 @@ function App() {
                   return (
                     <div 
                       key={index} 
-                      className={`flex flex-col h-full border shadow-2xs overflow-hidden transition-all ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200'} ${isHoveredProject ? 'ring-2 ring-amber-500 z-20' : isToday(slot.dateObj) ? (isUnrelatedHover ? 'ring-2 ring-zinc-500/40 z-10' : 'ring-2 ring-rose-500 ring-offset-1 z-10') : ''}`} 
+                      className={`flex flex-col h-full border shadow-sm overflow-hidden transition-all ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200'} ${isHoveredProject ? 'ring-2 ring-amber-500 z-20' : isToday(slot.dateObj) ? (isUnrelatedHover ? 'ring-2 ring-zinc-500/40 z-10' : 'ring-2 ring-rose-500 ring-offset-1 z-10') : ''}`} 
                       style={{ borderRadius: `${cardRadius}px` }}
                     >
                       <div 
@@ -769,19 +774,19 @@ function App() {
                           />
                         )}
 
-                        {/* Top row container: Day Dot + Pill Shaped Project Name Tag matching Dot Color */}
+                        {/* Top row container: Day Dot + Pill-Shaped Project Tag matching Dot Color */}
                         <div className="absolute top-2 left-2 right-2 flex items-center gap-1.5 z-10 pointer-events-none">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-2xs border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${hasLog ? 'border-white/80' : (isDarkMode ? 'border-zinc-700 text-zinc-400 bg-zinc-800' : 'border-slate-300 text-slate-500 bg-white')} ${isHoveredProject ? 'ring-2 ring-amber-500' : isToday(slot.dateObj) && !hasLog ? 'bg-rose-500 ring-2 ring-rose-500 text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
                             {slot.dayNum}
                             {hasMultipleProjects && (
-                              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none p-0 border border-white shadow-2xs select-none">
+                              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 text-white text-[7px] font-black flex items-center justify-center leading-none p-0 border border-white shadow-sm select-none">
                                 +
                               </span>
                             )}
                           </div>
                           {hasLog && primaryLog && (
                             <span 
-                              className={`text-[9px] sm:text-[10px] font-bold text-white px-2 py-0.5 rounded-full backdrop-blur-xs truncate max-w-[calc(100%-2rem)] leading-tight transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
+                              className={`inline-flex items-center text-[9px] sm:text-[10px] font-bold text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[calc(100%-2rem)] leading-none shadow-xs transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
                               style={{ backgroundColor: displayDotHex }}
                             >
                               {primaryLog.Projects}
@@ -789,7 +794,12 @@ function App() {
                           )}
                         </div>
 
-                        {hasLog && primaryLog && <div className={`relative z-10 text-[11px] font-bold text-white bg-black/35 p-1 rounded-xs backdrop-blur-xs line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>{primaryLog.title}</div>}
+                        {/* Translucent Entry Page Title Overlay */}
+                        {hasLog && primaryLog && (
+                          <div className={`relative z-10 text-[11px] font-bold text-white bg-black/30 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>
+                            {primaryLog.title}
+                          </div>
+                        )}
                       </div>
                       <div className="p-3 flex-1 overflow-y-auto min-h-0">
                         {hasLog && primaryLog?.pageContent && <p className={`text-[11px] leading-normal whitespace-pre-wrap transition-opacity duration-200 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'} ${isUnrelatedHover ? 'opacity-40' : ''}`}>{primaryLog.pageContent}</p>}
@@ -832,7 +842,7 @@ function App() {
               </div>
 
               {activeYearOrientation === 'portrait' ? (
-                /* --- PORTRAIT LAYOUT (Months on X, Days on Y) --- */
+                /* --- PORTRAIT LAYOUT --- */
                 <div className="flex flex-col h-full w-full min-w-0 min-h-0 mt-8 relative">
                   <div className={`grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center mb-2 border-b pb-2 shrink-0 ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
                     <div className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 text-center">Day</div>
@@ -852,7 +862,6 @@ function App() {
                   </div>
                   
                   <div className="flex-1 flex flex-col justify-between min-h-0 min-w-0 relative">
-                    {/* Background vertical connecting lines for portrait months */}
                     <div className="absolute inset-0 grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] pointer-events-none z-0">
                       <div />
                       {MONTH_NAMES.map((_, mIdx) => (
@@ -922,7 +931,7 @@ function App() {
                                 <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
                                   {targetDayNum}
                                   {hasMultipleProjects && (
-                                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 text-white text-[6px] font-black flex items-center justify-center leading-none p-0 border border-white/80 shadow-2xs select-none">
+                                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 text-white text-[6px] font-black flex items-center justify-center leading-none p-0 border border-white/80 shadow-xs select-none">
                                       +
                                     </span>
                                   )}
@@ -936,7 +945,7 @@ function App() {
                   </div>
                 </div>
               ) : (
-                /* --- LANDSCAPE LAYOUT (Days on X, Months on Y) --- */
+                /* --- LANDSCAPE LAYOUT --- */
                 <div className="flex flex-col h-full w-full min-w-0 min-h-0 mt-8">
                   <div className={`grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center mb-2 border-b pb-2 shrink-0 ${isDarkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
                     <div className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 text-center">Month</div>
@@ -960,13 +969,11 @@ function App() {
                             {monthLabel}
                           </div>
                           <div className="grid gap-0.5 sm:gap-1 items-center relative h-full min-w-0" style={{ gridTemplateColumns: 'repeat(37, minmax(0, 1fr))' }}>
-                            {/* Connecting line behind month dots */}
                             <div className={`absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[1.5px] z-0 pointer-events-none ${isDarkMode ? 'bg-zinc-800' : 'bg-slate-200'}`} />
 
                             {Array.from({ length: 37 }).map((_, colIndex) => {
                               const weekIndex = Math.floor(colIndex / 7);
                               const isHoveredWeekCell = hoveredWeek?.mIdx === mIdx && hoveredWeek?.weekIndex === weekIndex;
-                              const weekdayStr = TIMELINE_WEEKDAYS[colIndex % 7];
                               const targetDayNum = colIndex - startOffsetColumn + 1;
                               const isValidCalendarDay = targetDayNum > 0 && targetDayNum <= daysInMonth;
                               const weekRoundClass = colIndex % 7 === 0 ? 'rounded-l-md -ml-0.5' : colIndex % 7 === 6 || colIndex === 36 ? 'rounded-r-md -mr-0.5' : 'rounded-none';
@@ -1009,7 +1016,7 @@ function App() {
                                   <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
                                     {targetDayNum}
                                     {hasMultipleProjects && (
-                                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 text-white text-[6px] font-black flex items-center justify-center leading-none p-0 border border-white/80 shadow-2xs select-none">
+                                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-500 text-white text-[6px] font-black flex items-center justify-center leading-none p-0 border border-white/80 shadow-xs select-none">
                                         +
                                       </span>
                                     )}
@@ -1033,7 +1040,7 @@ function App() {
       {/* SETTINGS MODAL */}
       {/* ------------------------------------------------------------- */}
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70 backdrop-blur-xs text-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm text-slate-800">
           <div className={`w-full max-w-md rounded-xl shadow-xl border p-6 ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
             <h2 className="text-lg font-bold mb-4">Widget Setup</h2>
             <p className={`text-xs mb-6 ${isDarkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Enter your Notion Integration Token and Database ID to fetch your personal logs.</p>
@@ -1071,7 +1078,7 @@ function App() {
               <button 
                 onClick={handleSaveSettings} 
                 disabled={!notionToken || !databaseId}
-                className="px-4 py-2 text-sm font-bold text-white bg-rose-500 rounded hover:bg-rose-600 disabled:opacity-50 cursor-pointer shadow-xs"
+                className="px-4 py-2 text-sm font-bold text-white bg-rose-500 rounded hover:bg-rose-600 disabled:opacity-50 cursor-pointer shadow-sm"
               >
                 Save & Sync
               </button>
@@ -1081,7 +1088,7 @@ function App() {
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* DETAIL LOG MODAL (DYNAMIC GRID FRACTIONS & NOTION PVS LINK) */}
+      {/* DETAIL LOG MODAL */}
       {/* ------------------------------------------------------------- */}
       {selectedLogModal && (() => {
         const dateKey = selectedLogModal.dateObj.toISOString().split('T')[0];
@@ -1091,13 +1098,12 @@ function App() {
         const scrollCarousel = (direction) => {
           if (!modalCarouselRef.current) return;
           const firstChild = modalCarouselRef.current.firstElementChild;
-          // Scroll accurately by measuring the first card's actual width + 24px gap
           const scrollAmount = firstChild ? firstChild.clientWidth + 24 : 450;
           modalCarouselRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
         };
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 sm:p-8 bg-black/70 backdrop-blur-xs" onClick={() => setSelectedLogModal(null)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 sm:p-8 bg-black/70 backdrop-blur-sm" onClick={() => setSelectedLogModal(null)}>
             <div className={`w-[90%] max-w-[1300px] h-[85%] max-h-[850px] rounded-2xl flex flex-col overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'}`} onClick={(e) => e.stopPropagation()}>
               
               {/* Modal Header */}
@@ -1107,7 +1113,7 @@ function App() {
                     {selectedLogModal.dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
                   {getOntarioStatHolidayName(selectedLogModal.dateObj) && (
-                    <span className="text-xs font-bold text-amber-500 bg-amber-950/40 border border-amber-800/60 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+                    <span className="text-xs font-bold text-amber-500 bg-amber-950/40 border border-amber-800/60 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs">
                       <span>—</span>
                       <span>{getOntarioStatHolidayName(selectedLogModal.dateObj)}</span>
                     </span>
@@ -1116,7 +1122,7 @@ function App() {
                 <button onClick={() => setSelectedLogModal(null)} className={`font-bold cursor-pointer text-base ${isDarkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-slate-400 hover:text-slate-600'}`}>✕</button>
               </div>
               
-              {/* Modal Body Carousel Container with Chevron Arrows */}
+              {/* Modal Body Carousel Container */}
               <div className="relative flex-1 flex items-center overflow-hidden p-6 sm:p-8">
                 
                 {/* Left Chevron Button */}
@@ -1136,7 +1142,7 @@ function App() {
                   </button>
                 )}
 
-                {/* Horizontal Scroll Area (Dynamic Math Flex-basis) */}
+                {/* Horizontal Scroll Area */}
                 <div 
                   ref={modalCarouselRef} 
                   className="w-full h-full flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory items-stretch select-none"
@@ -1146,7 +1152,6 @@ function App() {
                     logs.map((log) => {
                       const isThumbnail = log.id === currentThumbId;
 
-                      // Deep link mapping logic
                       const httpsUrl = log.url || `https://www.notion.so/${log.id.replace(/-/g, '')}`;
                       const desktopUrl = httpsUrl.replace('https://', 'notion://');
                       const notionPageUrl = desktopUrl.includes('?') ? `${desktopUrl}&pvs=4` : `${desktopUrl}?pvs=4`;
@@ -1155,7 +1160,6 @@ function App() {
                         <div 
                           key={log.id} 
                           onClick={() => setThumbnailOverrides(prev => ({ ...prev, [dateKey]: log.id }))}
-                          // Fluid calc rules: 1 card wide on mobile, 2 cards perfectly on sm screens, 3 cards on lg screens
                           className={`shrink-0 w-full sm:w-[calc((100%-24px)/2)] lg:w-[calc((100%-48px)/3)] snap-start h-full my-auto flex flex-col p-5 sm:p-6 border rounded-xl gap-4 shadow-sm cursor-pointer transition-all ${
                             isThumbnail 
                               ? (isDarkMode ? 'border-2 border-amber-500 bg-amber-950/20 ring-2 ring-amber-500/20' : 'border-2 border-amber-500 bg-amber-50/20 ring-2 ring-amber-500/20')
