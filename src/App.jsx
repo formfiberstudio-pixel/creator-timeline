@@ -184,7 +184,8 @@ function WeekDayColumn({
   hoveredProjectTitle, 
   setHoveredProjectTitle, 
   setSelectedLogModal, 
-  getDotColor 
+  getDotColor,
+  scaleFactor
 }) {
   const scrollRef = useRef(null);
   const [canScrollUp, setCanScrollUp] = useState(false);
@@ -202,6 +203,8 @@ function WeekDayColumn({
   }, [logs, weekCardHeight]);
 
   const hasLog = logs.length > 0;
+  const dotPx = Math.round(24 * scaleFactor);
+  const dotFontPx = Math.round(11 * scaleFactor);
 
   return (
     <div 
@@ -221,18 +224,24 @@ function WeekDayColumn({
         style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}
       >
         <div 
-          className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm border transition-all ${
+          className={`rounded-full flex items-center justify-center font-bold text-white shadow-sm border transition-all ${
             hasLog ? 'border-white/80' : 'border-zinc-700/30 text-zinc-400'
           } ${isTodayDate && !hasLog ? 'ring-2 ring-[var(--theme-primary)] text-white' : ''}`} 
-          style={{ backgroundColor: hasLog ? displayDotHex : (isTodayDate ? 'var(--theme-primary)' : undefined) }}
+          style={{ 
+            width: `${dotPx}px`,
+            height: `${dotPx}px`,
+            fontSize: `${dotFontPx}px`,
+            backgroundColor: hasLog ? displayDotHex : (isTodayDate ? 'var(--theme-primary)' : undefined) 
+          }}
         >
           {slot.dayNum}
         </div>
 
         {logs.length > 1 && (
           <span 
-            className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border"
+            className="font-bold px-1.5 py-0.5 rounded-full border"
             style={{ 
+              fontSize: `${Math.round(10 * scaleFactor)}px`,
               backgroundColor: 'var(--theme-secondary-20, rgba(245, 158, 11, 0.2))', 
               color: 'var(--theme-secondary)', 
               borderColor: 'var(--theme-secondary)' 
@@ -295,8 +304,8 @@ function WeekDayColumn({
                 {/* Pill Project Tag */}
                 <div className="relative z-10 flex items-center gap-1.5 pointer-events-none">
                   <span 
-                    className="inline-flex items-center text-[9px] sm:text-[10px] font-bold text-white px-2 py-0.5 rounded-full backdrop-blur-sm truncate max-w-full leading-none shadow-xs"
-                    style={{ backgroundColor: logDotHex }}
+                    className="inline-flex items-center font-bold text-white px-2 py-0.5 rounded-full backdrop-blur-sm truncate max-w-full leading-none shadow-xs"
+                    style={{ backgroundColor: logDotHex, fontSize: `${Math.round(10 * scaleFactor)}px` }}
                   >
                     {log.Projects}
                   </span>
@@ -304,7 +313,10 @@ function WeekDayColumn({
 
                 {/* Translucent Title Overlay */}
                 <div className="relative z-10 mt-auto">
-                  <div className="text-[10px] sm:text-[11px] font-bold text-white bg-black/40 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight">
+                  <div 
+                    className="font-bold text-white bg-black/40 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight"
+                    style={{ fontSize: `${Math.round(11 * scaleFactor)}px` }}
+                  >
                     {log.title}
                   </div>
                 </div>
@@ -312,7 +324,7 @@ function WeekDayColumn({
             );
           })
         ) : (
-          <div className="h-full flex items-center justify-center text-[10px] italic opacity-40">
+          <div className="h-full flex items-center justify-center italic opacity-40" style={{ fontSize: `${Math.round(10 * scaleFactor)}px` }}>
             No entries
           </div>
         )}
@@ -368,6 +380,16 @@ function App() {
   useEffect(() => {
     localStorage.setItem('notionWidgetViewScale', viewScale);
   }, [viewScale]);
+
+  const scaleFactor = viewScale / 100;
+
+  // Derived baseline component dimensions based on viewScale
+  const monthDotPx = Math.round(24 * scaleFactor);
+  const monthDotFontPx = Math.round(11 * scaleFactor);
+  const yearDotPx = Math.round(16 * scaleFactor);
+  const yearDotFontPx = Math.round(8 * scaleFactor);
+  const cardTitleFontPx = Math.round(11 * scaleFactor);
+  const projectTagFontPx = Math.round(10 * scaleFactor);
 
   // --- THEME MANAGER STATE ---
   const [customThemes, setCustomThemes] = useState(() => {
@@ -902,7 +924,6 @@ function App() {
     '--theme-text': currentThemeColors.text,
     '--theme-primary': currentThemeColors.primary,
     '--theme-secondary': currentThemeColors.secondary,
-    fontSize: `${viewScale}%`,
   };
 
   return (
@@ -1055,7 +1076,7 @@ function App() {
                 return (
                   <div key={type} className="border rounded-md overflow-hidden shrink-0 shadow-sm" style={{ borderColor: categoryBorderColor, backgroundColor: 'var(--theme-card)' }}>
                     <div onClick={() => toggleTypeAccordion(type)} className="text-[10px] font-bold uppercase tracking-wider p-2.5 flex items-center justify-between cursor-pointer transition-colors hover:opacity-80">
-                      <span className="tracking-wide font-black">{type}</span>
+                      <span className="tracking-wide font-black" style={{ fontSize: `${Math.round(10 * scaleFactor)}px` }}>{type}</span>
                       <span className="text-[9px] font-mono opacity-60">{isHidden ? '▼' : '▲'}</span>
                     </div>
                     {!isHidden && (
@@ -1075,9 +1096,10 @@ function App() {
                               style={{ 
                                 backgroundColor: 'var(--theme-bg)',
                                 borderColor: isHovered || isSelected ? 'var(--theme-secondary)' : 'var(--theme-border)',
-                                opacity: dynamicFilterActive && !isSelected && !isHovered ? 0.35 : 1
+                                opacity: dynamicFilterActive && !isSelected && !isHovered ? 0.35 : 1,
+                                fontSize: `${Math.round(12 * scaleFactor)}px`
                               }}
-                              className={`text-xs p-2.5 rounded border transition-all cursor-pointer flex items-center gap-2 ${
+                              className={`p-2.5 rounded border transition-all cursor-pointer flex items-center gap-2 ${
                                 isHovered ? 'ring-1 ring-[var(--theme-secondary)] scale-[1.02] font-bold z-10 relative' : ''
                               }`}
                             >
@@ -1107,7 +1129,7 @@ function App() {
             <div className="flex flex-col h-full w-full min-h-0">
               <div className="flex items-center gap-2 mb-2 shrink-0">
                 <div className="w-5 shrink-0" />
-                <div className="grid w-full flex-1 text-center text-xs font-semibold uppercase tracking-wider" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
+                <div className="grid w-full flex-1 text-center font-semibold uppercase tracking-wider" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px`, fontSize: `${Math.round(12 * scaleFactor)}px` }}>
                   {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
                     <div key={day} className={idx === 0 || idx === 6 ? 'font-bold' : 'opacity-60'} style={{ color: idx === 0 || idx === 6 ? 'var(--theme-primary)' : undefined }}>{day}</div>
                   ))}
@@ -1164,10 +1186,15 @@ function App() {
                             {/* Top row container */}
                             <div className="absolute top-2 left-2 right-2 flex items-center gap-1.5 z-10 pointer-events-none">
                               <div 
-                                className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${
+                                className={`rounded-full flex items-center justify-center font-bold text-white shadow-sm border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${
                                   hasLog ? 'border-white/80' : 'border-zinc-700/30 text-zinc-400'
                                 } ${isToday(slot.dateObj) && !hasLog ? 'ring-2 ring-[var(--theme-primary)] text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} 
-                                style={{ backgroundColor: hasLog ? displayDotHex : (isToday(slot.dateObj) ? 'var(--theme-primary)' : undefined) }}
+                                style={{ 
+                                  width: `${monthDotPx}px`,
+                                  height: `${monthDotPx}px`,
+                                  fontSize: `${monthDotFontPx}px`,
+                                  backgroundColor: hasLog ? displayDotHex : (isToday(slot.dateObj) ? 'var(--theme-primary)' : undefined) 
+                                }}
                               >
                                 {slot.dayNum}
                                 {hasMultipleProjects && (
@@ -1178,8 +1205,8 @@ function App() {
                               </div>
                               {hasLog && primaryLog && (
                                 <span 
-                                  className={`inline-flex items-center text-[9px] sm:text-[10px] font-bold text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[calc(100%-2rem)] leading-none shadow-xs transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
-                                  style={{ backgroundColor: displayDotHex }}
+                                  className={`inline-flex items-center font-bold text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm truncate max-w-[calc(100%-2rem)] leading-none shadow-xs transition-opacity duration-200 pointer-events-auto ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
+                                  style={{ backgroundColor: displayDotHex, fontSize: `${projectTagFontPx}px` }}
                                 >
                                   {primaryLog.Projects}
                                 </span>
@@ -1188,7 +1215,10 @@ function App() {
 
                             {/* Translucent Entry Title Overlay */}
                             {hasLog && primaryLog && (
-                              <div className={`relative z-10 text-[10px] sm:text-[11px] font-bold text-white bg-black/40 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}>
+                              <div 
+                                className={`relative z-10 font-bold text-white bg-black/40 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
+                                style={{ fontSize: `${cardTitleFontPx}px` }}
+                              >
                                 {primaryLog.title}
                               </div>
                             )}
@@ -1265,6 +1295,7 @@ function App() {
                       setHoveredProjectTitle={setHoveredProjectTitle}
                       setSelectedLogModal={setSelectedLogModal}
                       getDotColor={getDotColor}
+                      scaleFactor={scaleFactor}
                     />
                   );
                 })}
@@ -1366,8 +1397,6 @@ function App() {
                             }
 
                             const targetDate = new Date(year, mIdx, targetDayNum);
-                            const isWeekend = targetDate.getDay() === 0 || targetDate.getDay() === 6;
-                            const isStatHoliday = getOntarioStatHolidayName(targetDate) !== null;
                             const logs = getLogsForDate(targetDate);
                             const hasLog = logs.length > 0;
                             const uniqueProjects = new Set(logs.map(l => l.Projects || 'Untitled Project'));
@@ -1382,8 +1411,14 @@ function App() {
                               <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekHighlightStyle}`}>
                                 <div 
                                   onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} 
-                                  style={{ backgroundColor: hasLog ? displayDotHex : 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
-                                  className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 border ${
+                                  style={{ 
+                                    width: `${yearDotPx}px`,
+                                    height: `${yearDotPx}px`,
+                                    fontSize: `${yearDotFontPx}px`,
+                                    backgroundColor: hasLog ? displayDotHex : 'var(--theme-card)', 
+                                    borderColor: 'var(--theme-border)' 
+                                  }}
+                                  className={`rounded-full flex items-center justify-center transition-all duration-200 relative z-10 border ${
                                     hasLog ? 'text-white font-bold border-white/80 shadow-xs scale-110' : ''
                                   } ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
                                 >
@@ -1453,8 +1488,6 @@ function App() {
                               }
                               
                               const targetDate = new Date(year, mIdx, targetDayNum);
-                              const isWeekend = targetDate.getDay() === 0 || targetDate.getDay() === 6;
-                              const isStatHoliday = getOntarioStatHolidayName(targetDate) !== null;
                               const logs = getLogsForDate(targetDate);
                               const hasLog = logs.length > 0;
                               const uniqueProjects = new Set(logs.map(l => l.Projects || 'Untitled Project'));
@@ -1469,8 +1502,14 @@ function App() {
                                 <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekHighlightStyle}`}>
                                   <div 
                                     onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} 
-                                    style={{ backgroundColor: hasLog ? displayDotHex : 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
-                                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 border ${
+                                    style={{ 
+                                      width: `${yearDotPx}px`,
+                                      height: `${yearDotPx}px`,
+                                      fontSize: `${yearDotFontPx}px`,
+                                      backgroundColor: hasLog ? displayDotHex : 'var(--theme-card)', 
+                                      borderColor: 'var(--theme-border)' 
+                                    }}
+                                    className={`rounded-full flex items-center justify-center transition-all duration-200 relative z-10 border ${
                                       hasLog ? 'text-white font-bold border-white/80 shadow-xs scale-110' : ''
                                     } ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
                                   >
@@ -1526,7 +1565,7 @@ function App() {
                   🎨 Themes
                 </button>
 
-                {/* 3. VIEW SCALE (NEW TAB) */}
+                {/* 3. VIEW SCALE */}
                 <button 
                   onClick={() => setSettingsTab('scale')} 
                   className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
@@ -1688,8 +1727,8 @@ function App() {
               <div className="flex-1 overflow-y-auto pr-1 space-y-5 min-h-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xs font-bold">Text Size & UI Scaling</h3>
-                    <p className="text-[11px] opacity-60">Adjust overall scale of text and cards across all views.</p>
+                    <h3 className="text-xs font-bold">Text Size & Baseline Component Scale</h3>
+                    <p className="text-[11px] opacity-60">Controls default dimensions of day dots, tags, and text across all views.</p>
                   </div>
                   <button 
                     onClick={() => setViewScale(100)} 
@@ -1698,6 +1737,62 @@ function App() {
                   >
                     ↺ Reset to 100%
                   </button>
+                </div>
+
+                {/* --- LIVE SCALED DAY DOT GRAPHIC PREVIEW PANEL --- */}
+                <div className="p-4 border rounded-xl space-y-3 shadow-xs" style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}>
+                  <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--theme-border)' }}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Live Baseline Preview ({viewScale}%)</span>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded text-white" style={{ backgroundColor: 'var(--theme-primary)' }}>
+                      Dot: {monthDotPx}px | Font: {cardTitleFontPx}px
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-around py-3 gap-4">
+                    {/* Month/Week Day Dot Preview */}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex items-center gap-2 p-2 rounded-lg border shadow-xs" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
+                        <div 
+                          className="rounded-full flex items-center justify-center font-bold text-white shadow-sm border border-white/80 transition-all shrink-0" 
+                          style={{ 
+                            width: `${monthDotPx}px`, 
+                            height: `${monthDotPx}px`, 
+                            fontSize: `${monthDotFontPx}px`,
+                            backgroundColor: 'var(--theme-primary)' 
+                          }}
+                        >
+                          23
+                        </div>
+                        <span 
+                          className="font-bold text-white px-2.5 py-0.5 rounded-full leading-none shadow-xs truncate max-w-[120px]" 
+                          style={{ backgroundColor: 'var(--theme-primary)', fontSize: `${projectTagFontPx}px` }}
+                        >
+                          Creator's App
+                        </span>
+                      </div>
+                      <span className="text-[9px] font-bold opacity-50 uppercase">Month / Week View</span>
+                    </div>
+
+                    <div className="w-px h-12" style={{ backgroundColor: 'var(--theme-border)' }} />
+
+                    {/* Year View Dot Preview */}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="p-3 rounded-lg border flex items-center justify-center shadow-xs" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
+                        <div 
+                          className="rounded-full flex items-center justify-center font-bold text-white shadow-sm border border-white/80 transition-all" 
+                          style={{ 
+                            width: `${yearDotPx}px`, 
+                            height: `${yearDotPx}px`, 
+                            fontSize: `${yearDotFontPx}px`,
+                            backgroundColor: 'var(--theme-secondary)' 
+                          }}
+                        >
+                          23
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-bold opacity-50 uppercase">Year View Dot</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Slider Control */}
@@ -1720,7 +1815,7 @@ function App() {
                   />
 
                   <div className="flex justify-between text-[10px] opacity-50 font-mono">
-                    <span>75% (Small)</span>
+                    <span>75% (Compact)</span>
                     <span>100% (Default)</span>
                     <span>135% (Large)</span>
                   </div>
