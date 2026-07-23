@@ -21,6 +21,100 @@ const MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SE
 const TIMELINE_WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 // -------------------------------------------------------------
+// VECTOR LINE ICONS (NO COLOR, NO FILL)
+// -------------------------------------------------------------
+const IconSync = () => (
+  <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"/>
+  </svg>
+);
+
+const IconSettings = () => (
+  <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+);
+
+const IconFolder = () => (
+  <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+  </svg>
+);
+
+const IconLink = () => (
+  <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+  </svg>
+);
+
+const IconTheme = () => (
+  <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="13.5" cy="6.5" r=".5"/>
+    <circle cx="17.5" cy="10.5" r=".5"/>
+    <circle cx="8.5" cy="7.5" r=".5"/>
+    <circle cx="6.5" cy="12.5" r=".5"/>
+    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.71 1.7-1.63 0-.44-.18-.85-.49-1.16-.3-.3-.49-.72-.49-1.18 0-.92.78-1.63 1.7-1.63H17c2.76 0 5-2.24 5-5 0-5.5-4.5-10-10-10z"/>
+  </svg>
+);
+
+const IconScale = () => (
+  <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8"/>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+);
+
+const IconPalette = () => (
+  <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18.37 2.63a2.12 2.12 0 0 1 3 3L14.5 12.5l-3 1 1-3Z"/>
+    <path d="M9 15.2c-1.39 1.39-3.2 2.3-5 2.8 1.12-1.8 2.03-3.61 2.8-5 1.39-1.39 3.65-1.39 5.04 0a3.56 3.56 0 0 1 0 5.04z"/>
+  </svg>
+);
+
+const IconMoon = () => (
+  <svg className="w-3 h-3 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+);
+
+const IconSun = () => (
+  <svg className="w-3 h-3 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1" x2="12" y2="3"/>
+    <line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/>
+    <line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+);
+
+const IconClose = () => (
+  <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+);
+
+const IconReset = () => (
+  <svg className="w-3 h-3 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+    <path d="M3 3v5h5"/>
+  </svg>
+);
+
+const IconPlus = () => (
+  <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19"/>
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+
+// -------------------------------------------------------------
 // BUILT-IN THEME PRESETS
 // -------------------------------------------------------------
 const DEFAULT_THEME_PRESETS = [
@@ -179,7 +273,6 @@ function WeekDayColumn({
   isTodayDate, 
   displayDotHex, 
   weekCardHeight, 
-  isDarkMode, 
   cardRadius, 
   hoveredProjectTitle, 
   setHoveredProjectTitle, 
@@ -218,7 +311,6 @@ function WeekDayColumn({
         color: 'var(--theme-text)'
       }}
     >
-      {/* Day Frame Header */}
       <div 
         className="p-2 shrink-0 border-b flex items-center justify-between z-10 relative"
         style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}
@@ -252,7 +344,6 @@ function WeekDayColumn({
         )}
       </div>
 
-      {/* TOP OVERFLOW SCROLL ARROW */}
       {canScrollUp && (
         <button 
           onClick={() => scrollRef.current?.scrollBy({ top: -(weekCardHeight + 10), behavior: 'smooth' })}
@@ -266,7 +357,6 @@ function WeekDayColumn({
         </button>
       )}
 
-      {/* Vertically Stacked Cards Container */}
       <div 
         ref={scrollRef}
         onScroll={checkScroll}
@@ -301,7 +391,6 @@ function WeekDayColumn({
                   />
                 )}
 
-                {/* Pill Project Tag */}
                 <div className="relative z-10 flex items-center gap-1.5 pointer-events-none">
                   <span 
                     className="inline-flex items-center font-bold text-white px-2 py-0.5 rounded-full backdrop-blur-sm truncate max-w-full leading-none shadow-xs"
@@ -311,7 +400,6 @@ function WeekDayColumn({
                   </span>
                 </div>
 
-                {/* Translucent Title Overlay */}
                 <div className="relative z-10 mt-auto">
                   <div 
                     className="font-bold text-white bg-black/40 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight"
@@ -330,7 +418,6 @@ function WeekDayColumn({
         )}
       </div>
 
-      {/* BOTTOM OVERFLOW SCROLL ARROW */}
       {canScrollDown && (
         <button 
           onClick={() => scrollRef.current?.scrollBy({ top: weekCardHeight + 10, behavior: 'smooth' })}
@@ -369,6 +456,7 @@ function App() {
 
   const [hoveredProjectTitle, setHoveredProjectTitle] = useState(null);
   const [hoveredWeek, setHoveredWeek] = useState(null);
+  const [hoveredMonthIndex, setHoveredMonthIndex] = useState(null);
   const [collapsedTypes, setCollapsedTypes] = useState({});
 
   // --- VIEW SCALE / TEXT SIZE STATE ---
@@ -383,7 +471,7 @@ function App() {
 
   const scaleFactor = viewScale / 100;
 
-  // Derived baseline component dimensions based on viewScale
+  // Derived baseline component dimensions
   const monthDotPx = Math.round(24 * scaleFactor);
   const monthDotFontPx = Math.round(11 * scaleFactor);
   const yearDotPx = Math.round(16 * scaleFactor);
@@ -402,9 +490,8 @@ function App() {
     return saved || 'default-rose';
   });
 
-  // ORDERED SETTINGS TABS: 'notion' (1) | 'theme' (2) | 'scale' (3) | 'palette' (4)
   const [settingsTab, setSettingsTab] = useState('notion'); 
-  const [themeEditMode, setThemeEditMode] = useState('dark'); // 'light' | 'dark'
+  const [themeEditMode, setThemeEditMode] = useState('dark');
 
   useEffect(() => {
     localStorage.setItem('notionWidgetCustomThemes', JSON.stringify(customThemes));
@@ -964,9 +1051,9 @@ function App() {
             disabled={isLoading || !notionToken || !databaseId}
             title="Sync Notion Data"
             style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
-            className="px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors disabled:opacity-50"
+            className="px-3 py-1.5 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors disabled:opacity-50"
           >
-            <span className={isLoading ? "animate-spin inline-block" : "inline-block"}>↻</span>
+            <span className={isLoading ? "animate-spin" : ""}><IconSync /></span>
             <span>Sync</span>
           </button>
 
@@ -974,17 +1061,19 @@ function App() {
             onClick={() => setShowSettings(true)}
             title="Widget Settings & Customization"
             style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
-            className="px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors"
+            className="px-3 py-1.5 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors"
           >
-            <span>⚙️</span><span>Settings</span>
+            <IconSettings />
+            <span>Settings</span>
           </button>
 
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
-            className="px-3 py-1 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5"
+            className="px-3 py-1.5 text-xs font-semibold border rounded-md cursor-pointer flex items-center gap-1.5"
           >
-            <span>📁</span><span>{isSidebarOpen ? 'Hide Projects' : 'Projects'}</span>
+            <IconFolder />
+            <span>{isSidebarOpen ? 'Hide Projects' : 'Projects'}</span>
           </button>
 
           <button
@@ -994,7 +1083,7 @@ function App() {
               borderColor: 'var(--theme-primary)',
               color: 'var(--theme-primary)'
             }}
-            className="px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 border cursor-pointer"
+            className="px-3 py-1.5 text-xs font-semibold rounded-md flex items-center gap-1.5 border cursor-pointer"
           >
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: 'var(--theme-primary)' }} />Today
           </button>
@@ -1039,20 +1128,13 @@ function App() {
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-sm font-bold">Categories</h2>
                 
-                {/* VECTOR PAINT PALETTE ICON BUTTON */}
                 <button
                   onClick={() => { setSettingsTab('palette'); setShowSettings(true); }}
                   title="Customize Project & Category Colors"
                   className="p-1 rounded cursor-pointer transition-transform hover:scale-110 opacity-80 hover:opacity-100"
                   style={{ color: 'var(--theme-primary)' }}
                 >
-                  <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
-                    <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
-                    <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
-                    <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
-                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.71 1.7-1.63 0-.44-.18-.85-.49-1.16-.3-.3-.49-.72-.49-1.18 0-.92.78-1.63 1.7-1.63H17c2.76 0 5-2.24 5-5 0-5.5-4.5-10-10-10z" />
-                  </svg>
+                  <IconPalette />
                 </button>
               </div>
 
@@ -1183,7 +1265,6 @@ function App() {
                               />
                             )}
 
-                            {/* Top row container */}
                             <div className="absolute top-2 left-2 right-2 flex items-center gap-1.5 z-10 pointer-events-none">
                               <div 
                                 className={`rounded-full flex items-center justify-center font-bold text-white shadow-sm border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${
@@ -1213,7 +1294,6 @@ function App() {
                               )}
                             </div>
 
-                            {/* Translucent Entry Title Overlay */}
                             {hasLog && primaryLog && (
                               <div 
                                 className={`relative z-10 font-bold text-white bg-black/40 p-1.5 rounded-sm backdrop-blur-sm line-clamp-2 leading-tight transition-opacity duration-200 ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
@@ -1235,17 +1315,14 @@ function App() {
           {/* B. WEEK VIEW */}
           {viewMode === 'week' && (
             <div className="flex flex-col h-full w-full min-h-0 relative">
-              {/* Day Header Row */}
               <div className="grid text-center text-xs font-semibold uppercase tracking-wider mb-2 shrink-0" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
                   <div key={day} className={idx === 0 || idx === 6 ? 'font-bold' : 'opacity-60'} style={{ color: idx === 0 || idx === 6 ? 'var(--theme-primary)' : undefined }}>{day}</div>
                 ))}
               </div>
               
-              {/* Columns Grid Container */}
               <div className="grid flex-1 min-h-0 relative" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
                 
-                {/* PROXIMITY-ONLY RESIZE GUIDE BAR WITH END TRIANGLES */}
                 <div 
                   onMouseDown={handleMouseDownResize}
                   className={`group/handle absolute left-0 right-0 z-30 h-6 -translate-y-1/2 flex items-center justify-between cursor-ns-resize pointer-events-auto transition-opacity duration-150 ${
@@ -1276,7 +1353,6 @@ function App() {
                   </div>
                 </div>
 
-                {/* Day Frame Columns */}
                 {slots.map((slot, index) => {
                   const logs = getLogsForDate(slot.dateObj);
                   const displayDotHex = getDisplayDotColor(logs, slot.dateObj);
@@ -1289,7 +1365,6 @@ function App() {
                       isTodayDate={isToday(slot.dateObj)}
                       displayDotHex={displayDotHex}
                       weekCardHeight={weekCardHeight}
-                      isDarkMode={isDarkMode}
                       cardRadius={cardRadius}
                       hoveredProjectTitle={hoveredProjectTitle}
                       setHoveredProjectTitle={setHoveredProjectTitle}
@@ -1340,8 +1415,10 @@ function App() {
                       <div
                         key={monthLabel}
                         onClick={() => { setCurrentDate(new Date(year, mIdx, 1)); setViewMode('month'); }}
-                        style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)' }}
-                        className="text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer hover:border-[var(--theme-primary)]"
+                        onMouseEnter={() => setHoveredMonthIndex(mIdx)}
+                        onMouseLeave={() => setHoveredMonthIndex(null)}
+                        style={{ backgroundColor: hoveredMonthIndex === mIdx ? 'var(--theme-primary-10, rgba(244, 63, 94, 0.15))' : 'var(--theme-bg)', borderColor: hoveredMonthIndex === mIdx ? 'var(--theme-primary)' : 'var(--theme-border)' }}
+                        className="text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer"
                       >
                         {monthLabel}
                       </div>
@@ -1352,7 +1429,7 @@ function App() {
                     <div className="absolute inset-0 grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] pointer-events-none z-0">
                       <div />
                       {MONTH_NAMES.map((_, mIdx) => (
-                        <div key={mIdx} className="relative h-full flex justify-center">
+                        <div key={mIdx} className={`relative h-full flex justify-center transition-colors ${hoveredMonthIndex === mIdx ? 'bg-[var(--theme-primary)]/10 rounded-lg' : ''}`}>
                           <div className="absolute top-0 bottom-0 w-[1.5px]" style={{ backgroundColor: 'var(--theme-border)' }} />
                         </div>
                       ))}
@@ -1384,16 +1461,16 @@ function App() {
 
                             let weekHighlightStyle = '';
                             if (isHoveredWeekCell) {
-                              const bgBorder = 'bg-amber-500/20 border-amber-500 z-20';
+                              const bgStyle = 'bg-amber-500/20 border-amber-500 z-20';
                               weekHighlightStyle = isStartOfWeek
-                                ? `${bgBorder} border-x border-t rounded-t-full -mb-1`
+                                ? `${bgStyle} border-x border-t rounded-t-full`
                                 : isEndOfWeek
-                                ? `${bgBorder} border-x border-b rounded-b-full -mt-1`
-                                : `${bgBorder} border-x -my-1`;
+                                ? `${bgStyle} border-x border-b rounded-b-full`
+                                : `${bgStyle} border-x border-y-0`;
                             }
 
                             if (!isValidCalendarDay) {
-                              return <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full w-full flex items-center justify-center transition-colors cursor-pointer ${weekHighlightStyle}`} />;
+                              return <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full w-full flex items-center justify-center transition-colors cursor-pointer py-1 px-0.5 ${weekHighlightStyle}`} />;
                             }
 
                             const targetDate = new Date(year, mIdx, targetDayNum);
@@ -1408,7 +1485,7 @@ function App() {
                             const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
 
                             return (
-                              <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekHighlightStyle}`}>
+                              <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors py-1 px-0.5 ${weekHighlightStyle}`}>
                                 <div 
                                   onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} 
                                   style={{ 
@@ -1442,11 +1519,11 @@ function App() {
                 <div className="flex flex-col h-full w-full min-w-0 min-h-0 mt-8">
                   <div className="grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center mb-2 border-b pb-2 shrink-0" style={{ borderColor: 'var(--theme-border)' }}>
                     <div className="text-[9px] font-bold uppercase tracking-wider opacity-50 text-center">Month</div>
-                    <div className="grid gap-0.5 sm:gap-1 text-center min-w-0" style={{ gridTemplateColumns: 'repeat(37, minmax(0, 1fr))' }}>
+                    <div className="grid gap-0 text-center min-w-0" style={{ gridTemplateColumns: 'repeat(37, minmax(0, 1fr))' }}>
                       {Array.from({ length: 37 }).map((_, colIndex) => {
                         const weekdayStr = TIMELINE_WEEKDAYS[colIndex % 7];
                         const isWeekend = weekdayStr === 'SUN' || weekdayStr === 'SAT';
-                        return <div key={colIndex} className={`text-[8px] sm:text-[9px] font-black tracking-tight py-1 rounded ${isWeekend ? 'font-bold' : 'opacity-40'}`} style={{ color: isWeekend ? 'var(--theme-primary)' : undefined }}>{weekdayStr.slice(0, 2)}</div>;
+                        return <div key={colIndex} className={`text-[8px] sm:text-[9px] font-black tracking-tight py-1 ${isWeekend ? 'font-bold' : 'opacity-40'}`} style={{ color: isWeekend ? 'var(--theme-primary)' : undefined }}>{weekdayStr.slice(0, 2)}</div>;
                       })}
                     </div>
                   </div>
@@ -1456,12 +1533,30 @@ function App() {
                       const firstDayOfMonthObj = new Date(year, mIdx, 1);
                       const startOffsetColumn = firstDayOfMonthObj.getDay(); 
                       const daysInMonth = new Date(year, mIdx + 1, 0).getDate();
+                      const isMonthHovered = hoveredMonthIndex === mIdx;
+
                       return (
-                        <div key={monthLabel} className="grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center h-full min-h-0 min-w-0 relative group border-b border-dashed last:border-0" style={{ borderColor: 'var(--theme-border)' }}>
-                          <div onClick={() => { setCurrentDate(new Date(year, mIdx, 1)); setViewMode('month'); }} style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)' }} className="text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer hover:border-[var(--theme-primary)]">
+                        <div 
+                          key={monthLabel} 
+                          onMouseEnter={() => setHoveredMonthIndex(mIdx)}
+                          onMouseLeave={() => setHoveredMonthIndex(null)}
+                          style={{ 
+                            backgroundColor: isMonthHovered ? 'var(--theme-primary-10, rgba(244, 63, 94, 0.12))' : undefined,
+                            borderColor: isMonthHovered ? 'var(--theme-primary)' : 'var(--theme-border)'
+                          }}
+                          className={`grid grid-cols-[50px_1fr] sm:grid-cols-[65px_1fr] items-center h-full min-h-0 min-w-0 relative rounded-lg transition-all border ${
+                            isMonthHovered ? 'ring-1 ring-[var(--theme-primary)] shadow-xs' : 'border-dashed border-x-0 border-t-0'
+                          }`}
+                        >
+                          <div 
+                            onClick={() => { setCurrentDate(new Date(year, mIdx, 1)); setViewMode('month'); }} 
+                            style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)' }} 
+                            className="text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer hover:border-[var(--theme-primary)]"
+                          >
                             {monthLabel}
                           </div>
-                          <div className="grid gap-0.5 sm:gap-1 items-center relative h-full min-w-0" style={{ gridTemplateColumns: 'repeat(37, minmax(0, 1fr))' }}>
+                          
+                          <div className="grid items-center relative h-full min-w-0" style={{ gridTemplateColumns: 'repeat(37, minmax(0, 1fr))' }}>
                             <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-[1.5px] z-0 pointer-events-none" style={{ backgroundColor: 'var(--theme-border)' }} />
 
                             {Array.from({ length: 37 }).map((_, colIndex) => {
@@ -1475,16 +1570,16 @@ function App() {
 
                               let weekHighlightStyle = '';
                               if (isHoveredWeekCell) {
-                                const bgBorder = 'bg-amber-500/20 border-amber-500 z-20';
+                                const bgStyle = 'bg-amber-500/20 border-amber-500 z-20';
                                 weekHighlightStyle = isStartOfWeek
-                                  ? `${bgBorder} border-y border-l rounded-l-full -mr-1 sm:-mr-1.5`
+                                  ? `${bgStyle} border-y border-l rounded-l-full`
                                   : isEndOfWeek
-                                  ? `${bgBorder} border-y border-r rounded-r-full -ml-1 sm:-ml-1.5`
-                                  : `${bgBorder} border-y -mx-1 sm:-mx-1.5`;
+                                  ? `${bgStyle} border-y border-r rounded-r-full`
+                                  : `${bgStyle} border-y border-x-0`;
                               }
 
                               if (!isValidCalendarDay) {
-                                return <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full flex items-center justify-center transition-colors cursor-pointer ${weekHighlightStyle}`} />;
+                                return <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full flex items-center justify-center transition-colors cursor-pointer py-1 px-0.5 ${weekHighlightStyle}`} />;
                               }
                               
                               const targetDate = new Date(year, mIdx, targetDayNum);
@@ -1499,7 +1594,7 @@ function App() {
                               const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
                               
                               return (
-                                <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekHighlightStyle}`}>
+                                <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors py-1 px-0.5 ${weekHighlightStyle}`}>
                                   <div 
                                     onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} 
                                     style={{ 
@@ -1535,57 +1630,59 @@ function App() {
         </main>
       </div>
 
-      {/* SETTINGS MODAL (TAB 1 TO 4 ORGANIZED ORDER) */}
+      {/* SETTINGS MODAL */}
       {showSettings && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm">
           <div 
             style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
             className="w-full max-w-lg rounded-xl shadow-2xl border p-6 flex flex-col gap-4 max-h-[90vh] overflow-hidden"
           >
-            {/* Tab Header - Ordered 1 to 4 */}
+            {/* Tab Header - Vector Icons */}
             <div className="flex items-center justify-between border-b pb-3 shrink-0" style={{ borderColor: 'var(--theme-border)' }}>
               <div className="flex items-center gap-1.5 flex-wrap">
-                {/* 1. NOTION SYNC */}
                 <button 
                   onClick={() => setSettingsTab('notion')} 
-                  className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
+                  className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all flex items-center gap-1.5 ${
                     settingsTab === 'notion' ? 'bg-black/20 font-bold' : 'opacity-60 hover:opacity-100'
                   }`}
                 >
-                  🔗 Notion Sync
+                  <IconLink />
+                  <span>Notion Sync</span>
                 </button>
 
-                {/* 2. THEMES */}
                 <button 
                   onClick={() => setSettingsTab('theme')} 
-                  className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
+                  className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all flex items-center gap-1.5 ${
                     settingsTab === 'theme' ? 'bg-black/20 font-bold' : 'opacity-60 hover:opacity-100'
                   }`}
                 >
-                  🎨 Themes
+                  <IconTheme />
+                  <span>Themes</span>
                 </button>
 
-                {/* 3. VIEW SCALE */}
                 <button 
                   onClick={() => setSettingsTab('scale')} 
-                  className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
+                  className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all flex items-center gap-1.5 ${
                     settingsTab === 'scale' ? 'bg-black/20 font-bold' : 'opacity-60 hover:opacity-100'
                   }`}
                 >
-                  🔍 View Scale
+                  <IconScale />
+                  <span>View Scale</span>
                 </button>
 
-                {/* 4. PROJECT PALETTE */}
                 <button 
                   onClick={() => setSettingsTab('palette')} 
-                  className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
+                  className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all flex items-center gap-1.5 ${
                     settingsTab === 'palette' ? 'bg-black/20 font-bold' : 'opacity-60 hover:opacity-100'
                   }`}
                 >
-                  🖌️ Project Palette
+                  <IconPalette />
+                  <span>Project Palette</span>
                 </button>
               </div>
-              <button onClick={() => setShowSettings(false)} className="font-bold opacity-60 hover:opacity-100">✕</button>
+              <button onClick={() => setShowSettings(false)} className="opacity-60 hover:opacity-100 p-1 cursor-pointer">
+                <IconClose />
+              </button>
             </div>
 
             {/* TAB 1: NOTION SYNC */}
@@ -1645,9 +1742,10 @@ function App() {
                     <button 
                       onClick={() => handleDuplicateTheme(activeTheme)}
                       style={{ backgroundColor: 'var(--theme-primary)' }}
-                      className="px-3 py-2 text-xs font-bold text-white rounded cursor-pointer shadow-xs hover:opacity-90 shrink-0"
+                      className="px-3 py-2 text-xs font-bold text-white rounded cursor-pointer shadow-xs hover:opacity-90 shrink-0 flex items-center gap-1"
                     >
-                      + Duplicate
+                      <IconPlus />
+                      <span>Duplicate</span>
                     </button>
                   </div>
                 </div>
@@ -1679,15 +1777,17 @@ function App() {
                         <div className="flex items-center p-0.5 rounded border" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
                           <button 
                             onClick={() => setThemeEditMode('dark')} 
-                            className={`px-2.5 py-1 text-[10px] font-bold rounded ${themeEditMode === 'dark' ? 'bg-black/30' : 'opacity-50'}`}
+                            className={`px-2.5 py-1 text-[10px] font-bold rounded flex items-center gap-1 ${themeEditMode === 'dark' ? 'bg-black/30' : 'opacity-50'}`}
                           >
-                            🌙 Dark
+                            <IconMoon />
+                            <span>Dark</span>
                           </button>
                           <button 
                             onClick={() => setThemeEditMode('light')} 
-                            className={`px-2.5 py-1 text-[10px] font-bold rounded ${themeEditMode === 'light' ? 'bg-black/30' : 'opacity-50'}`}
+                            className={`px-2.5 py-1 text-[10px] font-bold rounded flex items-center gap-1 ${themeEditMode === 'light' ? 'bg-black/30' : 'opacity-50'}`}
                           >
-                            ☀️ Light
+                            <IconSun />
+                            <span>Light</span>
                           </button>
                         </div>
                       </div>
@@ -1716,7 +1816,7 @@ function App() {
                   </div>
                 ) : (
                   <div className="p-3 border rounded text-xs opacity-70 italic text-center" style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}>
-                    "{activeTheme.name}" is a read-only built-in preset. Click <strong>+ Duplicate</strong> above to create an editable copy.
+                    "{activeTheme.name}" is a read-only built-in preset. Click <strong>Duplicate</strong> above to create an editable copy.
                   </div>
                 )}
               </div>
@@ -1732,14 +1832,14 @@ function App() {
                   </div>
                   <button 
                     onClick={() => setViewScale(100)} 
-                    className="text-[11px] font-bold px-2.5 py-1 rounded border hover:opacity-100 opacity-70 transition-opacity shrink-0 cursor-pointer"
+                    className="text-[11px] font-bold px-2.5 py-1 rounded border hover:opacity-100 opacity-70 transition-opacity shrink-0 cursor-pointer flex items-center gap-1"
                     style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}
                   >
-                    ↺ Reset to 100%
+                    <IconReset />
+                    <span>Reset to 100%</span>
                   </button>
                 </div>
 
-                {/* --- LIVE SCALED DAY DOT GRAPHIC PREVIEW PANEL --- */}
                 <div className="p-4 border rounded-xl space-y-3 shadow-xs" style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}>
                   <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--theme-border)' }}>
                     <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Live Baseline Preview ({viewScale}%)</span>
@@ -1749,7 +1849,6 @@ function App() {
                   </div>
 
                   <div className="flex items-center justify-around py-3 gap-4">
-                    {/* Month/Week Day Dot Preview */}
                     <div className="flex flex-col items-center gap-2">
                       <div className="flex items-center gap-2 p-2 rounded-lg border shadow-xs" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
                         <div 
@@ -1775,7 +1874,6 @@ function App() {
 
                     <div className="w-px h-12" style={{ backgroundColor: 'var(--theme-border)' }} />
 
-                    {/* Year View Dot Preview */}
                     <div className="flex flex-col items-center gap-2">
                       <div className="p-3 rounded-lg border flex items-center justify-center shadow-xs" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
                         <div 
@@ -1795,7 +1893,6 @@ function App() {
                   </div>
                 </div>
 
-                {/* Slider Control */}
                 <div className="p-4 border rounded-lg space-y-3" style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold">Scale Factor</span>
@@ -1821,7 +1918,6 @@ function App() {
                   </div>
                 </div>
 
-                {/* Quick Presets Grid */}
                 <div className="space-y-2">
                   <label className="block text-xs font-bold opacity-80">Quick Scale Presets</label>
                   <div className="grid grid-cols-5 gap-2">
@@ -1858,10 +1954,11 @@ function App() {
                   <p className="text-xs opacity-70">Control colors by <strong>Category Hue</strong> or tweak individual <strong>Project</strong> dot values.</p>
                   <button 
                     onClick={handleResetDotColors} 
-                    className="text-[11px] font-bold px-2.5 py-1 rounded border hover:opacity-100 opacity-70 transition-opacity shrink-0 cursor-pointer"
+                    className="text-[11px] font-bold px-2.5 py-1 rounded border hover:opacity-100 opacity-70 transition-opacity shrink-0 cursor-pointer flex items-center gap-1"
                     style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}
                   >
-                    ↺ Return to Default
+                    <IconReset />
+                    <span>Return to Default</span>
                   </button>
                 </div>
 
@@ -1975,8 +2072,6 @@ function App() {
               className="w-[90%] max-w-[1300px] h-[85%] max-h-[850px] rounded-2xl flex flex-col overflow-hidden shadow-2xl border" 
               onClick={(e) => e.stopPropagation()}
             >
-              
-              {/* Modal Header */}
               <div className="px-6 py-4 border-b flex items-center justify-between shrink-0" style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-bold tracking-wider" style={{ color: 'var(--theme-primary)' }}>
@@ -1989,12 +2084,12 @@ function App() {
                     </span>
                   )}
                 </div>
-                <button onClick={() => setSelectedLogModal(null)} className="font-bold cursor-pointer text-base opacity-60 hover:opacity-100">✕</button>
+                <button onClick={() => setSelectedLogModal(null)} className="p-1 cursor-pointer opacity-60 hover:opacity-100">
+                  <IconClose />
+                </button>
               </div>
               
-              {/* Modal Body Carousel */}
               <div className="relative flex-1 flex items-center overflow-hidden p-6 sm:p-8">
-                
                 {logs.length > 1 && (
                   <button 
                     onClick={() => scrollCarousel('left')}
