@@ -49,13 +49,12 @@ const IconLink = () => (
   </svg>
 );
 
+// POLAROID PHOTO FRAME VECTOR LINE DRAWING FOR THEMES
 const IconTheme = () => (
   <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="13.5" cy="6.5" r=".5"/>
-    <circle cx="17.5" cy="10.5" r=".5"/>
-    <circle cx="8.5" cy="7.5" r=".5"/>
-    <circle cx="6.5" cy="12.5" r=".5"/>
-    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.71 1.7-1.63 0-.44-.18-.85-.49-1.16-.3-.3-.49-.72-.49-1.18 0-.92.78-1.63 1.7-1.63H17c2.76 0 5-2.24 5-5 0-5.5-4.5-10-10-10z"/>
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+    <rect x="6" y="6" width="12" height="9" rx="1" ry="1"/>
+    <circle cx="12" cy="19.5" r="0.75" fill="currentColor"/>
   </svg>
 );
 
@@ -66,10 +65,14 @@ const IconScale = () => (
   </svg>
 );
 
+// PAINT PALETTE VECTOR LINE DRAWING FOR PROJECT PALETTE
 const IconPalette = () => (
   <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18.37 2.63a2.12 2.12 0 0 1 3 3L14.5 12.5l-3 1 1-3Z"/>
-    <path d="M9 15.2c-1.39 1.39-3.2 2.3-5 2.8 1.12-1.8 2.03-3.61 2.8-5 1.39-1.39 3.65-1.39 5.04 0a3.56 3.56 0 0 1 0 5.04z"/>
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c.92 0 1.67-.75 1.67-1.67 0-.42-.16-.81-.44-1.11-.27-.29-.44-.68-.44-1.11 0-.92.75-1.67 1.67-1.67H16c3.31 0 6-2.69 6-6 0-4.97-4.03-9-10-9z"/>
+    <circle cx="7.5" cy="11.5" r="1" fill="none" stroke="currentColor"/>
+    <circle cx="10.5" cy="7.5" r="1" fill="none" stroke="currentColor"/>
+    <circle cx="14.5" cy="7.5" r="1" fill="none" stroke="currentColor"/>
+    <circle cx="17.5" cy="11.5" r="1" fill="none" stroke="currentColor"/>
   </svg>
 );
 
@@ -456,7 +459,8 @@ function App() {
 
   const [hoveredProjectTitle, setHoveredProjectTitle] = useState(null);
   const [hoveredWeek, setHoveredWeek] = useState(null);
-  const [hoveredMonthIndex, setHoveredMonthIndex] = useState(null);
+  // SCOPED STRICTLY TO HOVERING THE LEFT-HAND MONTH BUTTON
+  const [hoveredMonthButtonIndex, setHoveredMonthButtonIndex] = useState(null);
   const [collapsedTypes, setCollapsedTypes] = useState({});
 
   // --- VIEW SCALE / TEXT SIZE STATE ---
@@ -1322,7 +1326,6 @@ function App() {
               </div>
               
               <div className="grid flex-1 min-h-0 relative" style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: `${gap}px` }}>
-                
                 <div 
                   onMouseDown={handleMouseDownResize}
                   className={`group/handle absolute left-0 right-0 z-30 h-6 -translate-y-1/2 flex items-center justify-between cursor-ns-resize pointer-events-auto transition-opacity duration-150 ${
@@ -1415,9 +1418,9 @@ function App() {
                       <div
                         key={monthLabel}
                         onClick={() => { setCurrentDate(new Date(year, mIdx, 1)); setViewMode('month'); }}
-                        onMouseEnter={() => setHoveredMonthIndex(mIdx)}
-                        onMouseLeave={() => setHoveredMonthIndex(null)}
-                        style={{ backgroundColor: hoveredMonthIndex === mIdx ? 'var(--theme-primary-10, rgba(244, 63, 94, 0.15))' : 'var(--theme-bg)', borderColor: hoveredMonthIndex === mIdx ? 'var(--theme-primary)' : 'var(--theme-border)' }}
+                        onMouseEnter={() => setHoveredMonthButtonIndex(mIdx)}
+                        onMouseLeave={() => setHoveredMonthButtonIndex(null)}
+                        style={{ backgroundColor: hoveredMonthButtonIndex === mIdx ? 'var(--theme-primary-10, rgba(244, 63, 94, 0.15))' : 'var(--theme-bg)', borderColor: hoveredMonthButtonIndex === mIdx ? 'var(--theme-primary)' : 'var(--theme-border)' }}
                         className="text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer"
                       >
                         {monthLabel}
@@ -1429,7 +1432,7 @@ function App() {
                     <div className="absolute inset-0 grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] pointer-events-none z-0">
                       <div />
                       {MONTH_NAMES.map((_, mIdx) => (
-                        <div key={mIdx} className={`relative h-full flex justify-center transition-colors ${hoveredMonthIndex === mIdx ? 'bg-[var(--theme-primary)]/10 rounded-lg' : ''}`}>
+                        <div key={mIdx} className={`relative h-full flex justify-center transition-colors ${hoveredMonthButtonIndex === mIdx ? 'bg-[var(--theme-primary)]/10 rounded-lg' : ''}`}>
                           <div className="absolute top-0 bottom-0 w-[1.5px]" style={{ backgroundColor: 'var(--theme-border)' }} />
                         </div>
                       ))}
@@ -1495,7 +1498,7 @@ function App() {
                                     backgroundColor: hasLog ? displayDotHex : 'var(--theme-card)', 
                                     borderColor: 'var(--theme-border)' 
                                   }}
-                                  className={`rounded-full flex items-center justify-center transition-all duration-200 relative z-10 border ${
+                                  className={`rounded-full flex items-center justify-center transition-all duration-200 relative z-20 border bg-[var(--theme-card)] ${
                                     hasLog ? 'text-white font-bold border-white/80 shadow-xs scale-110' : ''
                                   } ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
                                 >
@@ -1533,13 +1536,11 @@ function App() {
                       const firstDayOfMonthObj = new Date(year, mIdx, 1);
                       const startOffsetColumn = firstDayOfMonthObj.getDay(); 
                       const daysInMonth = new Date(year, mIdx + 1, 0).getDate();
-                      const isMonthHovered = hoveredMonthIndex === mIdx;
+                      const isMonthHovered = hoveredMonthButtonIndex === mIdx;
 
                       return (
                         <div 
                           key={monthLabel} 
-                          onMouseEnter={() => setHoveredMonthIndex(mIdx)}
-                          onMouseLeave={() => setHoveredMonthIndex(null)}
                           style={{ 
                             backgroundColor: isMonthHovered ? 'var(--theme-primary-10, rgba(244, 63, 94, 0.12))' : undefined,
                             borderColor: isMonthHovered ? 'var(--theme-primary)' : 'var(--theme-border)'
@@ -1548,10 +1549,13 @@ function App() {
                             isMonthHovered ? 'ring-1 ring-[var(--theme-primary)] shadow-xs' : 'border-dashed border-x-0 border-t-0'
                           }`}
                         >
+                          {/* MONTH BUTTON ON LEFT TRIGGER */}
                           <div 
                             onClick={() => { setCurrentDate(new Date(year, mIdx, 1)); setViewMode('month'); }} 
+                            onMouseEnter={() => setHoveredMonthButtonIndex(mIdx)}
+                            onMouseLeave={() => setHoveredMonthButtonIndex(null)}
                             style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)' }} 
-                            className="text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer hover:border-[var(--theme-primary)]"
+                            className="text-[10px] sm:text-[11px] font-bold text-center tracking-wide py-1 mx-1 rounded border transition-all cursor-pointer hover:border-[var(--theme-primary)] z-30"
                           >
                             {monthLabel}
                           </div>
@@ -1604,7 +1608,7 @@ function App() {
                                       backgroundColor: hasLog ? displayDotHex : 'var(--theme-card)', 
                                       borderColor: 'var(--theme-border)' 
                                     }}
-                                    className={`rounded-full flex items-center justify-center transition-all duration-200 relative z-10 border ${
+                                    className={`rounded-full flex items-center justify-center transition-all duration-200 relative z-20 border bg-[var(--theme-card)] ${
                                       hasLog ? 'text-white font-bold border-white/80 shadow-xs scale-110' : ''
                                     } ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
                                   >
