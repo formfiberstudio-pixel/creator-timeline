@@ -359,6 +359,16 @@ function App() {
   const [hoveredWeek, setHoveredWeek] = useState(null);
   const [collapsedTypes, setCollapsedTypes] = useState({});
 
+  // --- VIEW SCALE / TEXT SIZE STATE ---
+  const [viewScale, setViewScale] = useState(() => {
+    const saved = localStorage.getItem('notionWidgetViewScale');
+    return saved ? Number(saved) : 100;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('notionWidgetViewScale', viewScale);
+  }, [viewScale]);
+
   // --- THEME MANAGER STATE ---
   const [customThemes, setCustomThemes] = useState(() => {
     const saved = localStorage.getItem('notionWidgetCustomThemes');
@@ -370,7 +380,8 @@ function App() {
     return saved || 'default-rose';
   });
 
-  const [settingsTab, setSettingsTab] = useState('palette'); // 'theme' | 'palette' | 'notion'
+  // ORDERED SETTINGS TABS: 'notion' (1) | 'theme' (2) | 'scale' (3) | 'palette' (4)
+  const [settingsTab, setSettingsTab] = useState('notion'); 
   const [themeEditMode, setThemeEditMode] = useState('dark'); // 'light' | 'dark'
 
   useEffect(() => {
@@ -638,7 +649,6 @@ function App() {
       const projs = Array.from(projSet).sort();
       const total = projs.length;
       
-      // Determine Base Category Color (User override > Notion tag color > Figma Token > Theme Primary)
       let baseHex = currentThemeColors.primary;
       if (customCategoryColors[type]) {
         baseHex = customCategoryColors[type];
@@ -652,7 +662,6 @@ function App() {
       }
 
       projs.forEach((proj, idx) => {
-        // Individual project color override takes highest precedence
         if (customProjectColors[proj]) {
           newColorMap[proj] = customProjectColors[proj];
         } else {
@@ -884,7 +893,7 @@ function App() {
   };
 
   // -------------------------------------------------------------
-  // DYNAMIC THEME INJECTION
+  // DYNAMIC THEME & VIEW SCALE INJECTION
   // -------------------------------------------------------------
   const themeVars = {
     '--theme-bg': currentThemeColors.bg,
@@ -893,6 +902,7 @@ function App() {
     '--theme-text': currentThemeColors.text,
     '--theme-primary': currentThemeColors.primary,
     '--theme-secondary': currentThemeColors.secondary,
+    fontSize: `${viewScale}%`,
   };
 
   return (
@@ -1486,129 +1496,88 @@ function App() {
         </main>
       </div>
 
-      {/* SETTINGS & THEME / PALETTE MANAGER MODAL */}
+      {/* SETTINGS MODAL (TAB 1 TO 4 ORGANIZED ORDER) */}
       {showSettings && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm">
           <div 
             style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
             className="w-full max-w-lg rounded-xl shadow-2xl border p-6 flex flex-col gap-4 max-h-[90vh] overflow-hidden"
           >
-            {/* Tab Header */}
+            {/* Tab Header - Ordered 1 to 4 */}
             <div className="flex items-center justify-between border-b pb-3 shrink-0" style={{ borderColor: 'var(--theme-border)' }}>
               <div className="flex items-center gap-1.5 flex-wrap">
+                {/* 1. NOTION SYNC */}
                 <button 
-                  onClick={() => setSettingsTab('palette')} 
+                  onClick={() => setSettingsTab('notion')} 
                   className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
-                    settingsTab === 'palette' ? 'bg-black/20 font-bold' : 'opacity-60'
+                    settingsTab === 'notion' ? 'bg-black/20 font-bold' : 'opacity-60 hover:opacity-100'
                   }`}
                 >
-                  🖌️ Project Palette
+                  🔗 Notion Sync
                 </button>
+
+                {/* 2. THEMES */}
                 <button 
                   onClick={() => setSettingsTab('theme')} 
                   className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
-                    settingsTab === 'theme' ? 'bg-black/20 font-bold' : 'opacity-60'
+                    settingsTab === 'theme' ? 'bg-black/20 font-bold' : 'opacity-60 hover:opacity-100'
                   }`}
                 >
                   🎨 Themes
                 </button>
+
+                {/* 3. VIEW SCALE (NEW TAB) */}
                 <button 
-                  onClick={() => setSettingsTab('notion')} 
+                  onClick={() => setSettingsTab('scale')} 
                   className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
-                    settingsTab === 'notion' ? 'bg-black/20 font-bold' : 'opacity-60'
+                    settingsTab === 'scale' ? 'bg-black/20 font-bold' : 'opacity-60 hover:opacity-100'
                   }`}
                 >
-                  🔗 Notion Sync
+                  🔍 View Scale
+                </button>
+
+                {/* 4. PROJECT PALETTE */}
+                <button 
+                  onClick={() => setSettingsTab('palette')} 
+                  className={`text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
+                    settingsTab === 'palette' ? 'bg-black/20 font-bold' : 'opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  🖌️ Project Palette
                 </button>
               </div>
               <button onClick={() => setShowSettings(false)} className="font-bold opacity-60 hover:opacity-100">✕</button>
             </div>
 
-            {/* TAB 1: PROJECT & CATEGORY DOT PALETTE CONTROL */}
-            {settingsTab === 'palette' && (
+            {/* TAB 1: NOTION SYNC */}
+            {settingsTab === 'notion' && (
               <div className="flex-1 overflow-y-auto pr-1 space-y-4 min-h-0">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs opacity-70">Control colors by <strong>Category Hue</strong> or tweak individual <strong>Project</strong> dot values.</p>
-                  <button 
-                    onClick={handleResetDotColors} 
-                    className="text-[11px] font-bold px-2.5 py-1 rounded border hover:opacity-100 opacity-70 transition-opacity shrink-0 cursor-pointer"
-                    style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}
-                  >
-                    ↺ Return to Default
-                  </button>
+                <div>
+                  <label className="block text-xs font-bold mb-1">Notion Integration Token</label>
+                  <input 
+                    type="password" 
+                    value={notionToken} 
+                    onChange={(e) => setNotionToken(e.target.value)} 
+                    style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
+                    className="w-full border rounded px-3 py-2 text-sm outline-none"
+                    placeholder="secret_..."
+                  />
                 </div>
-
-                <div className="space-y-4">
-                  {Object.entries(groupedProjects).map(([type, projs]) => {
-                    const categoryCustomHex = customCategoryColors[type];
-                    const defaultCategoryHex = projs[0]?.projectTypeColor && NOTION_COLOR_MAP[projs[0].projectTypeColor] 
-                      ? NOTION_COLOR_MAP[projs[0].projectTypeColor] 
-                      : (themeTokens?.colour?.dot?.[type]?.$value?.hex || currentThemeColors.primary);
-                    const effectiveCategoryHex = categoryCustomHex || defaultCategoryHex;
-
-                    return (
-                      <div key={type} className="border rounded-lg p-3 space-y-2" style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}>
-                        {/* Category Hue Bar */}
-                        <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--theme-border)' }}>
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: effectiveCategoryHex }} />
-                            <span className="text-xs font-black uppercase tracking-wider">{type}</span>
-                            {categoryCustomHex && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">Modified</span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            {categoryCustomHex && (
-                              <button onClick={() => handleResetCategoryColor(type)} className="text-[10px] text-rose-500 font-bold hover:underline cursor-pointer">Reset Category</button>
-                            )}
-                            <input 
-                              type="color" 
-                              value={effectiveCategoryHex} 
-                              onChange={(e) => handleUpdateCategoryColor(type, e.target.value)}
-                              className="w-6 h-6 rounded border-0 cursor-pointer p-0 bg-transparent"
-                              title="Change Category Base Color (Updates child project shades)"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Nested Child Projects */}
-                        <div className="pl-2 space-y-1.5 pt-1">
-                          {projs.map((p) => {
-                            const projectCustomHex = customProjectColors[p.title];
-                            const currentEffectiveHex = projectColorMap[p.title] || effectiveCategoryHex;
-
-                            return (
-                              <div key={p.title} className="flex items-center justify-between p-1.5 rounded border" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
-                                <div className="flex items-center gap-2 truncate pr-2">
-                                  <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20" style={{ backgroundColor: currentEffectiveHex }} />
-                                  <span className="text-xs font-medium truncate">{p.title}</span>
-                                </div>
-
-                                <div className="flex items-center gap-2 shrink-0">
-                                  {projectCustomHex && (
-                                    <button onClick={() => handleResetProjectColor(p.title)} className="text-[9px] text-rose-500 font-bold hover:underline cursor-pointer">Reset</button>
-                                  )}
-                                  <input 
-                                    type="color" 
-                                    value={currentEffectiveHex} 
-                                    onChange={(e) => handleUpdateProjectColor(p.title, e.target.value)}
-                                    className="w-5 h-5 rounded border-0 cursor-pointer p-0 bg-transparent"
-                                    title={`Tweak specific color value for ${p.title}`}
-                                  />
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div>
+                  <label className="block text-xs font-bold mb-1">Notion Database ID</label>
+                  <input 
+                    type="text" 
+                    value={databaseId} 
+                    onChange={(e) => setDatabaseId(e.target.value)} 
+                    style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
+                    className="w-full border rounded px-3 py-2 text-sm outline-none"
+                    placeholder="3728d5a5..."
+                  />
                 </div>
               </div>
             )}
 
-            {/* TAB 2: THEME MANAGER */}
+            {/* TAB 2: THEMES */}
             {settingsTab === 'theme' && (
               <div className="flex-1 overflow-y-auto pr-1 space-y-5 min-h-0">
                 <div>
@@ -1714,30 +1683,157 @@ function App() {
               </div>
             )}
 
-            {/* TAB 3: NOTION INTEGRATION */}
-            {settingsTab === 'notion' && (
-              <div className="flex-1 overflow-y-auto pr-1 space-y-4 min-h-0">
-                <div>
-                  <label className="block text-xs font-bold mb-1">Notion Integration Token</label>
-                  <input 
-                    type="password" 
-                    value={notionToken} 
-                    onChange={(e) => setNotionToken(e.target.value)} 
-                    style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
-                    className="w-full border rounded px-3 py-2 text-sm outline-none"
-                    placeholder="secret_..."
-                  />
+            {/* TAB 3: VIEW SCALE & TEXT SIZE */}
+            {settingsTab === 'scale' && (
+              <div className="flex-1 overflow-y-auto pr-1 space-y-5 min-h-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold">Text Size & UI Scaling</h3>
+                    <p className="text-[11px] opacity-60">Adjust overall scale of text and cards across all views.</p>
+                  </div>
+                  <button 
+                    onClick={() => setViewScale(100)} 
+                    className="text-[11px] font-bold px-2.5 py-1 rounded border hover:opacity-100 opacity-70 transition-opacity shrink-0 cursor-pointer"
+                    style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}
+                  >
+                    ↺ Reset to 100%
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold mb-1">Notion Database ID</label>
+
+                {/* Slider Control */}
+                <div className="p-4 border rounded-lg space-y-3" style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold">Scale Factor</span>
+                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--theme-card)', color: 'var(--theme-primary)' }}>
+                      {viewScale}%
+                    </span>
+                  </div>
+
                   <input 
-                    type="text" 
-                    value={databaseId} 
-                    onChange={(e) => setDatabaseId(e.target.value)} 
-                    style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
-                    className="w-full border rounded px-3 py-2 text-sm outline-none"
-                    placeholder="3728d5a5..."
+                    type="range" 
+                    min="75" 
+                    max="135" 
+                    step="5"
+                    value={viewScale} 
+                    onChange={(e) => setViewScale(Number(e.target.value))}
+                    className="w-full cursor-pointer accent-[var(--theme-primary)]"
                   />
+
+                  <div className="flex justify-between text-[10px] opacity-50 font-mono">
+                    <span>75% (Small)</span>
+                    <span>100% (Default)</span>
+                    <span>135% (Large)</span>
+                  </div>
+                </div>
+
+                {/* Quick Presets Grid */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold opacity-80">Quick Scale Presets</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { label: '85%', val: 85, name: 'Compact' },
+                      { label: '100%', val: 100, name: 'Default' },
+                      { label: '110%', val: 110, name: 'Medium' },
+                      { label: '120%', val: 120, name: 'Large' },
+                      { label: '130%', val: 130, name: 'X-Large' },
+                    ].map((preset) => (
+                      <button
+                        key={preset.val}
+                        onClick={() => setViewScale(preset.val)}
+                        style={{ 
+                          backgroundColor: viewScale === preset.val ? 'var(--theme-primary)' : 'var(--theme-bg)',
+                          borderColor: viewScale === preset.val ? 'var(--theme-primary)' : 'var(--theme-border)',
+                          color: viewScale === preset.val ? '#FFFFFF' : 'var(--theme-text)'
+                        }}
+                        className="py-2 rounded border text-center transition-all cursor-pointer hover:border-[var(--theme-primary)]"
+                      >
+                        <div className="text-xs font-bold">{preset.label}</div>
+                        <div className="text-[9px] opacity-80">{preset.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: PROJECT PALETTE */}
+            {settingsTab === 'palette' && (
+              <div className="flex-1 overflow-y-auto pr-1 space-y-4 min-h-0">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs opacity-70">Control colors by <strong>Category Hue</strong> or tweak individual <strong>Project</strong> dot values.</p>
+                  <button 
+                    onClick={handleResetDotColors} 
+                    className="text-[11px] font-bold px-2.5 py-1 rounded border hover:opacity-100 opacity-70 transition-opacity shrink-0 cursor-pointer"
+                    style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}
+                  >
+                    ↺ Return to Default
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {Object.entries(groupedProjects).map(([type, projs]) => {
+                    const categoryCustomHex = customCategoryColors[type];
+                    const defaultCategoryHex = projs[0]?.projectTypeColor && NOTION_COLOR_MAP[projs[0].projectTypeColor] 
+                      ? NOTION_COLOR_MAP[projs[0].projectTypeColor] 
+                      : (themeTokens?.colour?.dot?.[type]?.$value?.hex || currentThemeColors.primary);
+                    const effectiveCategoryHex = categoryCustomHex || defaultCategoryHex;
+
+                    return (
+                      <div key={type} className="border rounded-lg p-3 space-y-2" style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}>
+                        <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'var(--theme-border)' }}>
+                          <div className="flex items-center gap-2">
+                            <span className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: effectiveCategoryHex }} />
+                            <span className="text-xs font-black uppercase tracking-wider">{type}</span>
+                            {categoryCustomHex && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">Modified</span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {categoryCustomHex && (
+                              <button onClick={() => handleResetCategoryColor(type)} className="text-[10px] text-rose-500 font-bold hover:underline cursor-pointer">Reset Category</button>
+                            )}
+                            <input 
+                              type="color" 
+                              value={effectiveCategoryHex} 
+                              onChange={(e) => handleUpdateCategoryColor(type, e.target.value)}
+                              className="w-6 h-6 rounded border-0 cursor-pointer p-0 bg-transparent"
+                              title="Change Category Base Color (Updates child project shades)"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="pl-2 space-y-1.5 pt-1">
+                          {projs.map((p) => {
+                            const projectCustomHex = customProjectColors[p.title];
+                            const currentEffectiveHex = projectColorMap[p.title] || effectiveCategoryHex;
+
+                            return (
+                              <div key={p.title} className="flex items-center justify-between p-1.5 rounded border" style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}>
+                                <div className="flex items-center gap-2 truncate pr-2">
+                                  <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-white/20" style={{ backgroundColor: currentEffectiveHex }} />
+                                  <span className="text-xs font-medium truncate">{p.title}</span>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  {projectCustomHex && (
+                                    <button onClick={() => handleResetProjectColor(p.title)} className="text-[9px] text-rose-500 font-bold hover:underline cursor-pointer">Reset</button>
+                                  )}
+                                  <input 
+                                    type="color" 
+                                    value={currentEffectiveHex} 
+                                    onChange={(e) => handleUpdateProjectColor(p.title, e.target.value)}
+                                    className="w-5 h-5 rounded border-0 cursor-pointer p-0 bg-transparent"
+                                    title={`Tweak specific color value for ${p.title}`}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
