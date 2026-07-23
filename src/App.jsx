@@ -91,13 +91,11 @@ function App() {
   const [selectedProjectFilters, setSelectedProjectFilters] = useState([]); 
   const [selectedLogModal, setSelectedLogModal] = useState(null); 
   
-  // Initialize thumbnail overrides from localStorage so they persist across reloads
   const [thumbnailOverrides, setThumbnailOverrides] = useState(() => {
     const saved = localStorage.getItem('notionWidgetThumbnails');
     return saved ? JSON.parse(saved) : {};
   });
 
-  // Save thumbnail overrides to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('notionWidgetThumbnails', JSON.stringify(thumbnailOverrides));
   }, [thumbnailOverrides]);
@@ -129,7 +127,6 @@ function App() {
     window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
   );
 
-  // Resize Observer for Calendar Container Dimension Tracking
   useEffect(() => {
     if (!calendarRef.current) return;
     const observer = new ResizeObserver((entries) => {
@@ -174,7 +171,6 @@ function App() {
     setIsLoading(true);
     setFetchError(null);
     try {
-      // Detect the user's current local timezone dynamically
       const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       const response = await fetch('/api/get-notion-logs', {
@@ -183,7 +179,7 @@ function App() {
         body: JSON.stringify({ 
           notionToken: token, 
           databaseId: dbId,
-          timeZone: userTimeZone // Send the dynamically retrieved timezone to the backend
+          timeZone: userTimeZone
         }),
       });
       
@@ -570,7 +566,7 @@ function App() {
         </div>
       )}
 
-      {/* MAIN WORKSPACE SPLIT (Fluid height/width) */}
+      {/* MAIN WORKSPACE SPLIT */}
       <div className="flex-1 flex min-h-0 min-w-0 gap-6">
         
         {/* SIDEBAR */}
@@ -875,6 +871,8 @@ function App() {
                       const weekdayStr = TIMELINE_WEEKDAYS[rowIndex % 7];
                       const isWeekendRow = weekdayStr === 'SUN' || weekdayStr === 'SAT';
                       const weekIndex = Math.floor(rowIndex / 7);
+                      const isStartOfWeek = rowIndex % 7 === 0;
+                      const isEndOfWeek = rowIndex % 7 === 6 || rowIndex === 36;
                       
                       return (
                         <div key={rowIndex} className={`flex-1 grid grid-cols-[30px_repeat(12,minmax(0,1fr))] sm:grid-cols-[40px_repeat(12,minmax(0,1fr))] items-center min-h-0 border-b border-dashed last:border-0 relative z-10 ${isDarkMode ? 'border-zinc-800/50' : 'border-slate-100/50'}`}>
@@ -892,10 +890,28 @@ function App() {
                             const isValidCalendarDay = targetDayNum > 0 && targetDayNum <= daysInMonth;
 
                             const isHoveredWeekCell = hoveredWeek?.mIdx === mIdx && hoveredWeek?.weekIndex === weekIndex;
-                            const weekHighlightStyle = isHoveredWeekCell ? (isDarkMode ? `bg-amber-950/40 border-x border-amber-500/40 z-20 ${rowIndex % 7 === 0 ? 'border-t rounded-t-md' : ''} ${rowIndex % 7 === 6 || rowIndex === 36 ? 'border-b rounded-b-md' : ''}` : `bg-amber-100 border-x border-amber-300/80 z-20 ${rowIndex % 7 === 0 ? 'border-t rounded-t-md' : ''} ${rowIndex % 7 === 6 || rowIndex === 36 ? 'border-b rounded-b-md' : ''}`) : '';
+
+                            let weekHighlightStyle = '';
+                            if (isHoveredWeekCell) {
+                              if (isDarkMode) {
+                                const bgBorder = 'bg-amber-950/70 border-amber-500/50 z-20';
+                                weekHighlightStyle = isStartOfWeek
+                                  ? `${bgBorder} border-x border-t rounded-t-full -mb-1`
+                                  : isEndOfWeek
+                                  ? `${bgBorder} border-x border-b rounded-b-full -mt-1`
+                                  : `${bgBorder} border-x -my-1`;
+                              } else {
+                                const bgBorder = 'bg-amber-100 border-amber-300/90 z-20';
+                                weekHighlightStyle = isStartOfWeek
+                                  ? `${bgBorder} border-x border-t rounded-t-full -mb-1`
+                                  : isEndOfWeek
+                                  ? `${bgBorder} border-x border-b rounded-b-full -mt-1`
+                                  : `${bgBorder} border-x -my-1`;
+                              }
+                            }
 
                             if (!isValidCalendarDay) {
-                              return <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full w-full flex items-center justify-center transition-colors cursor-pointer ${isHoveredWeekCell ? weekHighlightStyle : ''}`} />;
+                              return <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full w-full flex items-center justify-center transition-colors cursor-pointer ${weekHighlightStyle}`} />;
                             }
 
                             const targetDate = new Date(year, mIdx, targetDayNum);
@@ -911,8 +927,6 @@ function App() {
                             const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                             const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
 
-                            const slotBackground = isHoveredWeekCell ? weekHighlightStyle : '';
-
                             let dotStyles = isDarkMode ? 'border bg-zinc-900 text-zinc-400 font-normal hover:border-zinc-600 hover:text-zinc-200' : 'border bg-white text-slate-500 font-normal hover:border-slate-400 hover:text-slate-700';
                             if (hasLog) {
                               let ringClass = isStatHoliday ? 'ring-2 ring-amber-400/60' : isWeekend ? 'ring-2 ring-rose-400/50' : '';
@@ -927,7 +941,7 @@ function App() {
                             }
 
                             return (
-                              <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${slotBackground}`}>
+                              <div key={mIdx} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full w-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekHighlightStyle}`}>
                                 <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
                                   {targetDayNum}
                                   {hasMultipleProjects && (
@@ -976,11 +990,31 @@ function App() {
                               const isHoveredWeekCell = hoveredWeek?.mIdx === mIdx && hoveredWeek?.weekIndex === weekIndex;
                               const targetDayNum = colIndex - startOffsetColumn + 1;
                               const isValidCalendarDay = targetDayNum > 0 && targetDayNum <= daysInMonth;
-                              const weekRoundClass = colIndex % 7 === 0 ? 'rounded-l-md -ml-0.5' : colIndex % 7 === 6 || colIndex === 36 ? 'rounded-r-md -mr-0.5' : 'rounded-none';
-                              const weekHighlightStyle = isHoveredWeekCell ? (isDarkMode ? `bg-amber-950/40 border-y border-amber-500/40 z-20 ${colIndex % 7 === 0 ? 'border-l' : ''} ${colIndex % 7 === 6 || colIndex === 36 ? 'border-r' : ''}` : `bg-amber-100 border-y border-amber-300/80 z-20 ${colIndex % 7 === 0 ? 'border-l' : ''} ${colIndex % 7 === 6 || colIndex === 36 ? 'border-r' : ''}`) : '';
+
+                              const isStartOfWeek = colIndex % 7 === 0;
+                              const isEndOfWeek = colIndex % 7 === 6 || colIndex === 36;
+
+                              let weekHighlightStyle = '';
+                              if (isHoveredWeekCell) {
+                                if (isDarkMode) {
+                                  const bgBorder = 'bg-amber-950/70 border-amber-500/50 z-20';
+                                  weekHighlightStyle = isStartOfWeek
+                                    ? `${bgBorder} border-y border-l rounded-l-full -mr-1 sm:-mr-1.5`
+                                    : isEndOfWeek
+                                    ? `${bgBorder} border-y border-r rounded-r-full -ml-1 sm:-ml-1.5`
+                                    : `${bgBorder} border-y -mx-1 sm:-mx-1.5`;
+                                } else {
+                                  const bgBorder = 'bg-amber-100 border-amber-300/90 z-20';
+                                  weekHighlightStyle = isStartOfWeek
+                                    ? `${bgBorder} border-y border-l rounded-l-full -mr-1 sm:-mr-1.5`
+                                    : isEndOfWeek
+                                    ? `${bgBorder} border-y border-r rounded-r-full -ml-1 sm:-ml-1.5`
+                                    : `${bgBorder} border-y -mx-1 sm:-mx-1.5`;
+                                }
+                              }
 
                               if (!isValidCalendarDay) {
-                                return <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full flex items-center justify-center transition-colors cursor-pointer ${weekRoundClass} ${isHoveredWeekCell ? weekHighlightStyle : 'z-10'}`} />;
+                                return <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => setHoveredWeek({ mIdx, weekIndex })} onMouseLeave={() => setHoveredWeek(null)} className={`h-full flex items-center justify-center transition-colors cursor-pointer ${weekHighlightStyle}`} />;
                               }
                               
                               const targetDate = new Date(year, mIdx, targetDayNum);
@@ -996,8 +1030,6 @@ function App() {
                               const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                               const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
                               
-                              const slotBackground = isHoveredWeekCell ? weekHighlightStyle : '';
-                              
                               let dotStyles = isDarkMode ? 'border bg-zinc-900 text-zinc-400 font-normal hover:border-zinc-600 hover:text-zinc-200' : 'border bg-white text-slate-500 font-normal hover:border-slate-400 hover:text-slate-700';
                               if (hasLog) {
                                 let ringClass = isStatHoliday ? 'ring-2 ring-amber-400/60' : isWeekend ? 'ring-2 ring-rose-400/50' : '';
@@ -1012,7 +1044,7 @@ function App() {
                               }
 
                               return (
-                                <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekRoundClass} ${slotBackground}`}>
+                                <div key={colIndex} onClick={() => handleWeekClick(mIdx, weekIndex)} onMouseEnter={() => { setHoveredWeek({ mIdx, weekIndex }); if (hasLog && primaryLog) setHoveredProjectTitle(primaryLog.Projects || 'Untitled Project'); }} onMouseLeave={() => { setHoveredWeek(null); setHoveredProjectTitle(null); }} className={`h-full flex items-center justify-center relative cursor-pointer group/node transition-colors ${weekHighlightStyle}`}>
                                   <div onClick={(e) => { e.stopPropagation(); setSelectedLogModal({ dateObj: targetDate, logs }); }} className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] transition-all duration-200 relative z-10 ${dotStyles} ${hasLog ? 'border-white/80' : ''} ${isHoveredProject ? 'ring-2 ring-amber-500 ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-rose-500 ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} style={{ backgroundColor: hasLog ? displayDotHex : undefined }}>
                                     {targetDayNum}
                                     {hasMultipleProjects && (
@@ -1036,9 +1068,7 @@ function App() {
         </main>
       </div>
 
-      {/* ------------------------------------------------------------- */}
       {/* SETTINGS MODAL */}
-      {/* ------------------------------------------------------------- */}
       {showSettings && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70 backdrop-blur-sm text-slate-800">
           <div className={`w-full max-w-md rounded-xl shadow-xl border p-6 ${isDarkMode ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
@@ -1087,9 +1117,7 @@ function App() {
         </div>
       )}
 
-      {/* ------------------------------------------------------------- */}
       {/* DETAIL LOG MODAL */}
-      {/* ------------------------------------------------------------- */}
       {selectedLogModal && (() => {
         const dateKey = selectedLogModal.dateObj.toISOString().split('T')[0];
         const currentThumbId = thumbnailOverrides[dateKey] || (selectedLogModal.logs[0]?.id);
