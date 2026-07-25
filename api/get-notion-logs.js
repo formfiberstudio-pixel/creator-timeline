@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    // 1. Fetch Primary Activity Log Database (Strict Requirement)
+    // 1. Query Primary Activity Log Database
     const activityRes = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
       method: 'POST',
       headers,
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: activityData.message });
     }
 
-    // 2. Fetch Optional Special Days Database (Failsafed - Never blocks primary logs)
+    // 2. Query Optional Special Days Database (Failsafe)
     let specialDaysData = null;
     const cleanSpecialDbId = typeof specialDaysDatabaseId === 'string' ? specialDaysDatabaseId.trim() : '';
 
@@ -51,21 +51,87 @@ export default async function handler(req, res) {
       }
     }
 
-    // 3. Process Primary Activity Log Entries
+    // --- HELPER: Extract Date string across Date, Formula, or Created Time properties ---
+    const extractDateString = (props, page) => {
+      const dateKeys = ['Log Date', 'Post-Date', 'Date', 'LogDate', 'Created time'];
+      
+      for (const key of dateKeys) {
+        const prop = props[key];
+        if (!prop) continue;
+
+        // Formula Date (Notion API returns formula.date.start for date formulas)
+        if (prop.type === 'formula' && prop.formula) {
+          if (prop.formula.type === 'date' && prop.formula.date?.start) return prop.formula.date.start;
+          if (prop.formula.type === 'string' && prop.formula.string) return prop.formula.string;
+        }
+        // Standard Date Property
+        if (prop.type === 'date' && prop.date?.start) return prop.date.start;
+        // Created Time Property
+        if (prop.type === 'created_time' && prop.created_time) return prop.created_time;
+      }
+
+      // Generic scan across all properties if named keys fail
+      for (const prop of Object.values(props)) {
+        if (prop.type === 'date' && prop.date?.start) return prop.date.start;
+        if (prop.type === 'formula' && prop.formula) {
+          if (prop.formula.type === 'date' && prop.formula.date?.start) return prop.formula.date.start;
+          if (prop.formula.type === 'string' && prop.formula.string) return prop.formula.string;
+        }
+      }
+
+      // Ultimate Fallback: Notion Page Created Time (Ensures no log entry ever gets omitted)
+      return page.created_time || null;
+    };
+
+    // --- HELPER: Extract Title string ---
+    const extractTitle = (props) => {
+      for (const key of ['Log', 'Name', 'Title', 'Entry', 'Activity']) {
+        if (props[key]?.title) {
+          const text = props[key].title.map((t) => t.plain_text).join('');
+          if (text) return text;
+        }
+      }
+      // Scan for any title property in schema
+      const titleProp = Object.values(props).find((p) => p.type === 'title');
+      if (titleProp?.title) {
+        const text = titleProp.title.map((t) => t.plain_text).join('');
+        if (text) return text;
+      }
+      return 'Untitled Entry';
+    };
+
+    // --- HELPER: Extract Property Text (Select / Multi-Select / Status / Relation) ---
+    const extractPropValue = (props, possibleKeys, fallback = 'General') => {
+      for (const key of possibleKeys) {
+        const prop = props[key];
+        if (!prop) continue;
+
+        if (prop.type === 'select' && prop.select?.name) return prop.select.name;
+        if (prop.type === 'multi_select' && prop.multi_select?.[0]?.name) return prop.multi_select[0].name;
+        if (prop.type === 'status' && prop.status?.name) return prop.status.name;
+        if (prop.type === 'rich_text' && prop.rich_text?.[0]?.plain_text) return prop.rich_text[0].plain_text;
+        if (prop.type === 'relation' && prop.relation?.[0]?.id) return 'Project Entry';
+      }
+      return fallback;
+    };
+
+    // --- HELPER: Extract Notion Select Color ---
+    const extractPropColor = (props, possibleKeys, fallback = 'default') => {
+      for (const key of possibleKeys) {
+        const prop = props[key];
+        if (!prop) continue;
+        if (prop.type === 'select' && prop.select?.color) return prop.select.color;
+        if (prop.type === 'status' && prop.status?.color) return prop.status.color;
+      }
+      return fallback;
+    };
+
+    // 3. Process Activity Log Entries
     const processedLogs = (activityData.results || []).map((page) => {
       const props = page.properties;
 
-      const titleObj = props.Log?.title || props.Name?.title || props.Title?.title || [];
-      const title = titleObj.map((t) => t.plain_text).join('') || 'Untitled Entry';
-
-      let rawDateStr = null;
-      if (props['Log Date']?.formula?.string) {
-        rawDateStr = props['Log Date'].formula.string;
-      } else if (props['Post-Date']?.date?.start) {
-        rawDateStr = props['Post-Date'].date.start;
-      } else if (props.Date?.date?.start) {
-        rawDateStr = props.Date.date.start;
-      }
+      const title = extractTitle(props);
+      const rawDateStr = extractDateString(props, page);
 
       let year = null, monthNumber = null, dayNumber = null;
       if (rawDateStr) {
@@ -75,13 +141,15 @@ export default async function handler(req, res) {
         dayNumber = d;
       }
 
-      const projectSelect = props.Projects?.select?.name || props.Project?.select?.name || 'General';
-      const projectType = props['Project Type']?.select?.name || props.Type?.select?.name || 'General';
-      const projectTypeColor = props['Project Type']?.select?.color || props.Type?.select?.color || 'default';
+      const projectSelect = extractPropValue(props, ['Projects', 'Project', 'Category'], 'General');
+      const projectType = extractPropValue(props, ['Project Type', 'Type', 'Group'], 'General');
+      const projectTypeColor = extractPropColor(props, ['Project Type', 'Type', 'Group'], 'default');
 
-      const contentProp = props.Content?.rich_text || props.Notes?.rich_text || [];
+      // Page Content
+      const contentProp = props.Content?.rich_text || props.Notes?.rich_text || props.Description?.rich_text || [];
       const pageContent = contentProp.map((t) => t.plain_text).join('') || '';
 
+      // Image / Cover
       let imageUrl = null;
       if (page.cover) {
         imageUrl = page.cover.type === 'external' ? page.cover.external.url : page.cover.file?.url;
@@ -113,7 +181,7 @@ export default async function handler(req, res) {
       const nameObj = props.Name?.title || props.Title?.title || props.Event?.title || [];
       const name = nameObj.map((t) => t.plain_text).join('') || 'Special Day';
 
-      const rawDate = props.Date?.date?.start || null;
+      const rawDate = props.Date?.date?.start || props.Date?.formula?.date?.start || null;
       let year = null, monthNumber = null, dayNumber = null;
 
       if (rawDate) {
