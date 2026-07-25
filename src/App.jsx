@@ -268,7 +268,7 @@ const getOntarioStatHolidayName = (dateObj) => {
 };
 
 // -------------------------------------------------------------
-// HELPER: UNIFIED DAY DOT STYLING (WEEKENDS -> PRIMARY, STATS -> SECONDARY)
+// HELPER: UNIFIED DAY DOT STYLING (WEEKENDS -> PRIMARY, STATS -> SECONDARY) - UNFILLED BACKGROUND
 // -------------------------------------------------------------
 const getDayDotStyling = (dateObj, hasLog, logDotHex) => {
   if (!dateObj) return { bg: 'var(--theme-card)', text: 'var(--theme-text)', border: 'var(--theme-border)' };
@@ -279,10 +279,10 @@ const getDayDotStyling = (dateObj, hasLog, logDotHex) => {
   const isWknd = dateObj.getDay() === 0 || dateObj.getDay() === 6;
 
   if (statName) {
-    return { bg: 'var(--theme-secondary)', text: '#FFFFFF', border: 'var(--theme-secondary)' };
+    return { bg: 'var(--theme-card)', text: 'var(--theme-secondary)', border: 'var(--theme-secondary)' };
   }
   if (isWknd) {
-    return { bg: 'var(--theme-primary)', text: '#FFFFFF', border: 'var(--theme-primary)' };
+    return { bg: 'var(--theme-card)', text: 'var(--theme-primary)', border: 'var(--theme-primary)' };
   }
   return { bg: 'var(--theme-card)', text: 'var(--theme-text)', border: 'var(--theme-border)' };
 };
@@ -1566,6 +1566,7 @@ function App() {
                             const primaryLog = hasLog ? logs[0] : null;
                             const displayDotHex = getDisplayDotColor(logs, targetDate);
                             const dotStyle = getDayDotStyling(targetDate, hasLog, displayDotHex);
+                            const isSpecialDay = !!(getOntarioStatHolidayName(targetDate) || targetDate.getDay() === 0 || targetDate.getDay() === 6);
                             
                             const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                             const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
@@ -1583,8 +1584,8 @@ function App() {
                                     borderColor: dotStyle.border 
                                   }}
                                   className={`rounded-full flex items-center justify-center transition-all duration-200 relative z-20 border bg-[var(--theme-card)] ${
-                                    hasLog || dotStyle.bg !== 'var(--theme-card)' ? 'font-bold shadow-xs scale-110' : ''
-                                  } ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
+                                    hasLog || isSpecialDay ? 'font-bold shadow-xs' : ''
+                                  } ${hasLog ? 'scale-110' : ''} ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
                                 >
                                   {targetDayNum}
                                   {hasMultipleProjects && (
@@ -1678,6 +1679,7 @@ function App() {
                               const primaryLog = hasLog ? logs[0] : null;
                               const displayDotHex = getDisplayDotColor(logs, targetDate);
                               const dotStyle = getDayDotStyling(targetDate, hasLog, displayDotHex);
+                              const isSpecialDay = !!(getOntarioStatHolidayName(targetDate) || targetDate.getDay() === 0 || targetDate.getDay() === 6);
                               
                               const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                               const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
@@ -1695,8 +1697,8 @@ function App() {
                                       borderColor: dotStyle.border 
                                     }}
                                     className={`rounded-full flex items-center justify-center transition-all duration-200 relative z-20 border bg-[var(--theme-card)] ${
-                                      hasLog || dotStyle.bg !== 'var(--theme-card)' ? 'font-bold shadow-xs scale-110' : ''
-                                    } ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
+                                      hasLog || isSpecialDay ? 'font-bold shadow-xs' : ''
+                                    } ${hasLog ? 'scale-110' : ''} ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
                                   >
                                     {targetDayNum}
                                     {hasMultipleProjects && (
