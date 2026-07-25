@@ -268,6 +268,26 @@ const getOntarioStatHolidayName = (dateObj) => {
 };
 
 // -------------------------------------------------------------
+// HELPER: UNIFIED DAY DOT STYLING (WEEKENDS -> PRIMARY, STATS -> SECONDARY)
+// -------------------------------------------------------------
+const getDayDotStyling = (dateObj, hasLog, logDotHex) => {
+  if (!dateObj) return { bg: 'var(--theme-card)', text: 'var(--theme-text)', border: 'var(--theme-border)' };
+  if (hasLog) {
+    return { bg: logDotHex, text: '#FFFFFF', border: 'rgba(255,255,255,0.8)' };
+  }
+  const statName = getOntarioStatHolidayName(dateObj);
+  const isWknd = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+
+  if (statName) {
+    return { bg: 'var(--theme-secondary)', text: '#FFFFFF', border: 'var(--theme-secondary)' };
+  }
+  if (isWknd) {
+    return { bg: 'var(--theme-primary)', text: '#FFFFFF', border: 'var(--theme-primary)' };
+  }
+  return { bg: 'var(--theme-card)', text: 'var(--theme-text)', border: 'var(--theme-border)' };
+};
+
+// -------------------------------------------------------------
 // SUB-COMPONENT: WEEK DAY COLUMN
 // -------------------------------------------------------------
 function WeekDayColumn({ 
@@ -301,6 +321,7 @@ function WeekDayColumn({
   const hasLog = logs.length > 0;
   const dotPx = Math.round(24 * scaleFactor);
   const dotFontPx = Math.round(11 * scaleFactor);
+  const dotStyle = getDayDotStyling(slot.dateObj, hasLog, displayDotHex);
 
   return (
     <div 
@@ -319,14 +340,16 @@ function WeekDayColumn({
         style={{ borderColor: 'var(--theme-border)', backgroundColor: 'var(--theme-bg)' }}
       >
         <div 
-          className={`rounded-full flex items-center justify-center font-bold text-white shadow-sm border transition-all ${
-            hasLog ? 'border-white/80' : 'border-zinc-700/30 text-zinc-400'
-          } ${isTodayDate && !hasLog ? 'ring-2 ring-[var(--theme-primary)] text-white' : ''}`} 
+          className={`rounded-full flex items-center justify-center font-bold shadow-sm border transition-all ${
+            isTodayDate && !hasLog ? 'ring-2 ring-[var(--theme-primary)] text-white' : ''
+          }`} 
           style={{ 
             width: `${dotPx}px`,
             height: `${dotPx}px`,
             fontSize: `${dotFontPx}px`,
-            backgroundColor: hasLog ? displayDotHex : (isTodayDate ? 'var(--theme-primary)' : undefined) 
+            backgroundColor: isTodayDate && !hasLog ? 'var(--theme-primary)' : dotStyle.bg,
+            color: isTodayDate && !hasLog ? '#FFFFFF' : dotStyle.text,
+            borderColor: dotStyle.border
           }}
         >
           {slot.dayNum}
@@ -459,9 +482,56 @@ function App() {
 
   const [hoveredProjectTitle, setHoveredProjectTitle] = useState(null);
   const [hoveredWeek, setHoveredWeek] = useState(null);
-  // SCOPED STRICTLY TO HOVERING THE LEFT-HAND MONTH BUTTON
   const [hoveredMonthButtonIndex, setHoveredMonthButtonIndex] = useState(null);
   const [collapsedTypes, setCollapsedTypes] = useState({});
+
+  // --- SIDEBAR WIDTH RESIZING STATE ---
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem('notionWidgetSidebarWidth');
+    return saved ? Number(saved) : 260;
+  });
+  const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+  const sidebarDragStartX = useRef(0);
+  const sidebarDragStartWidth = useRef(260);
+
+  useEffect(() => {
+    localStorage.setItem('notionWidgetSidebarWidth', sidebarWidth);
+  }, [sidebarWidth]);
+
+  const handleMouseDownSidebarResize = (e) => {
+    e.preventDefault();
+    setIsResizingSidebar(true);
+    sidebarDragStartX.current = e.clientX;
+    sidebarDragStartWidth.current = sidebarWidth;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizingSidebar) return;
+      const deltaX = e.clientX - sidebarDragStartX.current;
+      const newWidth = Math.min(Math.max(sidebarDragStartWidth.current + deltaX, 180), 480);
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      if (isResizingSidebar) {
+        setIsResizingSidebar(false);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    };
+
+    if (isResizingSidebar) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizingSidebar]);
 
   // --- VIEW SCALE / TEXT SIZE STATE ---
   const [viewScale, setViewScale] = useState(() => {
@@ -1122,12 +1192,21 @@ function App() {
       {/* MAIN WORKSPACE SPLIT */}
       <div className="flex-1 flex min-h-0 min-w-0 gap-6">
         
-        {/* SIDEBAR */}
+        {/* SIDEBAR WITH DRAG RESIZE */}
         {isSidebarOpen && (
           <aside 
-            style={{ borderRadius: `${cardRadius}px`, backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
-            className="w-[260px] shrink-0 h-full flex flex-col p-4 rounded-xl border shadow-sm"
+            style={{ width: `${sidebarWidth}px`, borderRadius: `${cardRadius}px`, backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
+            className="shrink-0 h-full flex flex-col p-4 rounded-xl border shadow-sm relative"
           >
+            {/* SIDEBAR RESIZE HANDLE */}
+            <div 
+              onMouseDown={handleMouseDownSidebarResize}
+              className="absolute top-0 right-0 w-2.5 h-full cursor-col-resize z-30 group flex items-center justify-center"
+              title="Click & Drag to resize sidebar width"
+            >
+              <div className="w-0.5 h-8 rounded-full bg-[var(--theme-border)] group-hover:bg-[var(--theme-primary)] transition-colors" />
+            </div>
+
             <div className="mb-3 shrink-0">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-sm font-bold">Categories</h2>
@@ -1242,6 +1321,7 @@ function App() {
                         const hasMultipleProjects = uniqueProjects.size > 1;
                         const { primaryLog, isHalftoned } = getThumbnailLogForDate(slot.dateObj, logs);
                         const displayDotHex = getDisplayDotColor(logs, slot.dateObj);
+                        const dotStyle = getDayDotStyling(slot.dateObj, hasLog, displayDotHex);
                         
                         const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                         const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
@@ -1271,14 +1351,16 @@ function App() {
 
                             <div className="absolute top-2 left-2 right-2 flex items-center gap-1.5 z-10 pointer-events-none">
                               <div 
-                                className={`rounded-full flex items-center justify-center font-bold text-white shadow-sm border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${
-                                  hasLog ? 'border-white/80' : 'border-zinc-700/30 text-zinc-400'
-                                } ${isToday(slot.dateObj) && !hasLog ? 'ring-2 ring-[var(--theme-primary)] text-white' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} 
+                                className={`rounded-full flex items-center justify-center font-bold shadow-sm border transition-opacity duration-200 pointer-events-auto relative shrink-0 ${
+                                  isToday(slot.dateObj) ? 'ring-2 ring-[var(--theme-primary)] text-white' : ''
+                                } ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`} 
                                 style={{ 
                                   width: `${monthDotPx}px`,
                                   height: `${monthDotPx}px`,
                                   fontSize: `${monthDotFontPx}px`,
-                                  backgroundColor: hasLog ? displayDotHex : (isToday(slot.dateObj) ? 'var(--theme-primary)' : undefined) 
+                                  backgroundColor: isToday(slot.dateObj) ? 'var(--theme-primary)' : dotStyle.bg,
+                                  color: isToday(slot.dateObj) ? '#FFFFFF' : dotStyle.text,
+                                  borderColor: dotStyle.border
                                 }}
                               >
                                 {slot.dayNum}
@@ -1483,6 +1565,7 @@ function App() {
                             const hasMultipleProjects = uniqueProjects.size > 1;
                             const primaryLog = hasLog ? logs[0] : null;
                             const displayDotHex = getDisplayDotColor(logs, targetDate);
+                            const dotStyle = getDayDotStyling(targetDate, hasLog, displayDotHex);
                             
                             const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                             const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
@@ -1495,11 +1578,12 @@ function App() {
                                     width: `${yearDotPx}px`,
                                     height: `${yearDotPx}px`,
                                     fontSize: `${yearDotFontPx}px`,
-                                    backgroundColor: hasLog ? displayDotHex : 'var(--theme-card)', 
-                                    borderColor: 'var(--theme-border)' 
+                                    backgroundColor: dotStyle.bg,
+                                    color: dotStyle.text,
+                                    borderColor: dotStyle.border 
                                   }}
                                   className={`rounded-full flex items-center justify-center transition-all duration-200 relative z-20 border bg-[var(--theme-card)] ${
-                                    hasLog ? 'text-white font-bold border-white/80 shadow-xs scale-110' : ''
+                                    hasLog || dotStyle.bg !== 'var(--theme-card)' ? 'font-bold shadow-xs scale-110' : ''
                                   } ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
                                 >
                                   {targetDayNum}
@@ -1593,6 +1677,7 @@ function App() {
                               const hasMultipleProjects = uniqueProjects.size > 1;
                               const primaryLog = hasLog ? logs[0] : null;
                               const displayDotHex = getDisplayDotColor(logs, targetDate);
+                              const dotStyle = getDayDotStyling(targetDate, hasLog, displayDotHex);
                               
                               const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                               const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
@@ -1605,11 +1690,12 @@ function App() {
                                       width: `${yearDotPx}px`,
                                       height: `${yearDotPx}px`,
                                       fontSize: `${yearDotFontPx}px`,
-                                      backgroundColor: hasLog ? displayDotHex : 'var(--theme-card)', 
-                                      borderColor: 'var(--theme-border)' 
+                                      backgroundColor: dotStyle.bg,
+                                      color: dotStyle.text,
+                                      borderColor: dotStyle.border 
                                     }}
                                     className={`rounded-full flex items-center justify-center transition-all duration-200 relative z-20 border bg-[var(--theme-card)] ${
-                                      hasLog ? 'text-white font-bold border-white/80 shadow-xs scale-110' : ''
+                                      hasLog || dotStyle.bg !== 'var(--theme-card)' ? 'font-bold shadow-xs scale-110' : ''
                                     } ${isHoveredProject ? 'ring-2 ring-[var(--theme-secondary)] ring-offset-1 font-bold z-30 scale-125' : isToday(targetDate) ? 'ring-2 ring-[var(--theme-primary)] ring-offset-1 font-bold' : ''} ${isUnrelatedHover ? 'opacity-40 grayscale-[50%]' : ''}`}
                                   >
                                     {targetDayNum}
