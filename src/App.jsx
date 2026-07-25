@@ -49,7 +49,6 @@ const IconLink = () => (
   </svg>
 );
 
-// POLAROID PHOTO FRAME VECTOR LINE DRAWING FOR THEMES
 const IconTheme = () => (
   <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -65,7 +64,6 @@ const IconScale = () => (
   </svg>
 );
 
-// PAINT PALETTE VECTOR LINE DRAWING FOR PROJECT PALETTE
 const IconPalette = () => (
   <svg className="w-3.5 h-3.5 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10c.92 0 1.67-.75 1.67-1.67 0-.42-.16-.81-.44-1.11-.27-.29-.44-.68-.44-1.11 0-.92.75-1.67 1.67-1.67H16c3.31 0 6-2.69 6-6 0-4.97-4.03-9-10-9z"/>
@@ -268,9 +266,32 @@ const getOntarioStatHolidayName = (dateObj) => {
 };
 
 // -------------------------------------------------------------
-// HELPER: UNIFIED DAY DOT STYLING (WEEKENDS -> PRIMARY, STATS -> SECONDARY) - UNFILLED BACKGROUND
+// HELPER: SPECIAL DAYS MATCHING ENGINE (ANNUAL VS ONCE)
 // -------------------------------------------------------------
-const getDayDotStyling = (dateObj, hasLog, logDotHex) => {
+const getSpecialDayForDate = (dateObj, specialDaysList = []) => {
+  if (!dateObj || !Array.isArray(specialDaysList)) return null;
+
+  const targetYear = dateObj.getFullYear();
+  const targetMonth = dateObj.getMonth() + 1;
+  const targetDay = dateObj.getDate();
+
+  return specialDaysList.find((event) => {
+    if (event.occurrence === 'Annual') {
+      return event.monthNumber === targetMonth && event.dayNumber === targetDay;
+    } else {
+      return (
+        event.year === targetYear &&
+        event.monthNumber === targetMonth &&
+        event.dayNumber === targetDay
+      );
+    }
+  });
+};
+
+// -------------------------------------------------------------
+// HELPER: UNIFIED DAY DOT STYLING
+// -------------------------------------------------------------
+const getDayDotStyling = (dateObj, hasLog, logDotHex, specialDay) => {
   if (!dateObj) return { bg: 'var(--theme-card)', text: 'var(--theme-text)', border: 'var(--theme-border)' };
   if (hasLog) {
     return { bg: logDotHex, text: '#FFFFFF', border: 'rgba(255,255,255,0.8)' };
@@ -278,6 +299,9 @@ const getDayDotStyling = (dateObj, hasLog, logDotHex) => {
   const statName = getOntarioStatHolidayName(dateObj);
   const isWknd = dateObj.getDay() === 0 || dateObj.getDay() === 6;
 
+  if (specialDay) {
+    return { bg: 'var(--theme-card)', text: 'var(--theme-secondary)', border: 'var(--theme-secondary)' };
+  }
   if (statName) {
     return { bg: 'var(--theme-card)', text: 'var(--theme-secondary)', border: 'var(--theme-secondary)' };
   }
@@ -301,7 +325,8 @@ function WeekDayColumn({
   setHoveredProjectTitle, 
   setSelectedLogModal, 
   getDotColor,
-  scaleFactor
+  scaleFactor,
+  specialDay
 }) {
   const scrollRef = useRef(null);
   const [canScrollUp, setCanScrollUp] = useState(false);
@@ -321,7 +346,7 @@ function WeekDayColumn({
   const hasLog = logs.length > 0;
   const dotPx = Math.round(24 * scaleFactor);
   const dotFontPx = Math.round(11 * scaleFactor);
-  const dotStyle = getDayDotStyling(slot.dateObj, hasLog, displayDotHex);
+  const dotStyle = getDayDotStyling(slot.dateObj, hasLog, displayDotHex, specialDay);
 
   return (
     <div 
@@ -647,11 +672,13 @@ function App() {
 
   // --- API STATE VARS ---
   const [timelineLogs, setTimelineLogs] = useState([]);
+  const [specialDays, setSpecialDays] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [notionToken, setNotionToken] = useState('');
   const [databaseId, setDatabaseId] = useState('');
+  const [specialDaysDatabaseId, setSpecialDaysDatabaseId] = useState('');
 
   // --- PROJECT GRADIENT SHADE MAP ---
   const [projectColorMap, setProjectColorMap] = useState({});
@@ -771,10 +798,12 @@ function App() {
   useEffect(() => {
     const savedToken = localStorage.getItem('notionToken');
     const savedDbId = localStorage.getItem('databaseId');
+    const savedSpecialDbId = localStorage.getItem('specialDaysDatabaseId') || '';
     if (savedToken && savedDbId) {
       setNotionToken(savedToken);
       setDatabaseId(savedDbId);
-      fetchLogsFromNotion(savedToken, savedDbId);
+      setSpecialDaysDatabaseId(savedSpecialDbId);
+      fetchLogsFromNotion(savedToken, savedDbId, savedSpecialDbId);
     } else {
       setShowSettings(true);
     }
@@ -786,7 +815,7 @@ function App() {
     }
   }, [customCategoryColors, customProjectColors, activeThemeId, isDarkMode]);
 
-  const fetchLogsFromNotion = async (token, dbId) => {
+  const fetchLogsFromNotion = async (token, dbId, specDbId = specialDaysDatabaseId) => {
     setIsLoading(true);
     setFetchError(null);
     try {
@@ -798,6 +827,7 @@ function App() {
         body: JSON.stringify({ 
           notionToken: token, 
           databaseId: dbId,
+          specialDaysDatabaseId: specDbId,
           timeZone: userTimeZone
         }),
       });
@@ -805,6 +835,7 @@ function App() {
       const result = await response.json();
       if (result.success) {
         setTimelineLogs(result.data);
+        setSpecialDays(result.specialDays || []);
         generateProjectColorMap(result.data);
       } else {
         setFetchError(result.error || 'Failed to sync with Notion.');
@@ -860,8 +891,9 @@ function App() {
   const handleSaveSettings = () => {
     localStorage.setItem('notionToken', notionToken);
     localStorage.setItem('databaseId', databaseId);
+    localStorage.setItem('specialDaysDatabaseId', specialDaysDatabaseId);
     setShowSettings(false);
-    fetchLogsFromNotion(notionToken, databaseId);
+    fetchLogsFromNotion(notionToken, databaseId, specialDaysDatabaseId);
   };
 
   const gap = themeTokens?.layout?.gridGap?.$value ?? 12;
@@ -1121,7 +1153,7 @@ function App() {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { if (notionToken && databaseId) fetchLogsFromNotion(notionToken, databaseId); }}
+            onClick={() => { if (notionToken && databaseId) fetchLogsFromNotion(notionToken, databaseId, specialDaysDatabaseId); }}
             disabled={isLoading || !notionToken || !databaseId}
             title="Sync Notion Data"
             style={{ backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)' }}
@@ -1185,7 +1217,7 @@ function App() {
       {fetchError && !isLoading && (
         <div className="mb-4 p-3 shrink-0 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex justify-between items-center">
           <span>⚠️ {fetchError}</span>
-          <button onClick={() => fetchLogsFromNotion(notionToken, databaseId)} className="underline font-bold">Retry</button>
+          <button onClick={() => fetchLogsFromNotion(notionToken, databaseId, specialDaysDatabaseId)} className="underline font-bold">Retry</button>
         </div>
       )}
 
@@ -1321,7 +1353,8 @@ function App() {
                         const hasMultipleProjects = uniqueProjects.size > 1;
                         const { primaryLog, isHalftoned } = getThumbnailLogForDate(slot.dateObj, logs);
                         const displayDotHex = getDisplayDotColor(logs, slot.dateObj);
-                        const dotStyle = getDayDotStyling(slot.dateObj, hasLog, displayDotHex);
+                        const specialDay = getSpecialDayForDate(slot.dateObj, specialDays);
+                        const dotStyle = getDayDotStyling(slot.dateObj, hasLog, displayDotHex, specialDay);
                         
                         const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                         const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
@@ -1441,6 +1474,7 @@ function App() {
                 {slots.map((slot, index) => {
                   const logs = getLogsForDate(slot.dateObj);
                   const displayDotHex = getDisplayDotColor(logs, slot.dateObj);
+                  const specialDay = getSpecialDayForDate(slot.dateObj, specialDays);
 
                   return (
                     <WeekDayColumn 
@@ -1456,6 +1490,7 @@ function App() {
                       setSelectedLogModal={setSelectedLogModal}
                       getDotColor={getDotColor}
                       scaleFactor={scaleFactor}
+                      specialDay={specialDay}
                     />
                   );
                 })}
@@ -1565,8 +1600,9 @@ function App() {
                             const hasMultipleProjects = uniqueProjects.size > 1;
                             const primaryLog = hasLog ? logs[0] : null;
                             const displayDotHex = getDisplayDotColor(logs, targetDate);
-                            const dotStyle = getDayDotStyling(targetDate, hasLog, displayDotHex);
-                            const isSpecialDay = !!(getOntarioStatHolidayName(targetDate) || targetDate.getDay() === 0 || targetDate.getDay() === 6);
+                            const specialDay = getSpecialDayForDate(targetDate, specialDays);
+                            const dotStyle = getDayDotStyling(targetDate, hasLog, displayDotHex, specialDay);
+                            const isSpecialDay = !!(getOntarioStatHolidayName(targetDate) || targetDate.getDay() === 0 || targetDate.getDay() === 6 || specialDay);
                             
                             const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                             const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
@@ -1678,8 +1714,9 @@ function App() {
                               const hasMultipleProjects = uniqueProjects.size > 1;
                               const primaryLog = hasLog ? logs[0] : null;
                               const displayDotHex = getDisplayDotColor(logs, targetDate);
-                              const dotStyle = getDayDotStyling(targetDate, hasLog, displayDotHex);
-                              const isSpecialDay = !!(getOntarioStatHolidayName(targetDate) || targetDate.getDay() === 0 || targetDate.getDay() === 6);
+                              const specialDay = getSpecialDayForDate(targetDate, specialDays);
+                              const dotStyle = getDayDotStyling(targetDate, hasLog, displayDotHex, specialDay);
+                              const isSpecialDay = !!(getOntarioStatHolidayName(targetDate) || targetDate.getDay() === 0 || targetDate.getDay() === 6 || specialDay);
                               
                               const isHoveredProject = hasLog && logs.some(l => (l.Projects || 'Untitled Project') === hoveredProjectTitle);
                               const isUnrelatedHover = hoveredProjectTitle && !isHoveredProject;
@@ -1792,7 +1829,7 @@ function App() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1">Notion Database ID</label>
+                  <label className="block text-xs font-bold mb-1">Activity Log Database ID</label>
                   <input 
                     type="text" 
                     value={databaseId} 
@@ -1800,6 +1837,17 @@ function App() {
                     style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
                     className="w-full border rounded px-3 py-2 text-sm outline-none"
                     placeholder="3728d5a5..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1">Special Days Database ID (Optional)</label>
+                  <input 
+                    type="text" 
+                    value={specialDaysDatabaseId} 
+                    onChange={(e) => setSpecialDaysDatabaseId(e.target.value)} 
+                    style={{ backgroundColor: 'var(--theme-bg)', borderColor: 'var(--theme-border)', color: 'var(--theme-text)' }}
+                    className="w-full border rounded px-3 py-2 text-sm outline-none"
+                    placeholder="Optional ID for Birthdays/Vacations/Events..."
                   />
                 </div>
               </div>
@@ -2149,6 +2197,7 @@ function App() {
         const dateKey = selectedLogModal.dateObj.toISOString().split('T')[0];
         const currentThumbId = thumbnailOverrides[dateKey] || (selectedLogModal.logs[0]?.id);
         const logs = selectedLogModal.logs;
+        const specDay = getSpecialDayForDate(selectedLogModal.dateObj, specialDays);
 
         const scrollCarousel = (direction) => {
           if (!modalCarouselRef.current) return;
@@ -2173,6 +2222,12 @@ function App() {
                     <span className="text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs border" style={{ color: 'var(--theme-secondary)', borderColor: 'var(--theme-secondary)', backgroundColor: 'var(--theme-card)' }}>
                       <span>—</span>
                       <span>{getOntarioStatHolidayName(selectedLogModal.dateObj)}</span>
+                    </span>
+                  )}
+                  {specDay && (
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs border" style={{ color: 'var(--theme-secondary)', borderColor: 'var(--theme-secondary)', backgroundColor: 'var(--theme-card)' }}>
+                      <span>🎉</span>
+                      <span>{specDay.name} ({specDay.occurrence})</span>
                     </span>
                   )}
                 </div>
