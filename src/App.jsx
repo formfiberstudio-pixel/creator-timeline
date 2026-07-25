@@ -269,7 +269,7 @@ const getOntarioStatHolidayName = (dateObj) => {
 // HELPER: SPECIAL DAYS MATCHING ENGINE (ANNUAL VS ONCE)
 // -------------------------------------------------------------
 const getSpecialDayForDate = (dateObj, specialDaysList = []) => {
-  if (!dateObj || !Array.isArray(specialDaysList)) return null;
+  if (!dateObj || !Array.isArray(specialDaysList) || specialDaysList.length === 0) return null;
 
   const targetYear = dateObj.getFullYear();
   const targetMonth = dateObj.getMonth() + 1;
@@ -827,16 +827,16 @@ function App() {
         body: JSON.stringify({ 
           notionToken: token, 
           databaseId: dbId,
-          specialDaysDatabaseId: specDbId,
+          specialDaysDatabaseId: specDbId ? specDbId.trim() : '',
           timeZone: userTimeZone
         }),
       });
       
       const result = await response.json();
       if (result.success) {
-        setTimelineLogs(result.data);
+        setTimelineLogs(result.data || []);
         setSpecialDays(result.specialDays || []);
-        generateProjectColorMap(result.data);
+        generateProjectColorMap(result.data || []);
       } else {
         setFetchError(result.error || 'Failed to sync with Notion.');
       }

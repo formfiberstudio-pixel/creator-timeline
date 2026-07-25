@@ -19,39 +19,39 @@ export default async function handler(req, res) {
   };
 
   try {
-    // 1. Prepare API request promises for parallel fetching
-    const activityLogPromise = fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
+    // 1. Fetch Primary Activity Log Database (Strict Requirement)
+    const activityRes = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ page_size: 1000 }),
-    }).then((r) => r.json());
-
-    const specialDaysPromise = specialDaysDatabaseId
-      ? fetch(`https://api.notion.com/v1/databases/${specialDaysDatabaseId}/query`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ page_size: 1000 }),
-        }).then((r) => r.json())
-      : Promise.resolve(null);
-
-    // 2. Execute both queries concurrently
-    const [activityData, specialDaysData] = await Promise.all([
-      activityLogPromise,
-      specialDaysPromise,
-    ]);
+    });
+    const activityData = await activityRes.json();
 
     if (activityData.object === 'error') {
       return res.status(400).json({ success: false, error: activityData.message });
     }
 
-    if (specialDaysData && specialDaysData.object === 'error') {
-      return res.status(400).json({ 
-        success: false, 
-        error: `Special Days DB Error: ${specialDaysData.message}` 
-      });
+    // 2. Fetch Optional Special Days Database (Failsafed - Never blocks primary logs)
+    let specialDaysData = null;
+    const cleanSpecialDbId = typeof specialDaysDatabaseId === 'string' ? specialDaysDatabaseId.trim() : '';
+
+    if (cleanSpecialDbId) {
+      try {
+        const specialRes = await fetch(`https://api.notion.com/v1/databases/${cleanSpecialDbId}/query`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ page_size: 1000 }),
+        });
+        const parsed = await specialRes.json();
+        if (parsed.object !== 'error') {
+          specialDaysData = parsed;
+        }
+      } catch (e) {
+        console.warn('Special Days DB query skipped:', e);
+      }
     }
 
-    // 3. Process Activity Log Entries
+    // 3. Process Primary Activity Log Entries
     const processedLogs = (activityData.results || []).map((page) => {
       const props = page.properties;
 
@@ -106,7 +106,7 @@ export default async function handler(req, res) {
       };
     });
 
-    // 4. Process Special Days (Birthdays, Holidays, Weddings, Vacations)
+    // 4. Process Optional Special Days
     const processedSpecialDays = (specialDaysData?.results || []).map((page) => {
       const props = page.properties;
 
