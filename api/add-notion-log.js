@@ -9,6 +9,7 @@ async function uploadImageToNotion(base64Str, notionToken, index = 0) {
       'Content-Type': 'application/json',
     };
 
+    // 1. Create File Upload Object
     const createRes = await fetch('https://api.notion.com/v1/file_uploads', {
       method: 'POST',
       headers,
@@ -16,14 +17,18 @@ async function uploadImageToNotion(base64Str, notionToken, index = 0) {
     });
     const createData = await createRes.json();
 
-    if (!createData.id) return null;
+    if (!createData.id) {
+      console.error(`[Diagnostic] Failed creating file upload object for image ${index + 1}:`, createData);
+      return null;
+    }
 
+    // 2. Upload Binary Image Data
     const targetUrl = createData.upload_url || `https://api.notion.com/v1/file_uploads/${createData.id}/send`;
     const formData = new FormData();
     const blob = new Blob([buffer], { type: 'image/jpeg' });
     formData.append('file', blob, fileName);
 
-    await fetch(targetUrl, {
+    const uploadRes = await fetch(targetUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${notionToken}`,
@@ -31,6 +36,11 @@ async function uploadImageToNotion(base64Str, notionToken, index = 0) {
       },
       body: formData,
     });
+
+    if (!uploadRes.ok) {
+      console.error(`[Diagnostic] Binary upload failed for image ${index + 1}`);
+      return null;
+    }
 
     return createData.id;
   } catch (err) {
@@ -60,20 +70,29 @@ export default async function handler(req, res) {
   };
 
   try {
-    const rawImages = imagesBase64 || imageBase64;
-    const imageList = Array.isArray(rawImages) ? rawImages : (rawImages ? [rawImages] : []);
+    // Normalize payload to handle single image strings, delimited strings, or arrays
+    let imageList = [];
+    if (Array.isArray(imagesBase64)) {
+      imageList = imagesBase64;
+    } else if (typeof imagesBase64 === 'string' && imagesBase64.length > 0) {
+      imageList = imagesBase64.includes(',') ? imagesBase64.split(',') : [imagesBase64];
+    } else if (imageBase64) {
+      imageList = [imageBase64];
+    }
 
-    // 1. Upload All Shared Images
+    // Clean up any extra whitespace or newlines in base64 strings
+    imageList = imageList.map(str => typeof str === 'string' ? str.trim() : str).filter(Boolean);
+
+    // 1. Concurrently Upload All Images
     const uploadPromises = imageList.map((imgStr, idx) => 
       uploadImageToNotion(imgStr, notionToken, idx)
     );
     const uploadedFileIds = (await Promise.all(uploadPromises)).filter(Boolean);
 
-    // 2. SAFE DATE PARSING (Prevents "Invalid time value" crashes)
-    let validIsoDate = new Date().toISOString(); // Default fallback to right now
+    // 2. Safe Date Parsing
+    let validIsoDate = new Date().toISOString();
     if (dateTaken) {
       const parsedDate = new Date(dateTaken);
-      // Check if Date object is valid (not NaN)
       if (!isNaN(parsedDate.getTime())) {
         validIsoDate = parsedDate.toISOString();
       }
@@ -89,13 +108,15 @@ export default async function handler(req, res) {
       },
     };
 
-    if (location) {
+    // Safe Location Mapping for 'Place' column
+    if (location && String(location).trim() !== '') {
+      const locText = String(location).trim();
       properties['Place'] = { 
-        rich_text: [{ text: { content: location } }] 
+        rich_text: [{ text: { content: locText } }] 
       };
     }
 
-    // 4. Build Content Blocks
+    // 4. Build Block Children for All Uploaded Images
     const children = uploadedFileIds.map((fileId) => ({
       object: 'block',
       type: 'image',
@@ -105,7 +126,7 @@ export default async function handler(req, res) {
       },
     }));
 
-    // 5. Build Page Payload
+    // 5. Assemble Page Payload
     const pagePayload = {
       parent: { database_id: databaseId },
       properties,
@@ -119,7 +140,7 @@ export default async function handler(req, res) {
       };
     }
 
-    // 6. Send to Notion
+    // 6. Send Page Creation Request to Notion
     const response = await fetch('https://api.notion.com/v1/pages', {
       method: 'POST',
       headers,
@@ -129,6 +150,19 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (data.object === 'error') {
+      // Fallback if Place fails as rich_text (e.g. if Notion requires plain text property)
+      if (data.message && data.message.includes('Place')) {
+        delete properties['Place'];
+        const retryRes = await fetch('https://api.notion.com/v1/pages', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(pagePayload),
+        });
+        const retryData = await retryRes.json();
+        if (retryData.object !== 'error') {
+          return res.status(200).json({ success: true, pageId: retryData.id, uploadedPhotosCount: uploadedFileIds.length });
+        }
+      }
       return res.status(400).json({ success: false, error: data.message });
     }
 
