@@ -15,7 +15,6 @@ async function uploadImageToNotion(rawInput, notionToken) {
       'Content-Type': 'application/json',
     };
 
-    // 1. Request Upload Object from Notion
     const createRes = await fetch('https://api.notion.com/v1/file_uploads', {
       method: 'POST',
       headers,
@@ -24,7 +23,6 @@ async function uploadImageToNotion(rawInput, notionToken) {
     const createData = await createRes.json();
     if (!createData.id) return { id: null, error: createData.message };
 
-    // 2. Upload Binary Buffer
     const targetUrl = createData.upload_url || `https://api.notion.com/v1/file_uploads/${createData.id}/send`;
     const blob = new Blob([buffer], { type: contentType });
     const formData = new FormData();
@@ -50,14 +48,12 @@ export default async function handler(req, res) {
     let body = req.body;
     if (typeof body === 'string') try { body = JSON.parse(body); } catch (e) {}
 
-    // Notice we are now accepting 'pageId' and a singular 'imageBase64'
-    const { notionToken, databaseId, title, dateTaken, location, imageBase64, pageId } = body || {};
+    const { notionToken, databaseId, title, dateTaken, latitude, longitude, location, imageBase64, pageId } = body || {};
 
     if (!notionToken || !imageBase64) {
       return res.status(400).json({ error: 'Missing token or image data.' });
     }
 
-    // 1. Upload the single image to Notion's servers
     const uploadResult = await uploadImageToNotion(imageBase64, notionToken);
     if (uploadResult.error) return res.status(400).json({ error: uploadResult.error });
     const fileId = uploadResult.id;
@@ -74,7 +70,22 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
     };
 
-    // 2. IF PAGE ID EXISTS -> Append image to existing page
+    // Build proper Place property object if coordinates exist
+    let placeProperty = undefined;
+    const latNum = parseFloat(latitude);
+    const lonNum = parseFloat(longitude);
+    
+    if (!isNaN(latNum) && !isNaN(lonNum)) {
+      placeProperty = {
+        place: {
+          lat: latNum,
+          lon: lonNum,
+          name: location ? String(location).trim() : 'Logged Location'
+        }
+      };
+    }
+
+    // 1. IF PAGE ID EXISTS -> Append image block only
     if (pageId && String(pageId).trim() !== '') {
       const appendRes = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
         method: 'PATCH',
@@ -87,17 +98,17 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, pageId: pageId });
     }
 
-    // 3. IF NO PAGE ID -> Create a brand new page (For the very first photo)
+    // 2. IF NO PAGE ID -> Create a brand new page with properties (First photo)
     let validIsoDate = new Date().toISOString();
     if (dateTaken && !isNaN(new Date(dateTaken).getTime())) validIsoDate = new Date(dateTaken).toISOString();
 
     const properties = {
-      Name: { title: [{ text: { content: String(title) } }] },
+      Name: { title: [{ text: { content: String(title || 'Untitled Log') } }] },
       'Post-Date': { date: { start: validIsoDate } },
     };
 
-    if (location && String(location).trim() !== '') {
-      properties['Place'] = { place: { name: String(location).trim() } };
+    if (placeProperty) {
+      properties['Place'] = placeProperty;
     }
 
     const pagePayload = {
