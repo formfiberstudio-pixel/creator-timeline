@@ -2,21 +2,16 @@ async function uploadImageToNotion(rawInput, notionToken, index = 0) {
   try {
     if (!rawInput) return { id: null, error: `Image ${index + 1} is empty` };
 
-    // Handle nested arrays/objects if passed from Shortcuts
-    let targetStr = rawInput;
-    if (Array.isArray(targetStr)) targetStr = targetStr[0];
-    if (typeof targetStr === 'object' && targetStr !== null) {
-      targetStr = targetStr.text || targetStr.content || JSON.stringify(targetStr);
-    }
-
-    const base64Str = String(targetStr || '');
-    const cleanBase64 = base64Str.replace(/[\r\n\s]/g, '');
+    const base64Str = String(rawInput);
+    
+    // Strip Data URIs (if iOS adds them) and remove all whitespace/newlines
+    const cleanBase64 = base64Str.replace(/^data:image\/\w+;base64,/, '').replace(/[\r\n\s]/g, '');
 
     if (!cleanBase64 || cleanBase64 === '[objectObject]') {
-      return { id: null, error: `Image ${index + 1} is empty` };
+      return { id: null, error: `Image ${index + 1} string failed to process` };
     }
 
-    // Auto-detect PNG (transparent cutouts/screenshots) vs JPEG
+    // Auto-detect transparent PNGs (screenshots/cutouts) vs JPEGs
     const isPng = cleanBase64.startsWith('iVBORw');
     const contentType = isPng ? 'image/png' : 'image/jpeg';
     const fileExt = isPng ? 'png' : 'jpg';
@@ -39,10 +34,7 @@ async function uploadImageToNotion(rawInput, notionToken, index = 0) {
     const createData = await createRes.json();
 
     if (!createData.id) {
-      return { 
-        id: null, 
-        error: `Create File Failed (${index + 1}): ${createData.message || JSON.stringify(createData)}` 
-      };
+      return { id: null, error: `Upload Auth Failed: ${createData.message}` };
     }
 
     // 2. Upload Binary Buffer
@@ -62,7 +54,7 @@ async function uploadImageToNotion(rawInput, notionToken, index = 0) {
 
     if (!uploadRes.ok) {
       const errText = await uploadRes.text();
-      return { id: null, error: `Binary Send Failed (${index + 1}): ${errText}` };
+      return { id: null, error: `File Send Failed: ${errText}` };
     }
 
     return { id: createData.id, error: null };
@@ -85,36 +77,21 @@ export default async function handler(req, res) {
     const { notionToken, databaseId, title, dateTaken, location, imagesBase64, imageBase64 } = body || {};
 
     if (!notionToken || !databaseId || !title) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Missing required fields (notionToken, databaseId, or title).' 
-      });
+      return res.status(400).json({ success: false, error: 'Missing token, databaseId, or title.' });
     }
 
-    const headers = {
-      'Authorization': `Bearer ${notionToken}`,
-      'Notion-Version': '2026-03-11',
-      'Content-Type': 'application/json',
-    };
-
-    // Normalize and recursively flatten any nested arrays from Shortcuts
-    let rawData = imagesBase64 || imageBase64 || [];
+    // Process the Combined Text string from Apple Shortcuts
     let imageList = [];
+    const rawData = imagesBase64 || imageBase64 || '';
 
-    if (Array.isArray(rawData)) {
+    if (typeof rawData === 'string' && rawData.trim().length > 0) {
+      // Split the combined string perfectly into an array by commas
+      imageList = rawData.split(',').map(s => s.trim()).filter(Boolean);
+    } else if (Array.isArray(rawData)) {
       imageList = rawData.flat(Infinity);
-    } else if (typeof rawData === 'string' && rawData.trim().length > 0) {
-      const str = rawData.trim();
-      if (str.startsWith('[') && str.endsWith(']')) {
-        try { imageList = JSON.parse(str).flat(Infinity); } catch (e) { imageList = [str]; }
-      } else {
-        imageList = str.split(/[\r\n,]+/).map(s => s.trim()).filter(Boolean);
-      }
     }
 
-    imageList = imageList.filter(item => item !== null && item !== undefined && item !== '');
-
-    // 1. Upload All Shared Images
+    // 1. Upload All Shared Images Concurrently
     const uploadResults = await Promise.all(
       imageList.map((imgItem, idx) => uploadImageToNotion(imgItem, notionToken, idx))
     );
@@ -126,38 +103,27 @@ export default async function handler(req, res) {
     let validIsoDate = new Date().toISOString();
     if (dateTaken) {
       const parsedDate = new Date(dateTaken);
-      if (!isNaN(parsedDate.getTime())) {
-        validIsoDate = parsedDate.toISOString();
-      }
+      if (!isNaN(parsedDate.getTime())) validIsoDate = parsedDate.toISOString();
     }
 
     // 3. Build Database Properties
     const properties = {
-      Name: { 
-        title: [{ text: { content: String(title) } }] 
-      },
-      'Post-Date': { 
-        date: { start: validIsoDate } 
-      },
+      Name: { title: [{ text: { content: String(title) } }] },
+      'Post-Date': { date: { start: validIsoDate } },
     };
 
     if (location && String(location).trim() !== '') {
-      properties['Place'] = { 
-        place: { name: String(location).trim() } 
-      };
+      properties['Place'] = { place: { name: String(location).trim() } };
     }
 
-    // 4. Build Block Children
+    // 4. Build Block Children for Page Body
     const children = uploadedFileIds.map((fileId) => ({
       object: 'block',
       type: 'image',
-      image: {
-        type: 'file_upload',
-        file_upload: { id: fileId },
-      },
+      image: { type: 'file_upload', file_upload: { id: fileId } },
     }));
 
-    // 5. Assemble Payload
+    // 5. Assemble Page Payload
     const pagePayload = {
       parent: { database_id: databaseId },
       properties,
@@ -165,16 +131,17 @@ export default async function handler(req, res) {
     };
 
     if (uploadedFileIds.length > 0) {
-      pagePayload.cover = {
-        type: 'file_upload',
-        file_upload: { id: uploadedFileIds[0] },
-      };
+      pagePayload.cover = { type: 'file_upload', file_upload: { id: uploadedFileIds[0] } };
     }
 
     // 6. Create Page in Notion
     const response = await fetch('https://api.notion.com/v1/pages', {
       method: 'POST',
-      headers,
+      headers: {
+        'Authorization': `Bearer ${notionToken}`,
+        'Notion-Version': '2026-03-11',
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(pagePayload),
     });
 
@@ -192,6 +159,6 @@ export default async function handler(req, res) {
       uploadErrors: uploadErrors.length > 0 ? uploadErrors : undefined
     });
   } catch (err) {
-    return res.status(500).json({ success: false, error: err.message || 'Internal Server Exception' });
+    return res.status(500).json({ success: false, error: err.message || 'Internal Server Error' });
   }
 }
