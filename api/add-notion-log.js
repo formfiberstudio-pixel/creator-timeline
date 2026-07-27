@@ -17,12 +17,9 @@ async function uploadImageToNotion(base64Str, notionToken, index = 0) {
     });
     const createData = await createRes.json();
 
-    if (!createData.id) {
-      console.error(`[Diagnostic] Failed creating file upload object for image ${index + 1}:`, createData);
-      return null;
-    }
+    if (!createData.id) return null;
 
-    // 2. Upload Binary Image Data
+    // 2. Upload Binary Image Buffer
     const targetUrl = createData.upload_url || `https://api.notion.com/v1/file_uploads/${createData.id}/send`;
     const formData = new FormData();
     const blob = new Blob([buffer], { type: 'image/jpeg' });
@@ -37,10 +34,7 @@ async function uploadImageToNotion(base64Str, notionToken, index = 0) {
       body: formData,
     });
 
-    if (!uploadRes.ok) {
-      console.error(`[Diagnostic] Binary upload failed for image ${index + 1}`);
-      return null;
-    }
+    if (!uploadRes.ok) return null;
 
     return createData.id;
   } catch (err) {
@@ -70,7 +64,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Normalize payload to handle single image strings, delimited strings, or arrays
+    // Normalize array vs string input payloads
     let imageList = [];
     if (Array.isArray(imagesBase64)) {
       imageList = imagesBase64;
@@ -80,10 +74,9 @@ export default async function handler(req, res) {
       imageList = [imageBase64];
     }
 
-    // Clean up any extra whitespace or newlines in base64 strings
     imageList = imageList.map(str => typeof str === 'string' ? str.trim() : str).filter(Boolean);
 
-    // 1. Concurrently Upload All Images
+    // 1. Upload All Images
     const uploadPromises = imageList.map((imgStr, idx) => 
       uploadImageToNotion(imgStr, notionToken, idx)
     );
@@ -98,7 +91,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 3. Build Database Properties
+    // 3. Build Properties Matched to Your Notion Column Types
     const properties = {
       Name: { 
         title: [{ text: { content: title } }] 
@@ -108,15 +101,14 @@ export default async function handler(req, res) {
       },
     };
 
-    // Safe Location Mapping for 'Place' column
+    // Set Native Notion Place Property (📍)
     if (location && String(location).trim() !== '') {
-      const locText = String(location).trim();
       properties['Place'] = { 
-        rich_text: [{ text: { content: locText } }] 
+        place: { name: String(location).trim() } 
       };
     }
 
-    // 4. Build Block Children for All Uploaded Images
+    // 4. Build Block Children for Page Body (Inserts ALL uploaded photos)
     const children = uploadedFileIds.map((fileId) => ({
       object: 'block',
       type: 'image',
@@ -126,13 +118,14 @@ export default async function handler(req, res) {
       },
     }));
 
-    // 5. Assemble Page Payload
+    // 5. Assemble Payload
     const pagePayload = {
       parent: { database_id: databaseId },
       properties,
       children,
     };
 
+    // Set 1st Photo as Page Cover Art
     if (uploadedFileIds.length > 0) {
       pagePayload.cover = {
         type: 'file_upload',
@@ -140,7 +133,7 @@ export default async function handler(req, res) {
       };
     }
 
-    // 6. Send Page Creation Request to Notion
+    // 6. Send to Notion API
     const response = await fetch('https://api.notion.com/v1/pages', {
       method: 'POST',
       headers,
@@ -150,19 +143,6 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (data.object === 'error') {
-      // Fallback if Place fails as rich_text (e.g. if Notion requires plain text property)
-      if (data.message && data.message.includes('Place')) {
-        delete properties['Place'];
-        const retryRes = await fetch('https://api.notion.com/v1/pages', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(pagePayload),
-        });
-        const retryData = await retryRes.json();
-        if (retryData.object !== 'error') {
-          return res.status(200).json({ success: true, pageId: retryData.id, uploadedPhotosCount: uploadedFileIds.length });
-        }
-      }
       return res.status(400).json({ success: false, error: data.message });
     }
 
