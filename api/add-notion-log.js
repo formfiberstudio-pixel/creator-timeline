@@ -70,7 +70,23 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
     };
 
-    // Build proper Place property object using the passed location text
+    // 1. IF PAGE ID EXISTS -> Append image block and return pageId explicitly
+    if (pageId && String(pageId).trim() !== '') {
+      const appendRes = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ children: [imageBlock] })
+      });
+      const appendData = await appendRes.json();
+      if (appendData.object === 'error') return res.status(400).json({ error: appendData.message });
+      
+      return res.status(200).json({ success: true, pageId: String(pageId).trim() });
+    }
+
+    // 2. IF NO PAGE ID -> Create a brand new page with properties (First photo)
+    let validIsoDate = new Date().toISOString();
+    if (dateTaken && !isNaN(new Date(dateTaken).getTime())) validIsoDate = new Date(dateTaken).toISOString();
+
     let placeProperty = undefined;
     const latNum = parseFloat(latitude);
     const lonNum = parseFloat(longitude);
@@ -84,23 +100,6 @@ export default async function handler(req, res) {
         }
       };
     }
-
-    // 1. IF PAGE ID EXISTS -> Append image block only
-    if (pageId && String(pageId).trim() !== '') {
-      const appendRes = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ children: [imageBlock] })
-      });
-      const appendData = await appendRes.json();
-      if (appendData.object === 'error') return res.status(400).json({ error: appendData.message });
-      
-      return res.status(200).json({ success: true, pageId: pageId });
-    }
-
-    // 2. IF NO PAGE ID -> Create a brand new page with properties (First photo)
-    let validIsoDate = new Date().toISOString();
-    if (dateTaken && !isNaN(new Date(dateTaken).getTime())) validIsoDate = new Date(dateTaken).toISOString();
 
     const properties = {
       Name: { title: [{ text: { content: String(title || 'Untitled Log') } }] },
