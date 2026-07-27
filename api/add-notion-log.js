@@ -2,13 +2,21 @@ async function uploadImageToNotion(rawInput, notionToken, index = 0) {
   try {
     if (!rawInput) return { id: null, error: `Image ${index + 1} is empty` };
 
-    // Safely coerce and clean the base64 string
-    const base64Str = typeof rawInput === 'string' ? rawInput : String(rawInput);
+    // Handle nested arrays/objects if passed from Shortcuts
+    let targetStr = rawInput;
+    if (Array.isArray(targetStr)) targetStr = targetStr[0];
+    if (typeof targetStr === 'object' && targetStr !== null) {
+      targetStr = targetStr.text || targetStr.content || JSON.stringify(targetStr);
+    }
+
+    const base64Str = String(targetStr || '');
     const cleanBase64 = base64Str.replace(/[\r\n\s]/g, '');
 
-    if (!cleanBase64) return { id: null, error: `Image ${index + 1} string is empty` };
+    if (!cleanBase64 || cleanBase64 === '[objectObject]') {
+      return { id: null, error: `Image ${index + 1} is empty` };
+    }
 
-    // Auto-detect PNG (transparent cutouts) vs JPEG from Base64 magic numbers
+    // Auto-detect PNG (transparent cutouts/screenshots) vs JPEG
     const isPng = cleanBase64.startsWith('iVBORw');
     const contentType = isPng ? 'image/png' : 'image/jpeg';
     const fileExt = isPng ? 'png' : 'jpg';
@@ -37,7 +45,7 @@ async function uploadImageToNotion(rawInput, notionToken, index = 0) {
       };
     }
 
-    // 2. Upload Binary Buffer using FormData & Blob
+    // 2. Upload Binary Buffer
     const targetUrl = createData.upload_url || `https://api.notion.com/v1/file_uploads/${createData.id}/send`;
     const blob = new Blob([buffer], { type: contentType });
     const formData = new FormData();
@@ -69,7 +77,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Parse body safely whether sent as parsed JSON or stringified text
     let body = req.body;
     if (typeof body === 'string') {
       try { body = JSON.parse(body); } catch (e) {}
@@ -90,24 +97,24 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
     };
 
-    // Normalize Array vs String vs Single payload types safely
+    // Normalize and recursively flatten any nested arrays from Shortcuts
+    let rawData = imagesBase64 || imageBase64 || [];
     let imageList = [];
-    const rawData = imagesBase64 || imageBase64;
 
     if (Array.isArray(rawData)) {
-      imageList = rawData;
+      imageList = rawData.flat(Infinity);
     } else if (typeof rawData === 'string' && rawData.trim().length > 0) {
       const str = rawData.trim();
       if (str.startsWith('[') && str.endsWith(']')) {
-        try { imageList = JSON.parse(str); } catch (e) { imageList = [str]; }
+        try { imageList = JSON.parse(str).flat(Infinity); } catch (e) { imageList = [str]; }
       } else {
         imageList = str.split(/[\r\n,]+/).map(s => s.trim()).filter(Boolean);
       }
     }
 
-    imageList = imageList.filter(item => item !== null && item !== undefined);
+    imageList = imageList.filter(item => item !== null && item !== undefined && item !== '');
 
-    // 1. Upload All Shared Images Concurrently
+    // 1. Upload All Shared Images
     const uploadResults = await Promise.all(
       imageList.map((imgItem, idx) => uploadImageToNotion(imgItem, notionToken, idx))
     );
@@ -140,7 +147,7 @@ export default async function handler(req, res) {
       };
     }
 
-    // 4. Build Block Children for Page Body
+    // 4. Build Block Children
     const children = uploadedFileIds.map((fileId) => ({
       object: 'block',
       type: 'image',
@@ -150,14 +157,13 @@ export default async function handler(req, res) {
       },
     }));
 
-    // 5. Assemble Page Payload
+    // 5. Assemble Payload
     const pagePayload = {
       parent: { database_id: databaseId },
       properties,
       children,
     };
 
-    // Set 1st photo as page cover
     if (uploadedFileIds.length > 0) {
       pagePayload.cover = {
         type: 'file_upload',
