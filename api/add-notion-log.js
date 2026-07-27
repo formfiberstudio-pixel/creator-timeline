@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
     };
 
-    // Build proper Place property object if coordinates exist
+    // Build proper Place property object using the passed location text
     let placeProperty = undefined;
     const latNum = parseFloat(latitude);
     const lonNum = parseFloat(longitude);
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
         place: {
           lat: latNum,
           lon: lonNum,
-          name: location ? String(location).trim() : 'Logged Location'
+          name: location && String(location).trim() !== '' ? String(location).trim() : 'Pinned Location'
         }
       };
     }
