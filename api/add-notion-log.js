@@ -9,7 +9,6 @@ async function uploadImageToNotion(base64Str, notionToken, index = 0) {
       'Content-Type': 'application/json',
     };
 
-    // 1. Request File Upload Object from Notion
     const createRes = await fetch('https://api.notion.com/v1/file_uploads', {
       method: 'POST',
       headers,
@@ -19,7 +18,6 @@ async function uploadImageToNotion(base64Str, notionToken, index = 0) {
 
     if (!createData.id) return null;
 
-    // 2. Upload Binary Image Data
     const targetUrl = createData.upload_url || `https://api.notion.com/v1/file_uploads/${createData.id}/send`;
     const formData = new FormData();
     const blob = new Blob([buffer], { type: 'image/jpeg' });
@@ -48,7 +46,6 @@ export default async function handler(req, res) {
 
   const { notionToken, databaseId, title, dateTaken, location, imagesBase64, imageBase64 } = req.body;
 
-  // Safeguard: Check for required payload fields
   if (!notionToken || !databaseId || !title) {
     return res.status(400).json({ 
       success: false, 
@@ -63,38 +60,42 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Normalize single vs array image payloads
     const rawImages = imagesBase64 || imageBase64;
     const imageList = Array.isArray(rawImages) ? rawImages : (rawImages ? [rawImages] : []);
 
-    // 1. Concurrently Upload All Shared Images to Notion Storage
+    // 1. Upload All Shared Images
     const uploadPromises = imageList.map((imgStr, idx) => 
       uploadImageToNotion(imgStr, notionToken, idx)
     );
     const uploadedFileIds = (await Promise.all(uploadPromises)).filter(Boolean);
 
-    // 2. Build Database Page Properties Matched to Your Exact Notion Schema
-    const entryDate = dateTaken ? new Date(dateTaken).toISOString() : new Date().toISOString();
-    
+    // 2. SAFE DATE PARSING (Prevents "Invalid time value" crashes)
+    let validIsoDate = new Date().toISOString(); // Default fallback to right now
+    if (dateTaken) {
+      const parsedDate = new Date(dateTaken);
+      // Check if Date object is valid (not NaN)
+      if (!isNaN(parsedDate.getTime())) {
+        validIsoDate = parsedDate.toISOString();
+      }
+    }
+
+    // 3. Build Database Properties
     const properties = {
-      // Primary Title Column (Matched to your 'Name' column)
       Name: { 
         title: [{ text: { content: title } }] 
       },
-      // Photo Capture Date Column (Matched to your 'Post-Date' column)
       'Post-Date': { 
-        date: { start: entryDate } 
+        date: { start: validIsoDate } 
       },
     };
 
-    // Geolocation Column (Matched to your 'Place' property)
     if (location) {
       properties['Place'] = { 
         rich_text: [{ text: { content: location } }] 
       };
     }
 
-    // 3. Build Image Blocks for the Page Content Body
+    // 4. Build Content Blocks
     const children = uploadedFileIds.map((fileId) => ({
       object: 'block',
       type: 'image',
@@ -104,14 +105,13 @@ export default async function handler(req, res) {
       },
     }));
 
-    // 4. Assemble Page Payload
+    // 5. Build Page Payload
     const pagePayload = {
       parent: { database_id: databaseId },
       properties,
       children,
     };
 
-    // Set the 1st uploaded photo as the Page Cover Art
     if (uploadedFileIds.length > 0) {
       pagePayload.cover = {
         type: 'file_upload',
@@ -119,7 +119,7 @@ export default async function handler(req, res) {
       };
     }
 
-    // 5. Create Page in Notion
+    // 6. Send to Notion
     const response = await fetch('https://api.notion.com/v1/pages', {
       method: 'POST',
       headers,
