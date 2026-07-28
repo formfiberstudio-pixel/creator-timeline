@@ -58,15 +58,18 @@ export async function POST(req) {
     const dateTakenQuery = url.searchParams.get('dateTaken');
     const pageIdQuery = url.searchParams.get('pageId');
 
-    const contentType = req.headers.get('content-type') || '';
+    const contentType = (req.headers.get('content-type') || '').toLowerCase();
     let files = [];
     let fields = {};
 
-    // 1. Parse multi-file form-data packets
+    console.log('[Diagnostic] Incoming Content-Type:', contentType);
+
+    // 1. Parse Multipart Form-Data safely (Case-insensitive check)
     if (contentType.includes('multipart/form-data')) {
       try {
         const formData = await req.formData();
         for (const [key, value] of formData.entries()) {
+          console.log(`[Diagnostic] Form entry found -> Key: ${key}, Type: ${typeof value}`);
           if (value && typeof value === 'object' && typeof value.arrayBuffer === 'function') {
             files.push({
               filename: value.name || 'photo.jpg',
@@ -78,23 +81,24 @@ export async function POST(req) {
           }
         }
       } catch (err) {
-        console.error('Multipart parsing error:', err);
+        console.error('[Diagnostic] Multipart parsing exception:', err.message);
       }
     }
 
-    // 2. Fallback for raw streams if form-data is empty
+    // 2. Fallback: Raw binary stream parsing if form-data yielded no files
     if (files.length === 0) {
       try {
         const arrayBuffer = await req.arrayBuffer();
         if (arrayBuffer && arrayBuffer.byteLength > 0) {
           files.push({
             filename: 'photo_upload.jpg',
-            mimeType: 'image/jpeg',
+            mimeType: contentType.includes('image/') ? contentType : 'image/jpeg',
             buffer: Buffer.from(arrayBuffer)
           });
+          console.log('[Diagnostic] Raw stream fallback captured buffer of size:', arrayBuffer.byteLength);
         }
       } catch (err) {
-        console.error('Raw stream fallback error:', err);
+        console.error('[Diagnostic] Raw stream fallback error:', err.message);
       }
     }
 
@@ -114,8 +118,11 @@ export async function POST(req) {
       if (gpsData && gpsData.latitude && gpsData.longitude) {
         latitude = gpsData.latitude;
         longitude = gpsData.longitude;
+        console.log(`[Diagnostic] Automatically extracted GPS: ${latitude}, ${longitude}`);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log('[Diagnostic] EXIF GPS extraction skipped.');
+    }
 
     console.log(`[Diagnostic] Processing batch of ${files.length} images for Notion`);
 
