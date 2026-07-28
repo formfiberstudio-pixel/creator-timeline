@@ -58,43 +58,33 @@ export async function POST(req) {
     const dateTakenQuery = url.searchParams.get('dateTaken');
     const pageIdQuery = url.searchParams.get('pageId');
 
+    const contentType = req.headers.get('content-type') || '';
     let files = [];
     let fields = {};
 
-    // 1. Try parsing as Multipart Form-Data (Handles multi-file batches)
-    const contentType = req.headers.get('content-type') || '';
+    // 1. If it's multipart form-data, parse it using formData()
     if (contentType.includes('multipart/form-data')) {
-      try {
-        const formData = await req.formData();
-        for (const [key, value] of formData.entries()) {
-          if (value instanceof File) {
-            files.push({
-              filename: value.name || 'photo.jpg',
-              mimeType: value.type || 'image/jpeg',
-              buffer: Buffer.from(await value.arrayBuffer())
-            });
-          } else {
-            fields[key] = value;
-          }
-        }
-      } catch (e) {
-        console.warn('Multipart form parsing fallback triggered:', e.message);
-      }
-    }
-
-    // 2. Fallback: If no files caught yet, treat the entire request body as a raw binary stream
-    if (files.length === 0) {
-      try {
-        const arrayBuffer = await req.arrayBuffer();
-        if (arrayBuffer && arrayBuffer.byteLength > 0) {
+      const formData = await req.formData();
+      for (const [key, value] of formData.entries()) {
+        if (value instanceof File) {
           files.push({
-            filename: 'photo_upload.jpg',
-            mimeType: 'image/jpeg',
-            buffer: Buffer.from(arrayBuffer)
+            filename: value.name || 'photo.jpg',
+            mimeType: value.type || 'image/jpeg',
+            buffer: Buffer.from(await value.arrayBuffer())
           });
+        } else {
+          fields[key] = value;
         }
-      } catch (e) {
-        console.warn('Raw stream parsing fallback triggered:', e.message);
+      }
+    } else {
+      // 2. Otherwise, treat it as a clean raw binary image stream (standard for shared files)
+      const arrayBuffer = await req.arrayBuffer();
+      if (arrayBuffer && arrayBuffer.byteLength > 0) {
+        files.push({
+          filename: 'photo_upload.jpg',
+          mimeType: contentType.includes('image/') ? contentType : 'image/jpeg',
+          buffer: Buffer.from(arrayBuffer)
+        });
       }
     }
 
@@ -109,7 +99,7 @@ export async function POST(req) {
     let latitude = '';
     let longitude = '';
 
-    // Automatically extract GPS coordinates from the first image buffer
+    // Automatically extract GPS coordinates directly from the image buffer via exifr
     try {
       const gpsData = await exifr.gps(files[0].buffer);
       if (gpsData && gpsData.latitude && gpsData.longitude) {
@@ -121,13 +111,13 @@ export async function POST(req) {
       console.log('[Diagnostic] EXIF GPS extraction skipped:', e.message);
     }
 
-    console.log(`[Diagnostic] Processing batch of ${files.length} images for Notion`);
+    console.log(`[Diagnostic] Processing ${files.length} image(s) for Notion`);
 
     // ==========================================
     // STEP 1: CREATE PAGE WITH THE FIRST IMAGE
     // ==========================================
     const firstFile = files[0];
-    const firstBase64 = `data:${firstFile.mimeType || 'image/jpeg'};base64,${firstFile.buffer.toString('base64')}`;
+    const firstBase64 = `data:${firstFile.mimeType};base64,${firstFile.buffer.toString('base64')}`;
     
     const firstUpload = await uploadImageToNotion(firstBase64, notionToken);
     if (firstUpload.error) throw new Error(firstUpload.error);
@@ -185,11 +175,11 @@ export async function POST(req) {
     }
 
     // ==========================================
-    // STEP 2: LOOP AND APPEND REMAINING IMAGES
+    // STEP 2: LOOP AND APPEND REMAINING IMAGES (IF ANY)
     // ==========================================
     for (let i = 1; i < files.length; i++) {
         const currentFile = files[i];
-        const currentBase64 = `data:${currentFile.mimeType || 'image/jpeg'};base64,${currentFile.buffer.toString('base64')}`;
+        const currentBase64 = `data:${currentFile.mimeType};base64,${currentFile.buffer.toString('base64')}`;
         
         const currentUpload = await uploadImageToNotion(currentBase64, notionToken);
         if (currentUpload.error) continue;
@@ -205,7 +195,7 @@ export async function POST(req) {
 
     return Response.json({ success: true, pageId: pageId });
   } catch (err) {
-    console.error('Error processing batch request:', err);
+    console.error('Error processing request:', err);
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
