@@ -62,29 +62,39 @@ export async function POST(req) {
     let files = [];
     let fields = {};
 
-    // 1. If it's multipart form-data, parse it using formData()
+    // 1. Parse multi-file form-data packets
     if (contentType.includes('multipart/form-data')) {
-      const formData = await req.formData();
-      for (const [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          files.push({
-            filename: value.name || 'photo.jpg',
-            mimeType: value.type || 'image/jpeg',
-            buffer: Buffer.from(await value.arrayBuffer())
-          });
-        } else {
-          fields[key] = value;
+      try {
+        const formData = await req.formData();
+        for (const [key, value] of formData.entries()) {
+          if (value && typeof value === 'object' && typeof value.arrayBuffer === 'function') {
+            files.push({
+              filename: value.name || 'photo.jpg',
+              mimeType: value.type || 'image/jpeg',
+              buffer: Buffer.from(await value.arrayBuffer())
+            });
+          } else {
+            fields[key] = value;
+          }
         }
+      } catch (err) {
+        console.error('Multipart parsing error:', err);
       }
-    } else {
-      // 2. Otherwise, treat it as a clean raw binary image stream (standard for shared files)
-      const arrayBuffer = await req.arrayBuffer();
-      if (arrayBuffer && arrayBuffer.byteLength > 0) {
-        files.push({
-          filename: 'photo_upload.jpg',
-          mimeType: contentType.includes('image/') ? contentType : 'image/jpeg',
-          buffer: Buffer.from(arrayBuffer)
-        });
+    }
+
+    // 2. Fallback for raw streams if form-data is empty
+    if (files.length === 0) {
+      try {
+        const arrayBuffer = await req.arrayBuffer();
+        if (arrayBuffer && arrayBuffer.byteLength > 0) {
+          files.push({
+            filename: 'photo_upload.jpg',
+            mimeType: 'image/jpeg',
+            buffer: Buffer.from(arrayBuffer)
+          });
+        }
+      } catch (err) {
+        console.error('Raw stream fallback error:', err);
       }
     }
 
@@ -99,19 +109,15 @@ export async function POST(req) {
     let latitude = '';
     let longitude = '';
 
-    // Automatically extract GPS coordinates directly from the image buffer via exifr
     try {
       const gpsData = await exifr.gps(files[0].buffer);
       if (gpsData && gpsData.latitude && gpsData.longitude) {
         latitude = gpsData.latitude;
         longitude = gpsData.longitude;
-        console.log(`[Diagnostic] Automatically extracted GPS: ${latitude}, ${longitude}`);
       }
-    } catch (e) {
-      console.log('[Diagnostic] EXIF GPS extraction skipped:', e.message);
-    }
+    } catch (e) {}
 
-    console.log(`[Diagnostic] Processing ${files.length} image(s) for Notion`);
+    console.log(`[Diagnostic] Processing batch of ${files.length} images for Notion`);
 
     // ==========================================
     // STEP 1: CREATE PAGE WITH THE FIRST IMAGE
@@ -140,13 +146,7 @@ export async function POST(req) {
         const lonNum = parseFloat(longitude);
         
         if (!isNaN(latNum) && !isNaN(lonNum)) {
-          placeProperty = { 
-            place: { 
-              lat: latNum, 
-              lon: lonNum, 
-              name: 'Pinned Location' 
-            } 
-          };
+          placeProperty = { place: { lat: latNum, lon: lonNum, name: 'Pinned Location' } };
         }
 
         const properties = {
@@ -175,7 +175,7 @@ export async function POST(req) {
     }
 
     // ==========================================
-    // STEP 2: LOOP AND APPEND REMAINING IMAGES (IF ANY)
+    // STEP 2: LOOP AND APPEND REMAINING IMAGES
     // ==========================================
     for (let i = 1; i < files.length; i++) {
         const currentFile = files[i];
@@ -195,7 +195,7 @@ export async function POST(req) {
 
     return Response.json({ success: true, pageId: pageId });
   } catch (err) {
-    console.error('Error processing request:', err);
+    console.error('Error processing batch request:', err);
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
