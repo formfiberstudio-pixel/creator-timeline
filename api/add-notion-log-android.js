@@ -1,5 +1,6 @@
 import { Client } from '@notionhq/client';
 import exifr from 'exifr';
+import Busboy from 'busboy';
 
 async function uploadImageToNotion(rawInput, notionToken) {
   try {
@@ -62,54 +63,58 @@ export async function POST(req) {
     let files = [];
     let fields = {};
 
-    console.log('[Diagnostic] Incoming Content-Type:', contentType);
+    // Bypass Next.js stream bugs by reading the entire payload into raw memory immediately
+    const arrayBuffer = await req.arrayBuffer();
+    const rawBuffer = Buffer.from(arrayBuffer);
 
-    // 1. Parse Multipart Form-Data safely (Case-insensitive check)
+    if (rawBuffer.length === 0) {
+      return Response.json({ error: 'Empty request body.' }, { status: 400 });
+    }
+
+    // 1. If it's a batch from HTTP Shortcuts, manually parse the raw Buffer with Busboy
     if (contentType.includes('multipart/form-data')) {
-      try {
-        const formData = await req.formData();
-        for (const [key, value] of formData.entries()) {
-          console.log(`[Diagnostic] Form entry found -> Key: ${key}, Type: ${typeof value}`);
-          if (value && typeof value === 'object' && typeof value.arrayBuffer === 'function') {
+      await new Promise((resolve, reject) => {
+        const busboy = Busboy({ headers: { 'content-type': contentType } });
+
+        busboy.on('field', (name, val) => {
+          fields[name] = val;
+        });
+
+        busboy.on('file', (name, file, info) => {
+          const chunks = [];
+          file.on('data', (data) => chunks.push(data));
+          file.on('end', () => {
             files.push({
-              filename: value.name || 'photo.jpg',
-              mimeType: value.type || 'image/jpeg',
-              buffer: Buffer.from(await value.arrayBuffer())
+              filename: info.filename || 'photo.jpg',
+              mimeType: info.mimeType || 'image/jpeg',
+              buffer: Buffer.concat(chunks)
             });
-          } else {
-            fields[key] = value;
-          }
-        }
-      } catch (err) {
-        console.error('[Diagnostic] Multipart parsing exception:', err.message);
-      }
-    }
-
-    // 2. Fallback: Raw binary stream parsing if form-data yielded no files
-    if (files.length === 0) {
-      try {
-        const arrayBuffer = await req.arrayBuffer();
-        if (arrayBuffer && arrayBuffer.byteLength > 0) {
-          files.push({
-            filename: 'photo_upload.jpg',
-            mimeType: contentType.includes('image/') ? contentType : 'image/jpeg',
-            buffer: Buffer.from(arrayBuffer)
           });
-          console.log('[Diagnostic] Raw stream fallback captured buffer of size:', arrayBuffer.byteLength);
-        }
-      } catch (err) {
-        console.error('[Diagnostic] Raw stream fallback error:', err.message);
-      }
+        });
+
+        busboy.on('finish', resolve);
+        busboy.on('error', reject);
+
+        // Feed the entire raw buffer directly into the parser
+        busboy.end(rawBuffer);
+      });
+    } else {
+      // 2. If it's a single raw stream, just use the Buffer directly
+      files.push({
+        filename: 'photo_upload.jpg',
+        mimeType: contentType.includes('image/') ? contentType : 'image/jpeg',
+        buffer: rawBuffer
+      });
     }
 
     if (files.length === 0) {
-      return Response.json({ error: 'No image data received in the request body.' }, { status: 400 });
+      return Response.json({ error: 'No image data could be parsed from the request.' }, { status: 400 });
     }
 
     const title = titleQuery || fields.title || 'Android Photo Log';
     const dateTaken = dateTakenQuery || fields.dateTaken || new Date().toISOString();
     let pageId = pageIdQuery || fields.pageId || '';
-
+    
     let latitude = '';
     let longitude = '';
 
@@ -118,7 +123,7 @@ export async function POST(req) {
       if (gpsData && gpsData.latitude && gpsData.longitude) {
         latitude = gpsData.latitude;
         longitude = gpsData.longitude;
-        console.log(`[Diagnostic] Automatically extracted GPS: ${latitude}, ${longitude}`);
+        console.log(`[Diagnostic] Extracted GPS: ${latitude}, ${longitude}`);
       }
     } catch (e) {
       console.log('[Diagnostic] EXIF GPS extraction skipped.');
@@ -202,7 +207,7 @@ export async function POST(req) {
 
     return Response.json({ success: true, pageId: pageId });
   } catch (err) {
-    console.error('Error processing batch request:', err);
+    console.error('Error processing request:', err);
     return Response.json({ error: err.message }, { status: 500 });
   }
 }
