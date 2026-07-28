@@ -30,9 +30,17 @@ export default async function handler(req, res) {
     const location = fields.location?.[0] || '';
     const pageId = fields.pageId?.[0] || '';
 
-    const imageFile = files.image?.[0];
+// Grab the first file uploaded, regardless of the parameter name HTTP Shortcuts used
+    const allFiles = Object.values(files).flat();
+    const imageFile = allFiles[0];
+
     if (!imageFile) {
-      return res.status(400).json({ error: 'No image provided' });
+      // If it still fails, spit out exactly what Vercel received so we can debug it
+      return res.status(400).json({ 
+        error: 'No image provided', 
+        fileParametersReceived: Object.keys(files),
+        textParametersReceived: Object.keys(fields)
+      });
     }
 
     // Convert the raw Android file into a Base64 string identically to your iOS shortcut
