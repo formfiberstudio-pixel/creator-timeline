@@ -1,10 +1,6 @@
 import { Client } from '@notionhq/client';
-import exifr from 'exifr'; // <-- Add this new import
+import Busboy from 'busboy';
 
-export const config = {
-// ...
-
-// Disable Vercel's default JSON parser so we can read the raw binary stream natively
 export const config = {
   api: {
     bodyParser: false,
@@ -55,72 +51,77 @@ async function uploadImageToNotion(rawInput, notionToken) {
   }
 }
 
+// Bulletproof parser for catching multi-file batches on Vercel
+const parseForm = (req) => {
+  return new Promise((resolve, reject) => {
+    const busboy = Busboy({ headers: req.headers });
+    const fields = {};
+    const files = [];
+
+    busboy.on('field', (name, val) => {
+      fields[name] = val;
+    });
+
+    busboy.on('file', (name, file, info) => {
+      const { filename, mimeType } = info;
+      const chunks = [];
+      file.on('data', (data) => chunks.push(data));
+      file.on('end', () => {
+        files.push({
+          filename,
+          mimeType,
+          buffer: Buffer.concat(chunks)
+        });
+      });
+    });
+
+    busboy.on('finish', () => resolve({ fields, files }));
+    busboy.on('error', reject);
+    req.pipe(busboy);
+  });
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    // 1. Catch user's personal Notion credentials dynamically from headers
     const notionToken = req.headers['x-notion-token'];
     const databaseId = req.headers['x-database-id'];
 
     if (!notionToken || !databaseId) {
-      return res.status(401).json({ error: 'Missing Notion Token or Database ID in request headers.' });
+      return res.status(401).json({ error: 'Missing Notion Token or Database ID.' });
     }
 
-// 2. Extract text metadata (Change const to let for latitude/longitude so we can override them)
-    const title = req.query.title || 'Android Photo Log';
-    const dateTaken = req.query.dateTaken || new Date().toISOString();
-    let latitude = req.query.lat || '';
-    let longitude = req.query.lon || '';
-    const location = req.query.loc || '';
-    const pageId = req.query.pageId || '';
+    // Process the batch payload
+    const { fields, files } = await parseForm(req);
 
-    // 3. Read the raw binary file data
-    const chunks = [];
-    for await (const chunk of req) {
-      chunks.push(chunk);
-    }
-    const fileBuffer = Buffer.concat(chunks);
-
-    if (fileBuffer.length === 0) {
-      return res.status(400).json({ error: 'No image data received in the request body.' });
+    if (files.length === 0) {
+      return res.status(400).json({ error: 'No image data received.' });
     }
 
-    // ==========================================
-    // NEW: BULLETPROOF GPS EXTRACTION
-    // ==========================================
-    try {
-      const gpsData = await exifr.gps(fileBuffer);
-      if (gpsData && gpsData.latitude && gpsData.longitude) {
-        latitude = gpsData.latitude;
-        longitude = gpsData.longitude;
-        console.log(`[Diagnostic] Successfully extracted GPS from image: ${latitude}, ${longitude}`);
-      } else {
-        console.log('[Diagnostic] No GPS data found in the image EXIF.');
-      }
-    } catch (e) {
-      console.log('[Diagnostic] EXIF parsing error:', e.message);
-    }
-    // ==========================================
+    // Extract text metadata (supports both URL queries and form fields)
+    const title = req.query.title || fields.title || 'Android Photo Log';
+    const dateTaken = req.query.dateTaken || fields.dateTaken || new Date().toISOString();
+    const latitude = req.query.lat || fields.lat || '';
+    const longitude = req.query.lon || fields.lon || '';
+    const location = req.query.loc || fields.loc || '';
+    let pageId = req.query.pageId || fields.pageId || '';
 
-    // Convert raw buffer to Base64 to feed into your existing iOS function
-    const base64Data = fileBuffer.toString('base64');
-    const imageBase64 = `data:image/jpeg;base64,${base64Data}`;
-
-    console.log(`[Diagnostic] Attempting to send to Notion Database ID: ${databaseId}`);
+    console.log(`[Diagnostic] Processing batch of ${files.length} images`);
 
     // ==========================================
-    // SEAMLESS INTEGRATION OF iOS NOTION LOGIC 
+    // STEP 1: CREATE PAGE WITH THE FIRST IMAGE
     // ==========================================
-
-    const uploadResult = await uploadImageToNotion(imageBase64, notionToken);
-    if (uploadResult.error) return res.status(400).json({ error: uploadResult.error });
-    const fileId = uploadResult.id;
-
-    const imageBlock = {
+    const firstFile = files[0];
+    const firstBase64 = `data:${firstFile.mimeType || 'image/jpeg'};base64,${firstFile.buffer.toString('base64')}`;
+    
+    const firstUpload = await uploadImageToNotion(firstBase64, notionToken);
+    if (firstUpload.error) throw new Error(firstUpload.error);
+    
+    const firstImageBlock = {
       object: 'block',
       type: 'image',
-      image: { type: 'file_upload', file_upload: { id: fileId } }
+      image: { type: 'file_upload', file_upload: { id: firstUpload.id } }
     };
 
     const headers = {
@@ -129,65 +130,68 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
     };
 
-    // IF PAGE ID EXISTS -> Append image block
-    if (pageId && String(pageId).trim() !== '') {
-      const appendRes = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ children: [imageBlock] })
-      });
-      const appendData = await appendRes.json();
-      if (appendData.object === 'error') return res.status(400).json({ error: appendData.message });
-      
-      return res.status(200).json({ success: true, pageId: String(pageId).trim() });
-    }
-
-    // IF NO PAGE ID -> Create a brand new page
-    let validIsoDate = new Date().toISOString();
-    if (dateTaken && !isNaN(new Date(dateTaken).getTime())) validIsoDate = new Date(dateTaken).toISOString();
-
-    let placeProperty = undefined;
-    const latNum = parseFloat(latitude);
-    const lonNum = parseFloat(longitude);
-    
-    if (!isNaN(latNum) && !isNaN(lonNum)) {
-      placeProperty = {
-        place: {
-          lat: latNum,
-          lon: lonNum,
-          name: location && String(location).trim() !== '' ? String(location).trim() : 'Pinned Location'
+    // If no existing pageId, create the new page
+    if (!pageId || String(pageId).trim() === '') {
+        let placeProperty = undefined;
+        const latNum = parseFloat(latitude);
+        const lonNum = parseFloat(longitude);
+        
+        // Location Fallback Logic
+        if (!isNaN(latNum) && !isNaN(lonNum)) {
+          placeProperty = { place: { lat: latNum, lon: lonNum, name: location && String(location).trim() !== '' ? String(location).trim() : 'Pinned Location' } };
+        } else if (location && String(location).trim() !== '') {
+          // If Android stripped the GPS, map the user's manually typed location name instead
+          placeProperty = { place: { lat: 0, lon: 0, name: String(location).trim() } };
         }
-      };
+
+        const properties = {
+          Name: { title: [{ text: { content: String(title || 'Untitled Log') } }] },
+          'Post-Date': { date: { start: dateTaken } },
+        };
+
+        if (placeProperty) properties['Place'] = placeProperty;
+
+        const pagePayload = {
+          parent: { database_id: databaseId },
+          properties,
+          children: [firstImageBlock],
+          cover: { type: 'file_upload', file_upload: { id: firstUpload.id } }
+        };
+
+        const createRes = await fetch('https://api.notion.com/v1/pages', { method: 'POST', headers, body: JSON.stringify(pagePayload) });
+        const createData = await createRes.json();
+        if (createData.object === 'error') throw new Error(createData.message);
+        
+        pageId = createData.id;
+    } else {
+        // Append the first image if pageId already existed
+        const appendRes = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, { method: 'PATCH', headers, body: JSON.stringify({ children: [firstImageBlock] }) });
+        const appendData = await appendRes.json();
+        if (appendData.object === 'error') throw new Error(appendData.message);
     }
 
-    const properties = {
-      Name: { title: [{ text: { content: String(title || 'Untitled Log') } }] },
-      'Post-Date': { date: { start: validIsoDate } },
-    };
+    // ==========================================
+    // STEP 2: LOOP AND APPEND REMAINING IMAGES
+    // ==========================================
+    for (let i = 1; i < files.length; i++) {
+        const currentFile = files[i];
+        const currentBase64 = `data:${currentFile.mimeType || 'image/jpeg'};base64,${currentFile.buffer.toString('base64')}`;
+        
+        const currentUpload = await uploadImageToNotion(currentBase64, notionToken);
+        if (currentUpload.error) continue; // Silently skip a corrupted file to keep the batch moving
 
-    if (placeProperty) {
-      properties['Place'] = placeProperty;
+        const currentImageBlock = {
+          object: 'block',
+          type: 'image',
+          image: { type: 'file_upload', file_upload: { id: currentUpload.id } }
+        };
+
+        await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, { method: 'PATCH', headers, body: JSON.stringify({ children: [currentImageBlock] }) });
     }
 
-    const pagePayload = {
-      parent: { database_id: databaseId },
-      properties,
-      children: [imageBlock],
-      cover: { type: 'file_upload', file_upload: { id: fileId } }
-    };
-
-    const createRes = await fetch('https://api.notion.com/v1/pages', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(pagePayload),
-    });
-    const createData = await createRes.json();
-
-    if (createData.object === 'error') return res.status(400).json({ error: createData.message });
-
-    return res.status(200).json({ success: true, pageId: createData.id });
+    return res.status(200).json({ success: true, pageId: pageId });
   } catch (err) {
-    console.error('Error processing request:', err);
+    console.error('Error processing batch request:', err);
     return res.status(500).json({ error: err.message });
   }
 }
