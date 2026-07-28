@@ -1,13 +1,6 @@
 import { Client } from '@notionhq/client';
-import Busboy from 'busboy';
+import exifr from 'exifr';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-// Reused exact helper function from your iOS script
 async function uploadImageToNotion(rawInput, notionToken) {
   try {
     const cleanBase64 = String(rawInput).replace(/^data:image\/\w+;base64,/, '').replace(/[\r\n\s]/g, '');
@@ -51,63 +44,83 @@ async function uploadImageToNotion(rawInput, notionToken) {
   }
 }
 
-// Bulletproof parser for catching multi-file batches on Vercel
-const parseForm = (req) => {
-  return new Promise((resolve, reject) => {
-    const busboy = Busboy({ headers: req.headers });
-    const fields = {};
-    const files = [];
-
-    busboy.on('field', (name, val) => {
-      fields[name] = val;
-    });
-
-    busboy.on('file', (name, file, info) => {
-      const { filename, mimeType } = info;
-      const chunks = [];
-      file.on('data', (data) => chunks.push(data));
-      file.on('end', () => {
-        files.push({
-          filename,
-          mimeType,
-          buffer: Buffer.concat(chunks)
-        });
-      });
-    });
-
-    busboy.on('finish', () => resolve({ fields, files }));
-    busboy.on('error', reject);
-    req.pipe(busboy);
-  });
-};
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
+export async function POST(req) {
   try {
-    const notionToken = req.headers['x-notion-token'];
-    const databaseId = req.headers['x-database-id'];
+    const notionToken = req.headers.get('x-notion-token');
+    const databaseId = req.headers.get('x-database-id');
 
     if (!notionToken || !databaseId) {
-      return res.status(401).json({ error: 'Missing Notion Token or Database ID.' });
+      return Response.json({ error: 'Missing Notion Token or Database ID in request headers.' }, { status: 401 });
     }
 
-    // Process the batch payload
-    const { fields, files } = await parseForm(req);
+    const url = new URL(req.url);
+    const titleQuery = url.searchParams.get('title');
+    const dateTakenQuery = url.searchParams.get('dateTaken');
+    const pageIdQuery = url.searchParams.get('pageId');
+
+    const contentType = req.headers.get('content-type') || '';
+    let files = [];
+    let fields = {};
+
+    // Safely parse incoming multipart form-data or raw body payloads
+    if (contentType.includes('multipart/form-data')) {
+      try {
+        const formData = await req.formData();
+        for (const [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            files.push({
+              filename: value.name,
+              mimeType: value.type,
+              buffer: Buffer.from(await value.arrayBuffer())
+            });
+          } else {
+            fields[key] = value;
+          }
+        }
+      } catch (e) {
+        console.error('FormData parsing warning:', e.message);
+      }
+    }
 
     if (files.length === 0) {
-      return res.status(400).json({ error: 'No image data received.' });
+      try {
+        const arrayBuffer = await req.arrayBuffer();
+        if (arrayBuffer.byteLength > 0) {
+          files.push({
+            filename: 'photo_upload.jpg',
+            mimeType: 'image/jpeg',
+            buffer: Buffer.from(arrayBuffer)
+          });
+        }
+      } catch (e) {
+        console.error('ArrayBuffer parsing warning:', e.message);
+      }
     }
 
-    // Extract text metadata (supports both URL queries and form fields)
-    const title = req.query.title || fields.title || 'Android Photo Log';
-    const dateTaken = req.query.dateTaken || fields.dateTaken || new Date().toISOString();
-    const latitude = req.query.lat || fields.lat || '';
-    const longitude = req.query.lon || fields.lon || '';
-    const location = req.query.loc || fields.loc || '';
-    let pageId = req.query.pageId || fields.pageId || '';
+    if (files.length === 0) {
+      return Response.json({ error: 'No image data received in the request body.' }, { status: 400 });
+    }
 
-    console.log(`[Diagnostic] Processing batch of ${files.length} images`);
+    const title = titleQuery || fields.title || 'Android Photo Log';
+    const dateTaken = dateTakenQuery || fields.dateTaken || new Date().toISOString();
+    let pageId = pageIdQuery || fields.pageId || '';
+
+    let latitude = '';
+    let longitude = '';
+
+    // Automatically extract GPS coordinates directly from the first image buffer
+    try {
+      const gpsData = await exifr.gps(files[0].buffer);
+      if (gpsData && gpsData.latitude && gpsData.longitude) {
+        latitude = gpsData.latitude;
+        longitude = gpsData.longitude;
+        console.log(`[Diagnostic] Automatically extracted GPS: ${latitude}, ${longitude}`);
+      }
+    } catch (e) {
+      console.log('[Diagnostic] EXIF GPS extraction skipped:', e.message);
+    }
+
+    console.log(`[Diagnostic] Processing batch of ${files.length} images for Notion`);
 
     // ==========================================
     // STEP 1: CREATE PAGE WITH THE FIRST IMAGE
@@ -130,18 +143,19 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
     };
 
-    // If no existing pageId, create the new page
     if (!pageId || String(pageId).trim() === '') {
         let placeProperty = undefined;
         const latNum = parseFloat(latitude);
         const lonNum = parseFloat(longitude);
         
-        // Location Fallback Logic
         if (!isNaN(latNum) && !isNaN(lonNum)) {
-          placeProperty = { place: { lat: latNum, lon: lonNum, name: location && String(location).trim() !== '' ? String(location).trim() : 'Pinned Location' } };
-        } else if (location && String(location).trim() !== '') {
-          // If Android stripped the GPS, map the user's manually typed location name instead
-          placeProperty = { place: { lat: 0, lon: 0, name: String(location).trim() } };
+          placeProperty = { 
+            place: { 
+              lat: latNum, 
+              lon: lonNum, 
+              name: 'Pinned Location' 
+            } 
+          };
         }
 
         const properties = {
@@ -164,7 +178,6 @@ export default async function handler(req, res) {
         
         pageId = createData.id;
     } else {
-        // Append the first image if pageId already existed
         const appendRes = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, { method: 'PATCH', headers, body: JSON.stringify({ children: [firstImageBlock] }) });
         const appendData = await appendRes.json();
         if (appendData.object === 'error') throw new Error(appendData.message);
@@ -178,7 +191,7 @@ export default async function handler(req, res) {
         const currentBase64 = `data:${currentFile.mimeType || 'image/jpeg'};base64,${currentFile.buffer.toString('base64')}`;
         
         const currentUpload = await uploadImageToNotion(currentBase64, notionToken);
-        if (currentUpload.error) continue; // Silently skip a corrupted file to keep the batch moving
+        if (currentUpload.error) continue;
 
         const currentImageBlock = {
           object: 'block',
@@ -189,9 +202,9 @@ export default async function handler(req, res) {
         await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, { method: 'PATCH', headers, body: JSON.stringify({ children: [currentImageBlock] }) });
     }
 
-    return res.status(200).json({ success: true, pageId: pageId });
+    return Response.json({ success: true, pageId: pageId });
   } catch (err) {
     console.error('Error processing batch request:', err);
-    return res.status(500).json({ error: err.message });
+    return Response.json({ error: err.message }, { status: 500 });
   }
 }
