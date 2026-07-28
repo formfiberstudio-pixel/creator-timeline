@@ -58,19 +58,19 @@ export async function POST(req) {
     const dateTakenQuery = url.searchParams.get('dateTaken');
     const pageIdQuery = url.searchParams.get('pageId');
 
-    const contentType = req.headers.get('content-type') || '';
     let files = [];
     let fields = {};
 
-    // Safely parse incoming multipart form-data or raw body payloads
+    // 1. Try parsing as Multipart Form-Data (Handles multi-file batches)
+    const contentType = req.headers.get('content-type') || '';
     if (contentType.includes('multipart/form-data')) {
       try {
         const formData = await req.formData();
         for (const [key, value] of formData.entries()) {
           if (value instanceof File) {
             files.push({
-              filename: value.name,
-              mimeType: value.type,
+              filename: value.name || 'photo.jpg',
+              mimeType: value.type || 'image/jpeg',
               buffer: Buffer.from(await value.arrayBuffer())
             });
           } else {
@@ -78,14 +78,15 @@ export async function POST(req) {
           }
         }
       } catch (e) {
-        console.error('FormData parsing warning:', e.message);
+        console.warn('Multipart form parsing fallback triggered:', e.message);
       }
     }
 
+    // 2. Fallback: If no files caught yet, treat the entire request body as a raw binary stream
     if (files.length === 0) {
       try {
         const arrayBuffer = await req.arrayBuffer();
-        if (arrayBuffer.byteLength > 0) {
+        if (arrayBuffer && arrayBuffer.byteLength > 0) {
           files.push({
             filename: 'photo_upload.jpg',
             mimeType: 'image/jpeg',
@@ -93,7 +94,7 @@ export async function POST(req) {
           });
         }
       } catch (e) {
-        console.error('ArrayBuffer parsing warning:', e.message);
+        console.warn('Raw stream parsing fallback triggered:', e.message);
       }
     }
 
@@ -108,7 +109,7 @@ export async function POST(req) {
     let latitude = '';
     let longitude = '';
 
-    // Automatically extract GPS coordinates directly from the first image buffer
+    // Automatically extract GPS coordinates from the first image buffer
     try {
       const gpsData = await exifr.gps(files[0].buffer);
       if (gpsData && gpsData.latitude && gpsData.longitude) {
