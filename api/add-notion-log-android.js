@@ -2,6 +2,13 @@ import { Client } from '@notionhq/client';
 import exifr from 'exifr';
 import Busboy from 'busboy';
 
+// Disables Vercel's default parser so Busboy can catch the raw form-data stream flawlessly
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 async function uploadImageToNotion(rawInput, notionToken) {
   try {
     const cleanBase64 = String(rawInput).replace(/^data:image\/\w+;base64,/, '').replace(/[\r\n\s]/g, '');
@@ -45,85 +52,70 @@ async function uploadImageToNotion(rawInput, notionToken) {
   }
 }
 
-export async function POST(req) {
+// Universal Promise wrapper for Busboy parsing
+const parseForm = (req) => {
+  return new Promise((resolve, reject) => {
+    const busboy = Busboy({ headers: req.headers });
+    const fields = {};
+    const files = [];
+
+    busboy.on('field', (name, val) => {
+      fields[name] = val;
+    });
+
+    busboy.on('file', (name, file, info) => {
+      const chunks = [];
+      file.on('data', (data) => chunks.push(data));
+      file.on('end', () => {
+        files.push({
+          filename: info.filename || 'photo.jpg',
+          mimeType: info.mimeType || 'image/jpeg',
+          buffer: Buffer.concat(chunks)
+        });
+      });
+    });
+
+    busboy.on('finish', () => resolve({ fields, files }));
+    busboy.on('error', reject);
+    
+    // Pipe the Node.js request stream directly into Busboy
+    req.pipe(busboy);
+  });
+};
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
   try {
-    const notionToken = req.headers.get('x-notion-token');
-    const databaseId = req.headers.get('x-database-id');
+    const notionToken = req.headers['x-notion-token'];
+    const databaseId = req.headers['x-database-id'];
 
     if (!notionToken || !databaseId) {
-      return Response.json({ error: 'Missing Notion Token or Database ID in request headers.' }, { status: 401 });
+      return res.status(401).json({ error: 'Missing Notion Token or Database ID in request headers.' });
     }
 
-    const url = new URL(req.url);
-    const titleQuery = url.searchParams.get('title');
-    const dateTakenQuery = url.searchParams.get('dateTaken');
-    const pageIdQuery = url.searchParams.get('pageId');
-
-    const contentType = (req.headers.get('content-type') || '').toLowerCase();
-    let files = [];
-    let fields = {};
-
-    // Bypass Next.js stream bugs by reading the entire payload into raw memory immediately
-    const arrayBuffer = await req.arrayBuffer();
-    const rawBuffer = Buffer.from(arrayBuffer);
-
-    if (rawBuffer.length === 0) {
-      return Response.json({ error: 'Empty request body.' }, { status: 400 });
-    }
-
-    // 1. If it's a batch from HTTP Shortcuts, manually parse the raw Buffer with Busboy
-    if (contentType.includes('multipart/form-data')) {
-      await new Promise((resolve, reject) => {
-        const busboy = Busboy({ headers: { 'content-type': contentType } });
-
-        busboy.on('field', (name, val) => {
-          fields[name] = val;
-        });
-
-        busboy.on('file', (name, file, info) => {
-          const chunks = [];
-          file.on('data', (data) => chunks.push(data));
-          file.on('end', () => {
-            files.push({
-              filename: info.filename || 'photo.jpg',
-              mimeType: info.mimeType || 'image/jpeg',
-              buffer: Buffer.concat(chunks)
-            });
-          });
-        });
-
-        busboy.on('finish', resolve);
-        busboy.on('error', reject);
-
-        // Feed the entire raw buffer directly into the parser
-        busboy.end(rawBuffer);
-      });
-    } else {
-      // 2. If it's a single raw stream, just use the Buffer directly
-      files.push({
-        filename: 'photo_upload.jpg',
-        mimeType: contentType.includes('image/') ? contentType : 'image/jpeg',
-        buffer: rawBuffer
-      });
-    }
+    // 1. Parse the multi-file batch payload
+    const { fields, files } = await parseForm(req);
 
     if (files.length === 0) {
-      return Response.json({ error: 'No image data could be parsed from the request.' }, { status: 400 });
+      return res.status(400).json({ error: 'No image data received in the request body.' });
     }
 
-    const title = titleQuery || fields.title || 'Android Photo Log';
-    const dateTaken = dateTakenQuery || fields.dateTaken || new Date().toISOString();
-    let pageId = pageIdQuery || fields.pageId || '';
-    
+    // Extract variables (Supports both URL Queries and Form Fields)
+    const title = fields.title || req.query.title || 'Android Photo Log';
+    const dateTaken = fields.dateTaken || req.query.dateTaken || new Date().toISOString();
+    let pageId = fields.pageId || req.query.pageId || '';
+
     let latitude = '';
     let longitude = '';
 
+    // Automatically extract GPS coordinates directly from the first image buffer
     try {
       const gpsData = await exifr.gps(files[0].buffer);
       if (gpsData && gpsData.latitude && gpsData.longitude) {
         latitude = gpsData.latitude;
         longitude = gpsData.longitude;
-        console.log(`[Diagnostic] Extracted GPS: ${latitude}, ${longitude}`);
+        console.log(`[Diagnostic] Automatically extracted GPS: ${latitude}, ${longitude}`);
       }
     } catch (e) {
       console.log('[Diagnostic] EXIF GPS extraction skipped.');
@@ -205,9 +197,9 @@ export async function POST(req) {
         await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, { method: 'PATCH', headers, body: JSON.stringify({ children: [currentImageBlock] }) });
     }
 
-    return Response.json({ success: true, pageId: pageId });
+    return res.status(200).json({ success: true, pageId: pageId });
   } catch (err) {
-    console.error('Error processing request:', err);
-    return Response.json({ error: err.message }, { status: 500 });
+    console.error('Error processing batch request:', err);
+    return res.status(500).json({ error: err.message });
   }
 }
