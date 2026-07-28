@@ -1,3 +1,9 @@
+import { Client } from '@notionhq/client';
+import exifr from 'exifr'; // <-- Add this new import
+
+export const config = {
+// ...
+
 // Disable Vercel's default JSON parser so we can read the raw binary stream natively
 export const config = {
   api: {
@@ -61,15 +67,15 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Missing Notion Token or Database ID in request headers.' });
     }
 
-    // 2. Extract text metadata from URL Query
+// 2. Extract text metadata (Change const to let for latitude/longitude so we can override them)
     const title = req.query.title || 'Android Photo Log';
     const dateTaken = req.query.dateTaken || new Date().toISOString();
-    const latitude = req.query.lat || '';
-    const longitude = req.query.lon || '';
+    let latitude = req.query.lat || '';
+    let longitude = req.query.lon || '';
     const location = req.query.loc || '';
     const pageId = req.query.pageId || '';
 
-    // 3. Read the raw binary file data perfectly safely via stream
+    // 3. Read the raw binary file data
     const chunks = [];
     for await (const chunk of req) {
       chunks.push(chunk);
@@ -79,6 +85,23 @@ export default async function handler(req, res) {
     if (fileBuffer.length === 0) {
       return res.status(400).json({ error: 'No image data received in the request body.' });
     }
+
+    // ==========================================
+    // NEW: BULLETPROOF GPS EXTRACTION
+    // ==========================================
+    try {
+      const gpsData = await exifr.gps(fileBuffer);
+      if (gpsData && gpsData.latitude && gpsData.longitude) {
+        latitude = gpsData.latitude;
+        longitude = gpsData.longitude;
+        console.log(`[Diagnostic] Successfully extracted GPS from image: ${latitude}, ${longitude}`);
+      } else {
+        console.log('[Diagnostic] No GPS data found in the image EXIF.');
+      }
+    } catch (e) {
+      console.log('[Diagnostic] EXIF parsing error:', e.message);
+    }
+    // ==========================================
 
     // Convert raw buffer to Base64 to feed into your existing iOS function
     const base64Data = fileBuffer.toString('base64');
